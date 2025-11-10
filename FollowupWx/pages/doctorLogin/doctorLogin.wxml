@@ -1,0 +1,7 @@
+<view>
+  <block wx:if="{{showLoginView}}">
+    <loginview is-patient="{{false}}"></loginview>
+  </block>
+  <van-toast id="van-toast" />
+</view>
+

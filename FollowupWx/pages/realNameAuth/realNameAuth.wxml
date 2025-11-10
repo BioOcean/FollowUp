@@ -1,0 +1,88 @@
+<!--pages/realNameAuth/realNameAuth.wxml-->
+<view class="auth-container">
+  <view class="form-title">请填写患者信息</view>
+  <view class="form-item">
+    <text class="required-label">*</text>
+    <text class="form-label">患者姓名：</text>
+    <view class="id-number-container">
+      <input class="form-input" placeholder="请输入患者姓名" value="{{patientName}}" bindinput="inputPatientName" />
+    </view>
+  </view>
+  
+  <view class="form-item">
+    <text class="required-label"></text>
+    <text class="form-label">证件类型：</text>
+    <view class="id-number-container">
+      <picker mode="selector" range="{{idTypeList}}" bindchange="idTypeChange">
+        <view class="picker-content">
+          <text class="{{idType ? '' : 'placeholder'}}">{{idType || '请选择证件类型'}}</text>
+          <text class="arrow">▼</text>
+        </view>
+      </picker>
+    </view>
+  </view>
+  
+  <view class="form-item">
+    <text class="required-label"></text>
+    <text class="form-label">证件号码：</text>
+    <view class="id-number-container">
+      <input class="form-input" placeholder="请输入证件号码" value="{{idNumber}}" bindinput="inputIdNumber" />
+    </view>
+  </view>
+
+  <view class="ocr-container"  bindtap="scanIdCard" wx:if="{{idType=='居民身份证'}}">
+        <image class="scan-icon" src="/images/scan-icon.jpg" ></image>
+        <text>拍照识别</text>
+      </view>
+ 
+  
+  <view class="form-item">
+    <text class="required-label">*</text>
+    <text class="form-label">患者性别：</text>
+    <view class="gender-group">
+      <view class="gender-item {{gender === '女' ? 'gender-selected' : ''}}" bindtap="selectGender" data-gender="女">
+        <text>女</text>
+      </view>
+      <view class="gender-item {{gender === '男' ? 'gender-selected' : ''}}" bindtap="selectGender" data-gender="男">
+        <text>男</text>
+      </view>
+    </view>
+  </view>
+  
+  <view class="form-item">
+    <text class="required-label">*</text>
+    <text class="form-label">出生日期：</text>
+    <view class="id-number-container">
+      <picker mode="date" bindchange="birthDateChange">
+        <view class="picker-content">
+          <text class="{{birthDate ? '' : 'placeholder'}}">{{birthDate || '请输入出生日期'}}</text>
+        </view>
+      </picker>
+    </view>
+  </view>
+  
+  <view class="form-item">
+    <text class="required-label">*</text>
+    <text class="form-label">患者关系：</text>
+    <view class="id-number-container">
+      <picker mode="selector" range="{{relationList}}" bindchange="relationChange">
+        <view class="picker-content">
+          <text class="{{relation ? '' : 'placeholder'}}">{{relation || '请选择患者关系'}}</text>
+          <text class="arrow">▼</text>
+        </view>
+      </picker>
+    </view>
+  </view>
+  
+  <view class="form-item">
+    <text class="required-label">*</text>
+    <text class="form-label">手机号码：</text>
+    <view class="id-number-container">
+      <input class="form-input" type="number" placeholder="请输入手机号码" value="{{phoneNumber}}" bindinput="inputPhoneNumber" maxlength="11" />
+    </view>
+  </view>
+  
+  <button class="next-btn" bindtap="nextStep">下一步</button>
+
+  <van-toast id="van-toast" />
+</view>

@@ -1,0 +1,121 @@
+<!--pages/debug/debug.wxml-->
+<view class="debug-container">
+  <view class="debug-header">
+    <text class="debug-title">调试页面</text>
+  </view>
+
+  <!-- 页签切换区域 -->
+  <view class="tab-section">
+    <view class="tab-bar">
+      <view
+        class="tab-item {{activeTab === 'pageNav' ? 'active' : ''}}"
+        data-tab="pageNav"
+        bindtap="onTabChange"
+      >
+        <text class="tab-text">页面跳转</text>
+      </view>
+      <view
+        class="tab-item {{activeTab === 'miniProgramNav' ? 'active' : ''}}"
+        data-tab="miniProgramNav"
+        bindtap="onTabChange"
+      >
+        <text class="tab-text">小程序跳转</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="debug-content">
+    <!-- 页面跳转页签内容 -->
+    <view class="tab-content {{activeTab === 'pageNav' ? 'active' : ''}}">
+      <view class="input-section">
+        <text class="input-label">小程序路径：</text>
+        <input
+          class="path-input"
+          type="text"
+          placeholder="请输入小程序路径，如：pages/enter/enter?f=xw"
+          value="{{inputPath}}"
+          bindinput="onPathInput"
+        />
+      </view>
+
+      <view class="button-section">
+        <button
+          class="navigate-btn"
+          type="primary"
+          bindtap="onNavigate"
+          disabled="{{!inputPath}}"
+        >
+          跳转到指定页面
+        </button>
+      </view>
+
+      <view class="tips-section">
+        <text class="tips-title">使用说明：</text>
+        <text class="tips-text">• 输入完整的页面路径，包括参数</text>
+        <text class="tips-text">• 示例：pages/enter/enter?f=xw</text>
+        <text class="tips-text">• 示例：pages/index/index</text>
+      </view>
+    </view>
+
+    <!-- 小程序跳转页签内容 -->
+    <view class="tab-content {{activeTab === 'miniProgramNav' ? 'active' : ''}}">
+      <view class="form-section">
+        <view class="form-item">
+          <text class="form-label">AppID：</text>
+          <input
+            class="form-input"
+            type="text"
+            placeholder="请输入目标小程序的AppID"
+            value="{{appId}}"
+            bindinput="onAppIdInput"
+          />
+        </view>
+
+        <view class="form-item">
+          <text class="form-label">页面路径：</text>
+          <input
+            class="form-input"
+            type="text"
+            placeholder="请输入目标小程序的页面路径"
+            value="{{miniProgramPath}}"
+            bindinput="onMiniProgramPathInput"
+          />
+        </view>
+
+        <view class="form-item">
+          <text class="form-label">环境版本：</text>
+          <picker
+            class="form-picker"
+            mode="selector"
+            range="{{['develop', 'trial', 'release']}}"
+            value="{{envVersion === 'develop' ? 0 : envVersion === 'trial' ? 1 : 2}}"
+            bindchange="onEnvVersionChange"
+          >
+            <view class="picker-display">
+              <text class="picker-text">{{envVersion === 'develop' ? '开发版' : envVersion === 'trial' ? '体验版' : '正式版'}}</text>
+              <text class="picker-arrow">▼</text>
+            </view>
+          </picker>
+        </view>
+      </view>
+
+      <view class="button-section">
+        <button
+          class="navigate-btn"
+          type="primary"
+          bindtap="onNavigateToMiniProgram"
+          disabled="{{!appId || !miniProgramPath}}"
+        >
+          跳转至小程序
+        </button>
+      </view>
+
+      <view class="tips-section">
+        <text class="tips-title">使用说明：</text>
+        <text class="tips-text">• AppID：目标小程序的应用标识</text>
+        <text class="tips-text">• 页面路径：目标小程序的页面路径，如：pages/index/index</text>
+        <text class="tips-text">• 环境版本：develop（开发版）、trial（体验版）、release（正式版）</text>
+      </view>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,81 @@
+<!--pages/message/message.wxml-->
+<view class="message-container">
+  <!-- 顶部导航栏 -->
+  <view class="nav-bar">
+    <view class="nav-back" bindtap="onBack">
+      <text class="nav-back-icon">‹</text>
+    </view>
+    <view class="nav-title">消息中心</view>
+    <view class="nav-right">
+      <!-- 移除全部已读按钮 -->
+    </view>
+  </view>
+
+  <!-- 操作区域 -->
+  <view wx:if="{{messageList.length > 0}}" class="action-bar">
+    <view class="message-count">
+      <text class="count-text">共{{messageList.length}}条消息</text>
+    </view>
+    <view class="action-buttons">
+      <text class="mark-all-read-btn" bindtap="onMarkAllRead">全部已读</text>
+    </view>
+  </view>
+
+  <!-- 消息列表 -->
+  <scroll-view class="message-list" scroll-y="true" bindscrolltolower="onReachBottom">
+    <view wx:if="{{messageList.length > 0}}">
+      <view wx:for="{{messageList}}" wx:key="id" class="message-item" 
+            bindtap="onMessageClick" data-item="{{item}}">
+        <!-- 未读红点 -->
+        <view class="message-dot {{item.isRead ? 'read' : 'unread'}}"></view>
+        
+        <!-- 消息内容 -->
+        <view class="message-content">
+          <view class="message-header">
+            <text class="message-title">{{item.title}}</text>
+            <text class="message-time">{{item.createTimeDisplay}}</text>
+          </view>
+          <view class="message-preview">{{item.contentPreview}}</view>
+          <view class="message-meta">
+            <text class="message-type">{{item.type}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 空状态 -->
+    <view wx:else class="empty-state">
+      <text class="empty-text">暂无消息</text>
+    </view>
+
+    <!-- 加载状态 -->
+    <view wx:if="{{loading}}" class="loading-state">
+      <text class="loading-text">加载中...</text>
+    </view>
+
+    <!-- 无更多数据提示 -->
+    <view wx:elif="{{!hasMore && messageList.length > 0}}" class="no-more-state">
+      <text class="no-more-text">没有更多消息了</text>
+    </view>
+  </scroll-view>
+
+  <!-- 消息详情弹窗 -->
+  <view wx:if="{{showMessageDetail}}" class="modal-overlay" bindtap="onCloseModal">
+    <view class="modal-content" catchtap="">
+      <view class="modal-header">
+        <text class="modal-title">{{currentMessage.title}}</text>
+        <view class="modal-close" bindtap="onCloseModal">×</view>
+      </view>
+      <view class="modal-body">
+        <view class="modal-meta">
+          <text class="modal-time">{{currentMessage.createTimeDisplay}}</text>
+          <text class="modal-type">{{currentMessage.type}}</text>
+        </view>
+        <rich-text nodes="{{currentMessage.content}}"></rich-text>
+      </view>
+      <view wx:if="{{currentMessage.url}}" class="modal-footer">
+        <button class="modal-btn" bindtap="onOpenUrl">查看详情</button>
+      </view>
+    </view>
+  </view>
+</view>

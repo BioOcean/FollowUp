@@ -1,0 +1,47 @@
+<!--pages/tomini/tomini.wxml-->
+<view class="container">
+  <!-- 页面标题 -->
+  <view class="header">
+    <text class="title">小程序跳转</text>
+  </view>
+
+  <!-- 加载状态 -->
+  <view class="loading-section" wx:if="{{isLoading}}">
+    <view class="loading-content">
+      <text class="loading-text">数据加载中...</text>
+      <view class="loading-spinner"></view>
+    </view>
+  </view>
+
+  <!-- 跳转按钮区域 -->
+  <view class="jump-section" wx:if="{{showJumpButton && !isLoading && !showError}}">
+    <view class="jump-content">
+      <text class="section-title">{{description}}</text>
+      <button class="jump-btn" bindtap="onConfirmJump">确认跳转</button>
+    </view>
+  </view>
+
+  <!-- 错误状态 -->
+  <view class="error-section" wx:if="{{showError && !isLoading}}">
+    <view class="error-content">
+      <text class="error-icon">⚠️</text>
+      <text class="error-title">跳转失败</text>
+      <text class="error-message">{{errorMessage}}</text>
+      <button class="retry-btn" bindtap="onRetryJump">重新跳转</button>
+    </view>
+  </view>
+
+  <!-- 参数缺失提示 -->
+  <view class="missing-params-section" wx:if="{{!hasParams && !isLoading && !showError}}">
+    <view class="missing-content">
+      <text class="missing-icon">📋</text>
+      <text class="missing-title">等待数据</text>
+      <text class="missing-desc">请稍候...</text>
+    </view>
+  </view>
+
+  <!-- 底部提示 -->
+  <view class="footer">
+    <text class="footer-text">请您点击确认跳转其他小程序</text>
+  </view>
+</view>

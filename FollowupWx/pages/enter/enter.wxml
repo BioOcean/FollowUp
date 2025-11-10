@@ -1,0 +1,5 @@
+<!--pages/enter/enter.wxml-->
+<!-- 入口页面 - 显示加载提示 -->
+<view class="container">
+  <view class="loading-text">正在跳转...</view>
+</view>

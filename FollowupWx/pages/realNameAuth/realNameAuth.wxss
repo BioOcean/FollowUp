@@ -1,0 +1,139 @@
+/* pages/realNameAuth/realNameAuth.wxss */
+
+.auth-container {
+  padding: 60rpx;
+  background-color: #f5f5f5;
+  min-height: 100vh;
+}
+
+.form-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  margin-bottom: 30rpx;
+}
+
+.form-item {
+  display: flex;
+  align-items: center;
+  /* height: 100rpx; */
+  padding:20rpx 0;
+  /* border-bottom: 1px solid #eee; */
+  position: relative;
+}
+
+.required-label {
+  color: #f56c6c;
+  margin-right: 8rpx;
+  width: 20rpx;
+}
+
+.form-label {
+  width: 180rpx;
+  font-size: 28rpx;
+  color: #333;
+}
+
+.id-number-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 430rpx; /* 固定最大宽度 */
+}
+
+.form-input {
+  box-sizing: border-box;
+  width: 100%;
+  font-size: 28rpx;
+  height: 60rpx;
+  border-radius: 10rpx;
+  padding: 0 20rpx;
+  background-color: white;
+  border: 1rpx solid #2F9688;
+}
+
+picker {
+  width: 100%;
+  max-width: 430rpx; /* 与输入框宽度一致 */
+}
+
+.picker-content {
+  box-sizing: border-box;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 28rpx;
+  height: 60rpx;
+  border-radius: 10rpx;
+  padding: 0 20rpx;
+  background-color: white;
+  border: 1rpx solid #2F9688;
+}
+
+.placeholder {
+  color: #999;
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.arrow {
+  font-size: 24rpx;
+  color: #999;
+  margin-left: 10rpx;
+  flex-shrink: 0;
+}
+
+.scan-icon {
+  width: 30rpx;
+  height: 25rpx;
+  margin-right: 10rpx;
+}
+
+.ocr-container{
+  border:1px solid #2F9688;
+  border-radius: 10rpx;
+  padding: 5rpx 0;
+  /* margin-top: 10rpx; */
+  margin-bottom: 10rpx;
+  margin-left: 200rpx;
+  text-align: center;
+  color: #2F9688;
+}
+
+.gender-group {
+  flex: 1;
+  display: flex;
+  padding: 10rpx 0;
+}
+
+.gender-item {
+  width: 120rpx;
+  height: 60rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: white;
+  border-radius: 8rpx;
+  border: 1rpx solid #2F9688;
+  margin-right: 20rpx;
+  font-size: 28rpx;
+}
+
+.gender-selected {
+  background-color: #2F9688;
+  color: white;
+}
+
+.next-btn {
+  width: 100%;
+  height: 88rpx;
+  line-height: 88rpx;
+  background-color: #1890ff;
+  color: #fff;
+  border-radius: 10rpx;
+  font-size: 32rpx;
+  margin-top: 60rpx;
+}

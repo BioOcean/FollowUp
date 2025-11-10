@@ -10,6 +10,29 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Nuget", "Nuget", "{02EA681E
 		Directory.Packages.props = Directory.Packages.props
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "FollowupWx", "FollowupWx", "{8F3E7B9A-1D2C-4E5F-9A3B-5C8D7E9F1A2B}"
+	ProjectSection(SolutionItems) = preProject
+		FollowupWx\app.js = FollowupWx\app.js
+		FollowupWx\app.json = FollowupWx\app.json
+		FollowupWx\app.wxss = FollowupWx\app.wxss
+		FollowupWx\config.js = FollowupWx\config.js
+		FollowupWx\package.json = FollowupWx\package.json
+		FollowupWx\project.config.json = FollowupWx\project.config.json
+		FollowupWx\sitemap.json = FollowupWx\sitemap.json
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "pages", "pages", "{1A2B3C4D-5E6F-7A8B-9C0D-1E2F3A4B5C6D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "components", "components", "{2B3C4D5E-6F7A-8B9C-0D1E-2F3A4B5C6D7E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "utils", "utils", "{3C4D5E6F-7A8B-9C0D-1E2F-3A4B5C6D7E8F}"
+	ProjectSection(SolutionItems) = preProject
+		FollowupWx\utils\api.js = FollowupWx\utils\api.js
+		FollowupWx\utils\request.js = FollowupWx\utils\request.js
+		FollowupWx\utils\util.js = FollowupWx\utils\util.js
+		FollowupWx\utils\navigation.js = FollowupWx\utils\navigation.js
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -35,6 +58,11 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{1A2B3C4D-5E6F-7A8B-9C0D-1E2F3A4B5C6D} = {8F3E7B9A-1D2C-4E5F-9A3B-5C8D7E9F1A2B}
+		{2B3C4D5E-6F7A-8B9C-0D1E-2F3A4B5C6D7E} = {8F3E7B9A-1D2C-4E5F-9A3B-5C8D7E9F1A2B}
+		{3C4D5E6F-7A8B-9C0D-1E2F-3A4B5C6D7E8F} = {8F3E7B9A-1D2C-4E5F-9A3B-5C8D7E9F1A2B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {7D9A3789-3EF5-46E3-A9EC-5CBF59A078FC}

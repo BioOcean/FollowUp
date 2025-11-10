@@ -1,0 +1,273 @@
+/* pages/tomini/tomini.wxss */
+.container {
+  padding: 20px;
+  min-height: 100vh;
+  background-color: #f5f5f5;
+}
+
+/* 页面标题 */
+.header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+}
+
+/* 参数信息区域 */
+.params-section {
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 15px;
+  display: block;
+}
+
+.param-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.param-item:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.param-label {
+  font-size: 14px;
+  color: #666;
+  min-width: 80px;
+  margin-right: 10px;
+}
+
+.param-value {
+  font-size: 14px;
+  color: #333;
+  word-break: break-all;
+  flex: 1;
+}
+
+/* 加载状态 */
+.loading-section {
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 40px 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.loading-text {
+  font-size: 16px;
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #007aff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 错误状态 */
+.error-section {
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 30px 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.error-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.error-icon {
+  font-size: 48px;
+  margin-bottom: 15px;
+}
+
+.error-title {
+  font-size: 18px;
+  font-weight: bold;
+  color: #ff6b6b;
+  margin-bottom: 10px;
+}
+
+.error-message {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 20px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.retry-btn {
+  background-color: #007aff;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 12px 24px;
+  font-size: 14px;
+  min-width: 120px;
+}
+
+/* 参数缺失状态 */
+.missing-params-section {
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 30px 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.missing-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.missing-icon {
+  font-size: 48px;
+  margin-bottom: 15px;
+}
+
+.missing-title {
+  font-size: 18px;
+  font-weight: bold;
+  color: #ff9500;
+  margin-bottom: 10px;
+}
+
+.missing-desc {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.missing-example {
+  font-size: 12px;
+  color: #999;
+  background-color: #f8f8f8;
+  padding: 10px;
+  border-radius: 4px;
+  text-align: left;
+  line-height: 1.4;
+  word-break: break-all;
+}
+
+/* 跳转按钮区域 */
+.jump-section {
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 30px 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.jump-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.jump-tip {
+  font-size: 16px;
+  color: #333;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.jump-btn {
+  background-color: #07c160;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 14px 32px;
+  font-size: 16px;
+  font-weight: 500;
+  min-width: 160px;
+  box-shadow: 0 2px 8px rgba(7, 193, 96, 0.3);
+  transition: all 0.3s ease;
+}
+
+.jump-btn:active {
+  background-color: #06ad56;
+  transform: scale(0.98);
+}
+
+/* 底部提示 */
+.footer {
+  text-align: center;
+  margin-top: 40px;
+}
+
+.footer-text {
+  font-size: 12px;
+  color: #999;
+  line-height: 1.4;
+}
+
+/* 响应式设计 */
+@media (max-width: 375px) {
+  .container {
+    padding: 15px;
+  }
+
+  .title {
+    font-size: 20px;
+  }
+
+  .params-section,
+  .loading-section,
+  .error-section,
+  .missing-params-section,
+  .jump-section {
+    padding: 20px 15px;
+  }
+
+  .jump-btn {
+    padding: 12px 24px;
+    font-size: 15px;
+    min-width: 140px;
+  }
+
+  .jump-tip {
+    font-size: 15px;
+    margin-bottom: 16px;
+  }
+}

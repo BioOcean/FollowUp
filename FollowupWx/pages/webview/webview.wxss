@@ -1,0 +1,25 @@
+/* 基本样式，恢复圆形样式但保持简单 */
+.container {
+  width: 100%;
+  height: 100vh;
+  position: relative;
+}
+
+.float-button {
+  position: fixed;
+  /* 调整尺寸以适应图片，例如：宽度240rpx，高度80rpx (请根据您的图片实际比例调整) */
+  width: 100rpx; 
+  height: 100rpx; 
+  background-color: transparent; /* 图片自带背景，设为透明 */
+  /* 根据图片圆角调整，例如高度的一半使其两端为半圆 */
+  border-radius: 40rpx; 
+  box-shadow: 0 4rpx 8rpx rgba(0,0,0,0.2);
+  z-index: 9999;
+}
+/* 新增图片样式 */
+.button-image {
+  width: 100%;
+  height: 100%;
+  /* 确保图片也应用圆角，与父容器一致 */
+  border-radius: 40rpx; 
+}

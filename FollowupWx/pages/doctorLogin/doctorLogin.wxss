@@ -1,0 +1,136 @@
+.login-container {
+  margin-top: 40rpx;
+  width: 100%;
+}
+
+.login-title {
+  font-size: 40rpx;
+  font-weight: bold;
+  margin-top: 40rpx;
+  margin-bottom: 60rpx;
+  text-align: center;
+}
+
+.doctor-title {
+  font-size: 48rpx;
+  font-weight: bold;
+  text-align: center;
+}
+
+.login-type-switch {
+  display: flex;
+  align-items: center;
+}
+
+.login-type-switch view {
+  padding: 20rpx 40rpx;
+  font-size: 28rpx;
+  color: #333;
+}
+
+.login-type-switch .active {
+  color: #1890ff;
+  font-weight: bold;
+}
+
+.login-type-switch .divider {
+  width: 2rpx;
+  height: 40rpx;
+  background-color: #ddd;
+  padding: 0;
+}
+
+.login-form {
+  padding:40rpx;
+}
+
+.input-group {
+  position: relative;
+  margin-top: 40rpx;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 20rpx 0;
+  border-bottom: 2rpx solid #ddd;
+  font-size: 1rem;
+}
+
+.verify-code {
+  display: flex;
+  align-items: center;
+}
+
+.verify-code input {
+  flex: 1;
+}
+
+.verify-code-btn {
+  color: #1890ff;
+  font-size: 28rpx;
+}
+
+.verify-code-btn.disabled {
+  color: #999;
+}
+
+.hint-text {
+  color: #aaa;
+  font-size: 24rpx;
+  margin-top: 16rpx;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #999;
+}
+
+.login-btn, .wechat-btn {
+  width: 100% !important;
+  padding:20rpx;
+  text-align: center;
+  border-radius: 44rpx;
+  font-size: 25rpx;
+  margin-top: 80rpx;
+}
+
+.login-btn {
+  background-color: #1890ff;
+  color: white;
+}
+
+.wechat-btn {
+  background-color: #07C160;
+  color: white;
+  margin-top: 36rpx;
+}
+
+.agreement {
+  text-align: center;
+  font-size: 24rpx;
+  color: #333;
+  margin-top: 80rpx;
+  display: flex;
+  align-items: center;
+}
+
+.agreement navigator {
+  color: #1890ff;
+  padding: 6rpx;
+}
+
+.error-text {
+  color: #f44336;
+  font-size: 24rpx;
+  margin-top: 8rpx;
+}
+
+.error-message {
+  color: #f44336;
+  text-align: center;
+  margin-top: 30rpx;
+  font-size: 28rpx;
+}

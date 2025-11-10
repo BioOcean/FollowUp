@@ -30,4 +30,60 @@
 		</None>
 	</ItemGroup>
 
+	<ItemGroup>
+		<!-- 全局目录 -->
+		<Folder Include="Models\" />
+		<Folder Include="Services\Extension\" />
+		<Folder Include="Components\Dialogs\" />
+		
+		<!-- 患者管理模块 -->
+		<Folder Include="Components\Modules\PatientManagement\Pages\" />
+		<Folder Include="Components\Modules\PatientManagement\Components\" />
+		<Folder Include="Components\Modules\PatientManagement\Dialogs\" />
+		<Folder Include="Components\Modules\PatientManagement\Models\" />
+		<Folder Include="Components\Modules\PatientManagement\Services\" />
+		
+		<!-- 医生管理模块 -->
+		<Folder Include="Components\Modules\DoctorManagement\Pages\" />
+		<Folder Include="Components\Modules\DoctorManagement\Components\" />
+		<Folder Include="Components\Modules\DoctorManagement\Dialogs\" />
+		<Folder Include="Components\Modules\DoctorManagement\Models\" />
+		<Folder Include="Components\Modules\DoctorManagement\Services\" />
+		
+		<!-- 宣教管理模块 -->
+		<Folder Include="Components\Modules\EducationManagement\Pages\" />
+		<Folder Include="Components\Modules\EducationManagement\Components\" />
+		<Folder Include="Components\Modules\EducationManagement\Dialogs\" />
+		<Folder Include="Components\Modules\EducationManagement\Models\" />
+		<Folder Include="Components\Modules\EducationManagement\Services\" />
+		
+		<!-- 随访管理模块 -->
+		<Folder Include="Components\Modules\FollowUpManagement\Pages\" />
+		<Folder Include="Components\Modules\FollowUpManagement\Components\" />
+		<Folder Include="Components\Modules\FollowUpManagement\Dialogs\" />
+		<Folder Include="Components\Modules\FollowUpManagement\Models\" />
+		<Folder Include="Components\Modules\FollowUpManagement\Services\" />
+		
+		<!-- 健康档案模块 -->
+		<Folder Include="Components\Modules\HealthRecord\Pages\" />
+		<Folder Include="Components\Modules\HealthRecord\Components\" />
+		<Folder Include="Components\Modules\HealthRecord\Dialogs\" />
+		<Folder Include="Components\Modules\HealthRecord\Models\" />
+		<Folder Include="Components\Modules\HealthRecord\Services\" />
+		
+		<!-- 配置管理模块 -->
+		<Folder Include="Components\Modules\ConfigurationManagement\Pages\" />
+		<Folder Include="Components\Modules\ConfigurationManagement\Components\" />
+		<Folder Include="Components\Modules\ConfigurationManagement\Dialogs\" />
+		<Folder Include="Components\Modules\ConfigurationManagement\Models\" />
+		<Folder Include="Components\Modules\ConfigurationManagement\Services\" />
+		
+		<!-- 项目管理模块 -->
+		<Folder Include="Components\Modules\ProjectManagement\Pages\" />
+		<Folder Include="Components\Modules\ProjectManagement\Components\" />
+		<Folder Include="Components\Modules\ProjectManagement\Dialogs\" />
+		<Folder Include="Components\Modules\ProjectManagement\Models\" />
+		<Folder Include="Components\Modules\ProjectManagement\Services\" />
+	</ItemGroup>
+
 </Project>

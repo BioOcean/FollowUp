@@ -1,0 +1,7 @@
+<view>
+  <block wx:if="{{showLoginView}}">
+    <loginview is-patient="{{true}}" ProjectId="{{ProjectId}}" DoctorId="{{DoctorId}}" fromWhere="{{fromWhere}}" IsEnrollment="{{IsEnrollment}}"
+    ScanTime="{{ScanTime}}" code="{{code}}" patientMessage="{{patientMessage}}"></loginview>
+  </block>
+	<van-toast id="van-toast" />
+</view>

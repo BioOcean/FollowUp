@@ -1,0 +1,68 @@
+<!--pages/patientMessage/patientMessage.wxml-->
+<view class="container">
+  <view class="header">
+    <image src="/images/logo.png" mode="widthFix" class="logo" />
+    <view class="title">健康管家</view>
+    <view class="subtitle">消息订阅授权</view>
+  </view>
+  
+  <view class="content">
+    <view class="permission-tip">
+      <image src="/images/message-icon.png" class="tip-icon" mode="aspectFit"></image>
+      <view class="tip-text">
+        <view class="tip-title">为了及时通知您重要信息</view>
+        <view class="tip-desc">• 随访提醒通知</view>
+        <view class="tip-desc">• 宣教消息通知</view>
+      </view>
+    </view>
+    
+    <view class="description">
+      <text>我们需要您的授权来向您发送重要的健康提醒和宣教消息。您可以随时在小程序设置中管理消息通知权限。</text>
+    </view>
+    
+    <!-- 授权进度指示器 -->
+    <view wx:if="{{isProcessing}}" class="auth-progress">
+      <view class="progress-container">
+        <view class="progress-step {{authStep === 'requesting' ? 'active' : authStep === 'complete' ? 'completed' : ''}}">
+          <view class="step-circle">
+            <text wx:if="{{authStep === 'requesting'}}" class="step-number">1</text>
+            <text wx:elif="{{authStep === 'complete'}}" class="step-check">✓</text>
+            <text wx:else class="step-number">1</text>
+          </view>
+          <text class="step-label">请求授权</text>
+        </view>
+        
+        <view class="progress-line {{authStep === 'complete' ? 'completed' : ''}}"></view>
+        
+        <view class="progress-step {{authStep === 'complete' ? 'completed' : ''}}">
+          <view class="step-circle">
+            <text wx:if="{{authStep === 'complete'}}" class="step-check">✓</text>
+            <text wx:else class="step-number">2</text>
+          </view>
+          <text class="step-label">授权完成</text>
+        </view>
+      </view>
+      
+      <view class="current-step-hint">
+        <text wx:if="{{authStep === 'requesting'}}">正在请求消息订阅授权...</text>
+        <text wx:elif="{{authStep === 'complete'}}">授权完成，即将跳转</text>
+      </view>
+    </view>
+  </view>
+  
+  <view class="footer" wx:if="{{!isProcessing}}">
+    <button class="auth-btn secondary" bindtap="handleReject">
+      拒绝
+    </button>
+    <button class="auth-btn primary" bindtap="handleAccept">
+      同意并授权
+    </button>
+  </view>
+  
+  <!-- 跳转倒计时 -->
+  <view wx:if="{{showCountdown}}" class="countdown-info">
+    <text>{{countdown}}秒后自动跳转</text>
+  </view>
+</view>
+
+<van-toast id="van-toast" />

@@ -1,0 +1,34 @@
+<!--pages/terms/terms.wxml-->
+<scroll-view scroll-y="true" class="v-container">
+  <view class="H_title">博远健康管家患者服务条款</view>
+  
+  <view class="content-view">
+    <view class="paragraph text-bold">保密约定：博远健康管家保证用户隐私信息仅提供您的主治医生及健康管家可看，其他任何人均不能看到也无权使用。</view>
+    <view class="paragraph">我申请成为博远健康管家健康管理服务会员，在博远健康管家上接受我的主治医生对我院外情况的监护、指导服务。我同意博远健康管家如下约定：</view>
+    <view class="paragraph">1、我接受并遵守博远健康管家的注册用户服务条款。</view>
+    <view class="paragraph">2、我愿意根据自己的需求选择服务的类型。</view>
+    <view class="paragraph">3、我确认我在健康管理服务报到中提交的信息以及今后提供的信息均是真实的情况。我同意参加并接受主治医生在博远健康管家上的健康管理服务。我愿意按照医生指导，真实的记录平时的身体状况，服药情况，生活状况。</view>
+    <view class="paragraph">4、我同意医疗是严肃的科学，尽管我是医生的老病人，医生对我的病情有相当的了解，但医生在网上给我的回复都是建议，我们按专业建议看待，不擅自采用，不引用这些医生对我的关怀类的信息服务做为质疑医生给我的处置方案的证据。我保证会按医疗程序看病。</view>
+    <view class="paragraph">5、我知道这个健康管理服务，不包括紧急情况下给予干预意见，例如：病情发生较突然的变化时，感觉症状加重时，在这种紧急情况发生后均需要立即去当地有能力的医院就诊，而不可在网上等待建议。正确的做法是马上求助当地医院及拨打120电话。</view>
+    <view class="paragraph">6、我知道并同意我在网上登记的部分个人信息及疾病信息被我的主治医生及健康管家看到，并允许他们按照本服务条款的约定使用。</view>
+    <view class="paragraph">7、我知道这个健康管理服务医生需要了解我在院外的医嘱执行情况，日常生活中饮食、运动情况、身体体征、情绪、心情等生活细节，我愿意定期按要求提交或当医生或健康管家问起这些情况时，如实配合。</view>
+    <view class="paragraph">8、我同意并支持医患之间应以相互理解、信任为基础，共同对抗疾病。</view>
+  </view>
+
+  <view class="content-view">
+    <view class="section-title">博远健康管家网站向您提供的服务承诺：</view>
+    <view class="paragraph">1、本服务是由您的主治医生及健康管家一起给您提供的医疗信息类指导服务。</view>
+    <view class="paragraph">2、博远健康管家网站给您提供稳定的记录上传病情的专用平台，该平台由您及您授权人、您的主治医生及健康管家共同使用。</view>
+    <view class="paragraph">3、博远健康管家及您的主治医生共同保证您信息的安全，除本服务条款中约定的人员外，不得透漏给其他任何人。</view>
+    <view class="paragraph">4、在已经隐去所有您个人识别信息后的网站页面，您也有权要求设置为全隐私状态，不与其他病友分享疾病及治疗、康复情况。</view>
+    <view class="paragraph">5、博远健康管家保证您上传的情况，主治医生能得到通知并随时、顺利的看到。</view>
+    <view class="paragraph">6、主治医生会查看您上传或健康管家与您沟通后帮您上传的恢复情况，给您相应的指导建议</view>
+    <view class="paragraph">7、根据您疾病的情况、康复阶段，医生及健康管家一起工作保证您了解并理解相关的治疗方式及可能会出现的情况、如何预防、如何发现等知识。</view>
+    <view class="paragraph">8、健康管家会按主治医生给您安排的评估调查、复查项目、复诊安排等提前通知您，并约定具体操作时间、注意事项等。</view>
+    <view class="paragraph">9、如果您因为确切原因不满意博远健康管家及主治医生的服务或因特殊情况（痊愈、突发病情加重）无法、无必要再使用健康管理服务服务，可与博远健康管家协商。</view>
+  </view>
+
+  <view class="content-view">
+    <view class="paragraph text-bold">本服务条款最终解释权归博远健康管家</view>
+  </view>
+</scroll-view>

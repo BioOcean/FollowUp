@@ -1,0 +1,15 @@
+<view class="container">
+    <web-view 
+        src="{{url}}" 
+        bindmessage="onMessage"
+        id="loginWebview"/>
+    
+        <cover-view class="float-button"  wx:if="{{!isDoctor && showFloatButton}}"
+        style="top:{{buttonTop}}px; left:{{buttonLeft}}px;"
+        bindtouchstart="buttonStart"
+        catchtouchmove="buttonMove"
+        bindtouchend="buttonMoveEnd"
+        bindtap="handleButtonTap"> <!-- 改用新的tap处理函数 -->
+        <cover-image class="button-image" src="/images/custom_service.png"></cover-image>
+    </cover-view>
+</view>

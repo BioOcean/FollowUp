@@ -1,0 +1,119 @@
+<!--pages/agreement/agreement.wxml-->
+<scroll-view scroll-y="true" class="v-container">
+  <view class="H_title">博远健康管家服务协议</view>
+  
+  <view class="content-view">
+    <view class="paragraph text-bold">尊敬的用户：</view>
+    <view class="paragraph text-bold">欢迎使用博远健康管家！</view>
+    <view class="paragraph"><text class="text-bold">【协议说明】</text>本协议是您与博远健康管家之间关于使用本服务所订立的协议。</view>
+    <view class="paragraph text-bold">【审慎阅读】您在申请注册流程中点击同意本协议之前，应当认真阅读本协议。请您务必审慎阅读、充分理解各条款内容，特别是免除或者限制责任的条款、法律适用和争议解决条款。如您对协议有任何疑问，可向博远健康管家客服咨询。如您未满18周岁，或以其他形式被限制民事行为能力，请在监护人的陪同下阅读本协议。</view>
+    <view class="paragraph"><text class="text-bold">【签约动作】</text>当您按照注册页面提示填写信息、阅读并同意本协议且完成全部注册程序后，即表示您已充分阅读、理解并接受本协议的全部内容，并与博远健康管家网站达成一致，成为博远健康管家平台用户。您的注册行为将被认为是对本协议全部条款无保留的接受和遵守。<text class="text-bold">阅读本协议的过程中，如果您不同意本协议或其中任何条款约定，您应立即停止注册程序。</text></view>
+    <view class="paragraph"><text class="text-bold">【词汇定义】</text>本文中所用词汇定义如下：</view>
+    <view class="paragraph"><text class="indent"></text>博远健康管家：指包括博远健康管家网站、博远健康管家移动客户端及其他现在或将来推出的基于博远健康管家服务的平台。</view>
+    <view class="paragraph"><text class="indent"></text>用户：指阅读并同意本协议内容，经过博远健康管家注册程序成为博远健康管家各项服务使用者的单位或个人。（以下更多称为"您"）</view>
+    <view class="paragraph"><text class="indent"></text>博远健康管家管理规定：指包括本协议在内的，由用户签署，或由博远健康管家在明显位置展示的，具有规范用户行为作用的各类规定、提示、声明文件。</view>
+  </view>
+
+  <view class="content-view">
+    <view class="section-title">一、用户及注册：</view>
+    <view class="paragraph">1.1 博远健康管家提供用户注册。您的帐号和密码由您自行保管；您应当对以您的帐号进行的所有活动和事件负法律责任。</view>
+    <view class="paragraph">1.2 您注册时，在账号名称、头像和简介等注册信息中不得出现违法和不良信息，否则博远健康管家有权拒绝提供服务，并关闭该账号。</view>
+  </view>
+
+  <view class="content-view">
+    <view class="section-title">二、服务内容：</view>
+    <view class="paragraph">2.1 博远健康管家服务的具体内容由博远健康管家经营者提供，博远健康管家经营者保留随时变更、中断或终止部分或全部网络服务的权利。</view>
+    <view class="paragraph text-bold">2.2 博远健康管家作为医生、患者间交流互通平台，您通过博远健康管家发表的各种言论（包括但不仅限于咨询问题、就医经验、感谢信等），并不代表博远健康管家赞同您的观点或证实其内容的真实性。</view>
+    <view class="paragraph text-bold">2.3 您在博远健康管家上获得的医生答复、医学文章、医疗保健信息等，均不代表博远健康管家赞同其观点或证实内容的真实性，以上信息不能作为您采取治疗方案的直接依据。如确有必要，您应当联系医生进行面对面的诊疗。</view>
+    <view class="paragraph">2.4 博远健康管家在提供网络服务时，可能会对部分服务收取一定费用，博远健康管家将会对收费服务给予明确的提示，如您拒绝支付此类费用，博远健康管家有权不提供相关服务：</view>
+    <view class="paragraph indent">①您同意并认可博远健康管家现行的有关服务价格标准，您最终支付的费用由您所购买服务的类型决定。</view>
+    <view class="paragraph indent">②费用可能会根据市场供需情况进行调整，您须留意服务的价格，并根据自主意愿选择适合您的服务产品。</view>
+    <view class="paragraph">2.5 博远健康管家仅提供相关的服务，除此之外与服务有关的设备（如电脑、调制解调器及其他与接入互联网有关的装置）及所需的费用（如为接入互联网而支付的电话费及上网费）均应由您自行负担。</view>
+    <view class="paragraph">2.6 因不可抗力、网络状况、通讯线路、用户自身过错等技术原因，或其他不可控原因导致您不能正常使用博远健康管家服务，博远健康管家不承担相应责任。</view>
+  </view>
+
+  <view class="content-view">
+    <view class="section-title">三、用户的权利和责任：</view>
+    <view class="paragraph">3.1 您有权利拥有自己在博远健康管家的用户名及密码，并有权利使用自己的用户名及密码随时登陆博远健康管家服务。</view>
+    <view class="paragraph">3.2 您不得以任何形式转让或授权他人使用自己的博远健康管家用户名，亦不得盗用他人帐号，由以上行为造成的后果由用户自行承担。</view>
+    <view class="paragraph">3.3 您有权根据博远健康管家管理规定发布、获取信息，进行医患互通交流等。</view>
+    <view class="paragraph">3.4 您必须遵守卫生部《互联网医疗保健信息服务管理办法》及国家关于互联网信息发布的相关法律法规，您对自己在博远健康管家上发布的信息承担责任，您不得发布违法信息，不得恶意评价其他用户。您承诺自己在使用博远健康管家时实施的所有行为均遵守国家法律、法规和博远健康管家管理规定以及社会公共利益或公共道德。如您违反上述任一规则，导致相应法律后果的发生，您将以自己的名义独立承担所有法律责任。</view>
+    <view class="paragraph">3.5 您不得将涉及医疗纠纷的问题或其它有责任争议的问题在博远健康管家发布，关于医疗纠纷的问题，请另行咨询律师或相关主管部门寻求援助，博远健康管家有权将此类信息删除。</view>
+    <view class="paragraph">3.6 您发现其他用户有违法或违反博远健康管家管理规定的行为，可以向博远健康管家进行反映要求处理。您因博远健康管家展示的内容与其他用户发生纠纷的，司法部门可以要求博远健康管家根据法律程序提供该案件所需证据材料。</view>
+    <view class="paragraph">3.7 未经博远健康管家授权，您不得将博远健康管家展示的内容直接或变相用于商业目的，包括但不限于将平台数据用于任何模型训练的输入，或将训练后的模型用于商业目的等。</view>
+  </view>
+
+  <view class="content-view">
+    <view class="section-title">四、博远健康管家的权利和责任：</view>
+    <view class="paragraph">4.1 博远健康管家将协助医患之间进行合法的交流，并提供必要的网络技术帮助；</view>
+    <view class="paragraph">4.2 博远健康管家有义务在现有技术上维护整个网络平台的正常运行，并努力提升和改进技术，使您与医生的网上交流、互助得以顺利进行；</view>
+    <view class="paragraph">4.3 博远健康管家作为医患互通服务的平台，不对您发布的信息的来源和正确性负责，不参与医患交流，不对医患交流的结果承担任何责任；</view>
+    <view class="paragraph text-bold">4.4 对于您在博远健康管家上的不当行为或其它任何博远健康管家认为应当终止服务的情况，博远健康管家有权随时作出删除相关信息、终止服务提供等处理，而无需征得您的同意；</view>
+    <view class="paragraph">4.5 博远健康管家没有义务对所有用户的注册数据、所有的活动行为以及与之有关的其它事项进行审查，但如存在下列情况，博远健康管家有权根据不同情况选择保留或删除相关信息或继续、停止对该用户提供服务，并追究相关法律责任：</view>
+    <view class="paragraph indent">①您或其它第三方通知博远健康管家，认为某个具体用户、具体行为、具体事项可能存在重大问题；</view>
+    <view class="paragraph indent">②您或其它第三方向博远健康管家告知网络平台上有违法或不当行为的，博远健康管家以普通非专业医疗人员的知识水平标准对相关内容进行判别，可以明显认为这些内容或行为具有违法或不当性质的。</view>
+    <view class="paragraph">4.6 用户在博远健康管家上如与其它用户产生纠纷，请求博远健康管家从中予以调处，经博远健康管家审核后，博远健康管家有权向纠纷双方了解情况，并将所了解的情况互相通知对方；博远健康管家所作出的调处行为不具有法律效力，调处结果系由纠纷双方自愿作出，博远健康管家仅协助提供信息的沟通，不对调处结果承担相应法律责任。</view>
+    <view class="paragraph">4.7 博远健康管家有权对用户的注册数据及活动行为进行查阅，发现注册数据或活动行为中存在任何问题或怀疑，均有权向用户发出询问及要求改正的通知或者直接作出删除等处理；</view>
+    <view class="paragraph">4.8 经国家生效法律文书或行政处罚决定确认用户存在违法行为，或者博远健康管家有足够事实依据可以认定用户存在违法或违反博远健康管家管理规定的行为的，博远健康管家有权以合理方式公布用户的违法行为；</view>
+    <view class="paragraph">4.9 因不可抗力（如火灾、水灾、暴动、骚乱、战争、自然灾害等）导致博远健康管家的服务中断或者用户数据损坏、丢失等，博远健康管家不承担任何责任；</view>
+  </view>
+
+  <view class="content-view">
+    <view class="section-title">五、服务变更、中断或终止：</view>
+    <view class="paragraph">5.1 因系统维护或升级的需要而需暂停网络服务，博远健康管家将尽可能事先进行通告。</view>
+    <view class="paragraph">5.2 如发生下列任何一种情形，博远健康管家有权解除本协议，并终止您的全部服务：</view>
+    <view class="paragraph indent">5.2.1 您违反国家有关法律法规或博远健康管家管理规定，侵害他人合法权益的；</view>
+    <view class="paragraph indent">5.2.2 您因在博远健康管家上的不当行为被行政或司法机构拘留或起诉；</view>
+    <view class="paragraph indent">5.2.3 您丧失使用网站服务的行为能力；</view>
+    <view class="paragraph indent">5.2.4 您提供的个人资料不真实；</view>
+    <view class="paragraph indent">5.2.5 您盗用他人账户、发布违禁信息、骗取他人财物的；</view>
+    <view class="paragraph indent">5.2.6 您传播虚假信息，歪曲事实，经查证属实的；</view>
+    <view class="paragraph indent">5.2.7 其它博远健康管家认为需要终止服务的情况。</view>
+    <view class="paragraph">除前款所述情形外，博远健康管家保留在不事先通知您的情况下随时中断或终止部分或全部网络服务的权利，对于服务的中断或终止而造成您的损失的，博远健康管家不承担任何责任。</view>
+    <view class="paragraph">5.3 服务发生变更、中断、终止后，博远健康管家仍有以下权利：</view>
+    <view class="paragraph indent">5.3.1 服务发生终止后，博远健康管家将您的注册数据及以前的行为记录进行匿名化处理；</view>
+    <view class="paragraph indent">5.3.2 如您在服务变更、中断、终止前，在博远健康管家平台上存在违法行为或违反条款的行为，博远健康管家仍可行使本服务条款所规定的权利。</view>
+  </view>
+
+  <view class="content-view">
+    <view class="section-title">六、个人隐私：</view>
+    <view class="paragraph">尊重用户个人隐私信息的私有性是博远健康管家的一贯原则，博远健康管家将通过技术手段、强化内部管理等办法充分保护用户的个人隐私信息，除法律或有法律赋予权限的政府部门要求或事先得到用户明确授权等原因外，博远健康管家保证不对外公开或向第三方透露您的个人隐私信息，或用户在使用服务时存储的非公开内容。同时，为了运营和改善博远健康管家的技术与服务，博远健康管家将可能会自行收集使用或向第三方提供用户的非个人隐私信息，这将有助于博远健康管家向用户提供更好的用户体验和服务质量。</view>
+    <view class="paragraph">您使用或继续使用我们的服务，即意味着同意我们按照《博远健康管家隐私政策》收集、使用、储存和分享您的相关信息。详情请参见《博远健康管家隐私政策》。</view>
+  </view>
+
+  <view class="content-view">
+    <view class="section-title">七、免责声明：</view>
+    <view class="paragraph">7.1 您有权选择是否遵从智慧互联网医院的医师作出的疾病诊断、治疗方案、用药意见（包括电子处方）等。如果您在未与智慧互联网医院开展合作的医疗机构获取药品、接受治疗的，即便您依据的处方或治疗方案来源于智慧互联网医院和/或在线医生，智慧互联网医院和/或医生亦不承担相应责任。</view>
+    <view class="paragraph">7.2 博远健康管家不承诺网页上设置的外部链接的准确性和完整性，同时，对于该等外部链接指向的不由博远健康管家实际控制的任何网页上的内容，博远健康管家不承担任何责任。</view>
+    <view class="paragraph">7.3 对于因不可抗力或博远健康管家不能控制的原因造成的网络服务中断或其它缺陷，博远健康管家不承担任何责任，但将尽力减少因此而给您造成的损失和影响。</view>
+  </view>
+
+  <view class="content-view">
+    <view class="section-title">八、违约赔偿：</view>
+    <view class="paragraph">8.1 您同意保障和维护博远健康管家及其他用户的利益，如因您违反有关法律、法规或博远健康管家管理规定而给博远健康管家或任何其他第三人造成损失，您同意承担由此造成的损害赔偿责任。</view>
+  </view>
+
+  <view class="content-view">
+    <view class="section-title">九、服务条款修改：</view>
+    <view class="paragraph">9.1 博远健康管家有权根据服务情况变更、终止博远健康管家管理规定的各项条款，博远健康管家将会通过适当方式向您提示修改内容。</view>
+    <view class="paragraph">9.2 如果您不同意博远健康管家管理规定所做的修改，有权停止使用网络服务。如果您继续使用网络服务，则视为您接受博远健康管家对服务条款相关条款所做的修改。</view>
+  </view>
+
+  <view class="content-view">
+    <view class="section-title">十、法律管辖：</view>
+    <view class="paragraph">10.1 本服务条款的订立、执行和解释及争议的解决均应适用中国法律。</view>
+    <view class="paragraph">10.2 如双方就本服务条款内容或其执行发生任何争议，双方应尽量友好协商解决；协商不成时，任何一方均可向博远健康管家经营者所在地的人民法院提起诉讼。</view>
+  </view>
+
+  <view class="content-view">
+    <view class="section-title">十一、通知送达</view>
+    <view class="paragraph">11.1 本协议项下博远健康管家对于您所有的通知均可通过网页公告、电子邮件、手机短信或常规的信件传送等方式进行；该等通知于发送之日视为已送达给您。</view>
+    <view class="paragraph">11.2 您对于博远健康管家的通知应当通过博远健康管家对外正式公布的通信地址、传真号码、电子邮件地址等联系信息进行送达。</view>
+  </view>
+
+  <view class="content-view">
+    <view class="section-title">十二、其他规定</view>
+    <view class="paragraph">12.1 本服务条款构成您与博远健康管家对服务条款之约定事项及其他有关事宜的完整协议，除服务条款规定的之外，未赋予服务条款各方其他权利。</view>
+    <view class="paragraph">12.2 如本服务条款中的任何条款无论因何种原因完全或部分无效或不具有执行力，本条款的其余条款仍应有效并且有约束力。</view>
+  </view>
+</scroll-view>

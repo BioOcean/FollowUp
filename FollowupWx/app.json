@@ -1,0 +1,25 @@
+{
+  "pages": [
+    "pages/doctorLogin/doctorLogin",
+    "pages/patientLogin/patientLogin",
+    "pages/debug/debug",
+    "pages/realNameAuth/realNameAuth",
+    "pages/privacyPolicy/privacyPolicy",
+    "pages/agreement/agreement",
+    "pages/terms/terms",
+    "pages/webview/webview",
+    "pages/enter/enter",
+    "pages/message/message",
+    "pages/tomini/tomini"
+  ],
+  "window": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "健康管家",
+    "navigationBarBackgroundColor": "#ffffff"
+  },
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents",
+  "usingComponents": {
+    "van-toast": "@vant/weapp/toast/index"
+  }
+}

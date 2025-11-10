@@ -1,0 +1,168 @@
+/* pages/debug/debug.wxss */
+/* 中文样式说明：调试页面的基础布局与控件样式 */
+
+.debug-container {
+  padding: 24rpx;
+}
+
+.debug-header {
+  margin-bottom: 24rpx;
+}
+
+.debug-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.debug-content {
+  background: #fff;
+  border-radius: 12rpx;
+  padding: 24rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.04);
+}
+
+.input-section {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.input-label {
+  color: #666;
+  font-size: 26rpx;
+}
+
+.path-input {
+  flex: 1;
+  height: 72rpx;
+  line-height: 72rpx;
+  padding: 0 20rpx;
+  border: 1rpx solid #e5e5e5;
+  border-radius: 8rpx;
+  background-color: #fafafa;
+}
+
+.button-section {
+  margin-top: 24rpx;
+}
+
+.navigate-btn {
+  width: 100%;
+}
+
+.tips-section {
+  margin-top: 32rpx;
+}
+
+.tips-title {
+  font-size: 28rpx;
+  color: #333;
+  margin-bottom: 8rpx;
+}
+
+.tips-text {
+  display: block;
+  color: #999;
+  font-size: 24rpx;
+  line-height: 1.8;
+}
+
+/* 页签样式 */
+.tab-section {
+  margin-bottom: 16rpx;
+}
+
+.tab-bar {
+  display: flex;
+  background: #f8f8f8;
+  border-radius: 8rpx;
+  overflow: hidden;
+  border: 1rpx solid #e5e5e5;
+}
+
+.tab-item {
+  flex: 1;
+  padding: 20rpx;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.tab-item.active {
+  background: #007aff;
+}
+
+.tab-item.active .tab-text {
+  color: #fff;
+  font-weight: bold;
+}
+
+.tab-text {
+  color: #666;
+  font-size: 28rpx;
+}
+
+/* 页签内容样式 */
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+/* 小程序跳转表单样式 */
+.form-section {
+  margin-bottom: 24rpx;
+}
+
+.form-item {
+  margin-bottom: 24rpx;
+  display: flex;
+  align-items: center;
+}
+
+.form-label {
+  color: #666;
+  font-size: 28rpx;
+  min-width: 120rpx;
+  margin-right: 16rpx;
+}
+
+.form-input {
+  flex: 1;
+  height: 72rpx;
+  line-height: 72rpx;
+  padding: 0 20rpx;
+  border: 1rpx solid #e5e5e5;
+  border-radius: 8rpx;
+  background-color: #fafafa;
+  font-size: 28rpx;
+}
+
+.form-picker {
+  flex: 1;
+  height: 72rpx;
+}
+
+.picker-display {
+  height: 72rpx;
+  line-height: 72rpx;
+  padding: 0 20rpx;
+  border: 1rpx solid #e5e5e5;
+  border-radius: 8rpx;
+  background-color: #fafafa;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.picker-text {
+  color: #333;
+  font-size: 28rpx;
+}
+
+.picker-arrow {
+  color: #999;
+  font-size: 24rpx;
+}

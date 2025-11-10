@@ -1,0 +1,280 @@
+/* pages/patientMessage/patientMessage.wxss */
+.container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 40rpx;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 80rpx;
+  margin-top: 60rpx;
+}
+
+.logo {
+  width: 120rpx;
+  margin-bottom: 30rpx;
+}
+
+.title {
+  font-size: 48rpx;
+  font-weight: bold;
+  color: #fff;
+  margin-bottom: 10rpx;
+}
+
+.subtitle {
+  font-size: 28rpx;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.permission-tip {
+  display: flex;
+  align-items: flex-start;
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 40rpx;
+  margin-bottom: 40rpx;
+  box-shadow: 0 8rpx 30rpx rgba(0, 0, 0, 0.1);
+}
+
+.tip-icon {
+  width: 100rpx;
+  height: 100rpx;
+  margin-right: 30rpx;
+  flex-shrink: 0;
+}
+
+.tip-text {
+  flex: 1;
+}
+
+.tip-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 20rpx;
+}
+
+.tip-desc {
+  font-size: 28rpx;
+  color: #666;
+  margin-bottom: 10rpx;
+  position: relative;
+  padding-left: 20rpx;
+}
+
+.tip-desc:before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 8rpx;
+  height: 8rpx;
+  background-color: #07c160;
+  border-radius: 50%;
+}
+
+.description {
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 40rpx;
+  margin-bottom: 40rpx;
+  box-shadow: 0 8rpx 30rpx rgba(0, 0, 0, 0.1);
+}
+
+.description text {
+  font-size: 28rpx;
+  color: #666;
+  line-height: 1.6;
+}
+
+/* 授权进度指示器 */
+.auth-progress {
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 40rpx;
+  margin-bottom: 40rpx;
+  box-shadow: 0 8rpx 30rpx rgba(0, 0, 0, 0.1);
+}
+
+.progress-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 30rpx;
+}
+
+.progress-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.step-circle {
+  width: 60rpx;
+  height: 60rpx;
+  border-radius: 50%;
+  background-color: #f5f5f5;
+  color: #999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24rpx;
+  font-weight: bold;
+  margin-bottom: 15rpx;
+  transition: all 0.3s ease;
+}
+
+.progress-step.active .step-circle {
+  background-color: #667eea;
+  color: #fff;
+  transform: scale(1.1);
+}
+
+.progress-step.completed .step-circle {
+  background-color: #07c160;
+  color: #fff;
+}
+
+.step-number {
+  font-size: 24rpx;
+}
+
+.step-check {
+  font-size: 28rpx;
+}
+
+.step-label {
+  font-size: 24rpx;
+  color: #666;
+}
+
+.progress-step.active .step-label {
+  color: #667eea;
+  font-weight: bold;
+}
+
+.progress-step.completed .step-label {
+  color: #07c160;
+  font-weight: bold;
+}
+
+.progress-line {
+  width: 100rpx;
+  height: 4rpx;
+  background-color: #f0f0f0;
+  margin: 0 30rpx;
+  position: relative;
+  top: -30rpx;
+  transition: all 0.3s ease;
+}
+
+.progress-line.completed {
+  background-color: #07c160;
+}
+
+.current-step-hint {
+  text-align: center;
+  font-size: 26rpx;
+  color: #666;
+}
+
+.footer {
+  display: flex;
+  gap: 30rpx;
+  margin-top: 60rpx;
+  justify-content: center;
+  align-items: center;
+}
+
+.auth-btn {
+  min-width: 200rpx;
+  height: 88rpx;
+  border-radius: 44rpx;
+  font-size: 32rpx;
+  font-weight: bold;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 40rpx;
+  transition: all 0.3s ease;
+}
+
+.auth-btn.primary {
+  background: #fff;
+  color: #667eea;
+  box-shadow: 0 4rpx 15rpx rgba(255, 255, 255, 0.3);
+}
+
+.auth-btn.secondary {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  border: 2rpx solid rgba(255, 255, 255, 0.5);
+}
+
+.auth-btn.primary:hover {
+  transform: translateY(-2rpx);
+  box-shadow: 0 6rpx 20rpx rgba(255, 255, 255, 0.4);
+}
+
+.auth-btn.secondary:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* 倒计时信息 */
+.countdown-info {
+  text-align: center;
+  margin-top: 30rpx;
+  font-size: 26rpx;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* 动画效果 */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.permission-tip,
+.description,
+.auth-progress {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.permission-tip {
+  animation-delay: 0.1s;
+}
+
+.description {
+  animation-delay: 0.2s;
+}
+
+.auth-progress {
+  animation-delay: 0.3s;
+}
+
+.footer {
+  animation: fadeInUp 0.6s ease-out;
+  animation-delay: 0.4s;
+}
