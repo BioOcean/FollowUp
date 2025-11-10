@@ -1,0 +1,53 @@
+﻿@namespace FollowUp.Components
+@attribute [AllowAnonymous]
+
+@code {
+    protected CubeDbContext? _context { get; private set; }
+
+    [Inject] protected IDbContextFactory<CubeDbContext> ContextFactory { get; set; } = default!;
+    [Inject] ILogger<BasePage> inj_Logger { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        ArgumentNullException.ThrowIfNull(ContextFactory, nameof(ContextFactory));
+        _context = await ContextFactory.CreateDbContextAsync();
+
+        // 检查认证状态，未认证则跳转到登录页
+        var isAuthenticated = inj_httpContextAccessor.HttpContext?.User?.Identity?.IsAuthenticated == true;
+        var isLoginPage = inj_navigationManager.Uri.Contains("/login");
+
+        // 未认证且不在登录页，跳转到登录页
+        if (!isAuthenticated && !isLoginPage)
+        {
+            inj_navigationManager.NavigateTo("/login", true);
+            return;
+        }
+
+        await OnPageInitializedAsync();
+
+        await base.OnInitializedAsync();
+       
+    }
+
+    // 提供一个虚方法供子类重写，实现自己的初始化逻辑
+    protected virtual Task OnPageInitializedAsync() => Task.CompletedTask;
+
+    protected virtual async Task OnPageDisposedAsync() => await Task.CompletedTask;
+
+    public async ValueTask DisposeAsync()
+    {
+        await DisposeAsyncCore().ConfigureAwait(false);
+
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual async ValueTask DisposeAsyncCore()
+    {
+        if (_context != null)
+        {
+            await _context.DisposeAsync().ConfigureAwait(false);
+            _context = null;
+        }
+        await OnPageDisposedAsync();
+    }
+}

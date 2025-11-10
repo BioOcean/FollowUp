@@ -1,0 +1,47 @@
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- Bio 系列包 -->
+    <PackageVersion Include="Bio.AI" Version="1.1.4" />
+    <PackageVersion Include="Bio.Common" Version="0.2.902" />
+    <PackageVersion Include="Bio.Core" Version="0.2.1106.1" />
+    <PackageVersion Include="Bio.FormSetLib" Version="0.1.1110.1" />
+    <PackageVersion Include="Bio.Models" Version="0.2.1010.5" />
+    <PackageVersion Include="Bio.Shared" Version="0.2.927" />
+    <!-- Blazor UI 框架 -->
+    <PackageVersion Include="BootstrapBlazor" Version="9.11.2" />
+    <PackageVersion Include="BootstrapBlazor.FontAwesome" Version="9.1.2" />
+    <PackageVersion Include="HtmlSanitizer" Version="9.0.886" />
+    <PackageVersion Include="MudBlazor" Version="8.13.0" />
+    <!-- Microsoft ASP.NET Core 包 -->
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.10" />
+    <PackageVersion Include="Microsoft.AspNetCore.Components.Authorization" Version="9.0.7" />
+    <PackageVersion Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="9.0.10" />
+    <!-- Entity Framework Core -->
+    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="9.0.10" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.10" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.10" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.10" />
+    <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
+    <PackageVersion Include="Microsoft.Data.SqlClient" Version="6.1.2" />
+    <PackageVersion Include="EFCore.BulkExtensions" Version="9.0.2" />
+    <!-- Microsoft Extensions -->
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.10" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.10" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.10" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.Binder" Version="9.0.10" />
+    <PackageVersion Include="Microsoft.Extensions.Options" Version="9.0.10" />
+    <PackageVersion Include="Microsoft.Extensions.Caching.Abstractions" Version="9.0.10" />
+    <!-- 数据处理和工具包 -->
+    <PackageVersion Include="System.Text.Json" Version="9.0.10" />
+    <PackageVersion Include="System.Linq.Dynamic.Core" Version="1.6.9" />
+    <!-- 日志和监控 -->
+    <PackageVersion Include="NLog.Web.AspNetCore" Version="6.0.5" />
+    <!-- 开发工具 -->
+    <PackageVersion Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.22.1" />
+    <!-- 系统组件 -->
+    <PackageVersion Include="System.ComponentModel.Annotations" Version="5.0.0" />
+  </ItemGroup>
+</Project>

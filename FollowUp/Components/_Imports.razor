@@ -1,0 +1,66 @@
+﻿// 系统标准库
+@using System.Net.Http
+@using System.Net.Http.Json
+@using System.Text
+@using System.Text.Json
+@using System.Text.Json.Serialization
+@using System.Text.RegularExpressions
+@using System.Globalization
+
+// Microsoft AspNetCore相关
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Routing
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.AspNetCore.Components.Web.Virtualization
+@using Microsoft.AspNetCore.WebUtilities
+@using static Microsoft.AspNetCore.Components.Web.RenderMode
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.Extensions.Logging
+@using Microsoft.JSInterop
+@using Microsoft.Extensions.Configuration
+
+// FollowUp项目相关
+@using FollowUp
+@using FollowUp.Components
+@using FollowUp.Components.Layout
+@using FollowUp.Components.Shared
+
+// Bio相关库
+@using Bio.Shared.Interfaces
+@using Bio.Shared.Services
+@using Bio.Models
+
+// 默认页面要求认证（白名单页面使用 [AllowAnonymous]）
+@attribute [Authorize]
+
+// 第三方UI库 - MudBlazor
+@using MudBlazor
+@using MudBlazor.Services
+@using MudDialogResult = MudBlazor.DialogResult
+
+// 第三方UI库 - BootstrapBlazor
+@using BootstrapBlazor.Components
+
+// 依赖注入
+@inject NavigationManager inj_navigationManager
+@inject ISnackbar inj_snackbar
+@inject IJSRuntime inj_jsRuntime
+@inject IConfiguration inj_configuration
+@inject IHttpContextAccessor inj_httpContextAccessor
+@inject LocalStorageService inj_LocalStorageService
+
+// 解决命名冲突的类型别名 - BootstrapBlazor
+@using BColor = BootstrapBlazor.Components.Color
+@using BSize = BootstrapBlazor.Components.Size
+@using BPlacement = BootstrapBlazor.Components.Placement
+@using BBreadcrumbItem = BootstrapBlazor.Components.BreadcrumbItem
+@using BTransition = BootstrapBlazor.Components.Transition
+
+// 解决命名冲突的类型别名 - MudBlazor
+@using Color = MudBlazor.Color
+@using Size = MudBlazor.Size
+@using Placement = MudBlazor.Placement
+@using BreadcrumbItem = MudBlazor.BreadcrumbItem
+@using Transition = MudBlazor.Transition

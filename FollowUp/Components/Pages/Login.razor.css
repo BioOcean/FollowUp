@@ -1,0 +1,67 @@
+.div-login {
+	width: 100%;
+	height: 100vh;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	position: relative;
+}
+
+.bioo-input-user {
+	background-image: url('/images/login-account.png');
+	background-position: 10px center;
+	background-repeat: no-repeat;
+	background-size: 20px;
+	padding-left: 35px;
+	margin-top: 10px;
+}
+
+.div-input-pwd {
+	margin-top: 15px;
+	position: relative;
+}
+
+.login-pwd {
+	background-image: url('/images/login-pwd.png');
+	background-position: 10px center;
+	background-repeat: no-repeat;
+	background-size: 20px;
+	padding-left: 35px;
+	width: 100%;
+}
+
+.icon-pwd {
+	position: absolute;
+	right: 12px;
+	top: 50%;
+	transform: translateY(-50%);
+	cursor: pointer;
+	color: var(--bioo-text-secondary);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.login-bg {
+	position: absolute;
+	width:100vw;
+	height:100vh;
+	z-index: 1;
+	object-fit: cover;
+	object-position:center;
+}
+
+.login-left-logo {
+	position: absolute;
+	z-index: 2;
+	left: 5%;
+	top: 5%;
+}
+
+.language-switcher-container {
+	position: absolute;
+	z-index: 3;
+	right: 5%;
+	top: 5%;
+}
+

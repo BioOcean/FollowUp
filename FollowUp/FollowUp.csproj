@@ -1,0 +1,33 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+	<PropertyGroup>
+		<TargetFramework>net9.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<UserSecretsId>72641905-a0ff-4858-969c-6f1001a1ead4</UserSecretsId>
+		<DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Bio.Common" />
+		<PackageReference Include="Bio.Core" />
+		<PackageReference Include="Bio.FormSetLib" />
+		<PackageReference Include="Bio.Shared" />
+		<PackageReference Include="BootstrapBlazor" />
+		<PackageReference Include="BootstrapBlazor.FontAwesome" />
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
+		<PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" PrivateAssets="all" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+		<PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" />
+		<PackageReference Include="MudBlazor" />
+		<PackageReference Include="NLog.Web.AspNetCore" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Update="certs\debug.bio-ocean.com.pfx">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+
+</Project>

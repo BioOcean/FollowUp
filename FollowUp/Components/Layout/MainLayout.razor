@@ -1,0 +1,25 @@
+﻿@inherits LayoutComponentBase
+
+<MudThemeProvider IsDarkMode="false" Theme="BiooTheme"/>
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<MudLayout Class="layout-container">
+    <MudMainContent Class="main-content">
+        @Body
+    </MudMainContent>
+</MudLayout>
+
+@code {
+    MudTheme BiooTheme = new MudTheme()
+    {
+        PaletteLight = new PaletteLight()
+        {
+            Primary = "#18b797",
+            Secondary = "#01A63E",
+            Error = "#ED5565",
+            Success = "#23C6C8"
+        }
+    };
+}

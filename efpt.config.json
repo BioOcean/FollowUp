@@ -1,0 +1,108 @@
+﻿{
+   "CodeGenerationMode": 4,
+   "ContextClassName": "CareDbContext",
+   "ContextNamespace": null,
+   "FilterSchemas": false,
+   "IncludeConnectionString": false,
+   "ModelNamespace": null,
+   "OutputContextPath": null,
+   "OutputPath": "Models",
+   "PreserveCasingWithRegex": true,
+   "ProjectRootNamespace": "Bio",
+   "Schemas": null,
+   "SelectedHandlebarsLanguage": 2,
+   "SelectedToBeGenerated": 0,
+   "T4TemplatePath": null,
+   "Tables": [
+      {
+         "Name": "Form.Form_Card",
+         "ObjectType": 0
+      },
+      {
+         "Name": "Form.Form_Form",
+         "ObjectType": 0
+      },
+      {
+         "Name": "Form.Form_FormSet",
+         "ObjectType": 0
+      },
+      {
+         "Name": "Form.Form_Project",
+         "ObjectType": 0
+      },
+      {
+         "Name": "Form.Form_Question",
+         "ObjectType": 0
+      },
+      {
+         "Name": "public.ColumnDefinition",
+         "ObjectType": 0
+      },
+      {
+         "Name": "public.TableDefinition",
+         "ObjectType": 0
+      },
+      {
+         "Name": "System.Sys_Department",
+         "ObjectType": 0
+      },
+      {
+         "Name": "System.Sys_Hospital",
+         "ObjectType": 0
+      },
+      {
+         "Name": "System.Sys_Map_Role_Permission",
+         "ObjectType": 0
+      },
+      {
+         "Name": "System.Sys_Map_User_Role",
+         "ObjectType": 0
+      },
+      {
+         "Name": "System.Sys_Permission",
+         "ObjectType": 0
+      },
+      {
+         "Name": "System.Sys_Region",
+         "ObjectType": 0
+      },
+      {
+         "Name": "System.Sys_Role",
+         "ObjectType": 0
+      },
+      {
+         "Name": "System.Sys_User",
+         "ObjectType": 0
+      },
+      {
+         "Name": "System.Sys_Ward",
+         "ObjectType": 0
+      }
+   ],
+   "UiHint": null,
+   "UncountableWords": null,
+   "UseAsyncStoredProcedureCalls": true,
+   "UseBoolPropertiesWithoutDefaultSql": false,
+   "UseDatabaseNames": true,
+   "UseDatabaseNamesForRoutines": true,
+   "UseDateOnlyTimeOnly": true,
+   "UseDbContextSplitting": false,
+   "UseDecimalDataAnnotationForSprocResult": true,
+   "UseFluentApiOnly": true,
+   "UseHandleBars": false,
+   "UseHierarchyId": false,
+   "UseInflector": true,
+   "UseLegacyPluralizer": false,
+   "UseManyToManyEntity": false,
+   "UseNoDefaultConstructor": false,
+   "UseNoNavigations": false,
+   "UseNoObjectFilter": false,
+   "UseNodaTime": false,
+   "UseNullableReferences": false,
+   "UsePrefixNavigationNaming": false,
+   "UseSchemaFolders": false,
+   "UseSchemaNamespaces": false,
+   "UseSpatial": false,
+   "UseT4": false,
+   "UseT4Split": false
+}

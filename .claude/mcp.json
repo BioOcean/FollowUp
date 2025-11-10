@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "ntcare-code-quality": {
+      "command": "node",
+      "args": [
+        "D:/GitHub/NTCare/.mcp/ntcare-code-quality/dist/index.js"
+      ],
+      "env": {
+        "PROJECT_ROOT": "D:/GitHub/NTCare"
+      }
+    }
+  }
+}

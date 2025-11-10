@@ -1,0 +1,7 @@
+﻿root = true
+
+[*.razor]
+dotnet_diagnostic.MUD0002.severity = none
+
+[*.cshtml]
+dotnet_diagnostic.MUD0002.severity = none

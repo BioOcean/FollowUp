@@ -1,0 +1,191 @@
+﻿@page "/login"
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@layout FullScreenLayout
+@attribute [AllowAnonymous]
+@inject ILogger<Login> logger
+
+<PageTitle>用户登录</PageTitle>
+
+<div class="div-login">
+
+    @* 左上角logo *@
+    @if (!string.IsNullOrEmpty(hospitalLogoUrl))
+    {
+            <img src="@hospitalLogoUrl" width="340" height="74" class="login-left-logo" />
+    }
+    @* 背景图 *@
+    <img src="@loginBgUrl"  class="login-bg" />
+    @* 右上角语言切换按钮 *@
+
+@*     <div class="language-switcher-container">
+        <LanguageSwitcher />
+    </div>
+ *@
+    <MudPaper Class="pa-4 z-2 d-flex flex-column" Elevation="3" Width="360px" Height="380px">
+        <div class="d-flex align-items-center flex-column mt-3">
+            @if (!isShowLogo)
+            {
+                <h4>@loginHospitalTitle</h4>
+            }
+            else
+            {
+                    <img src="@hospitalLogoUrl" alt="logo" height="40" class="mt-1" />
+            } 
+            @* 副标题 *@
+            @if (isShowSecondTitle)
+            {
+                <h6 class="mt-4">专科一体智能数据系统</h6>
+            }
+        </div>
+        <MudForm Class="mt-3">
+            <input type="text" class="bioo-input  bioo-input-user" placeholder="请输入用户名" maxlength="12"
+            @bind-value="Account" />
+            <div class="div-input-pwd ">
+                <input type="@(_isShow ? "text" : "password")" class="bioo-input login-pwd" placeholder="请输入密码"
+                maxlength="20" @bind-value="Password" @onkeypress="HandleKeyPress" @bind-value:event="oninput" />
+                <div class="icon-pwd" @onclick="SwitchPasswordVisibility">
+                    <MudIcon
+                    Icon="@(_isShow? Icons.Material.Filled.Visibility : Icons.Material.Filled.VisibilityOff)" />
+                </div>
+            </div>
+
+            <div class="mt-3" style="color:red">@loginMsg</div>
+
+            <button class="bioo-btn mt-5" type="normal" @onclick="Signin" @onclick:preventDefault>登录</button>
+        </MudForm>
+        <div class="d-flex justify-content-center align-items-end" style="height:100%">
+            <img src="images/logo.png" alt="logo" height="35" />
+        </div>
+    </MudPaper>   
+</div>
+
+@code {
+
+
+    [Parameter]
+    public string returnUrl { get; set; } = string.Empty;
+    string _account { get; set; } = "";
+    string _password { get; set; } = "";
+
+    private string Account
+    {
+        get => _account;
+        set
+        {
+            _account = value;
+            ClearLoginMsg();
+        }
+    }
+
+    private string Password
+    {
+        get => _password;
+        set
+        {
+            _password = value;
+            ClearLoginMsg();
+        }
+    }
+    string[] errors = [];
+    bool isShowLogo = true; //是否显示logo； logo与标题互斥
+    bool isShowSecondTitle = true; //是否显示副标题；
+    string loginMsg = "";
+    private string hospitalLogoUrl = "";
+    private string loginBgUrl = ""; //背景图
+    private string loginHospitalTitle = "";
+    private string subTitle = ""; //副标题
+    private bool _isInitialized = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        logger.LogWarning("登录页面初始化 OnPageInitializedAsync");
+
+        await base.OnInitializedAsync();
+
+        if (_isInitialized)
+        {
+            logger.LogWarning("登录页面初始化 - 已初始化，跳过");
+            return;
+        }
+        _isInitialized = true;
+
+        // 检查用户是否已登录
+        // var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        // if (authState.User.Identity != null && authState.User.Identity.IsAuthenticated)
+        // {
+        //     logger.LogWarning("用户已登录，跳NavigateTo LoginSystem");
+        //     inj_navigationManager.NavigateTo("/LoginSystem", true);  // 使用replace=true强制刷新
+        //     return;
+        // }
+
+        logger.LogWarning("登录页面初始化 - 首次初始化");
+
+        hospitalLogoUrl = inj_configuration.GetValue<string>("AppSettings:hospitalLogo") ?? string.Empty;
+        loginBgUrl = inj_configuration.GetValue<string>("AppSettings:loginBg") ?? string.Empty;
+        isShowLogo = inj_configuration.GetValue<bool>("AppSettings:showLoginTitleLogo");
+        isShowSecondTitle = !string.IsNullOrEmpty(inj_configuration.GetValue<string>("AppSettings:subTitle"));
+        loginHospitalTitle = inj_configuration.GetValue<string>("AppSettings:loginHospitalTitle") ?? string.Empty;
+        subTitle = inj_configuration.GetValue<string>("AppSettings:subTitle") ?? string.Empty;
+    }
+
+    private async Task Signin()
+    {
+        logger.LogWarning("登录页面登录 Signin");
+        if (string.IsNullOrWhiteSpace(_account) || string.IsNullOrWhiteSpace(_password))
+        {
+            loginMsg = "请输入正确的用户名和密码"; // 与 NTCare AuthResources.Login_Error_EmptyFields 一致
+            return;
+        }
+        try
+        {
+            logger.LogWarning("登录页面登录 Signin 开始");
+
+            // 使用浏览器 fetch 调用登录端点，确保Cookie由浏览器保存
+            try
+            {
+                // 登录前清空旧 userId，避免 ForUser 作用域串号
+                try { await inj_jsRuntime.InvokeVoidAsync("bioAuthClearUserId"); } catch { }
+
+                await inj_jsRuntime.InvokeVoidAsync("bioAuthLogin", inj_navigationManager.BaseUri, _account, _password);
+
+                logger.LogWarning("登录API成功，Cookie已由浏览器保存");
+                
+                // 登录成功后跳转到首页
+                inj_navigationManager.NavigateTo("/", forceLoad: true);
+            }
+            catch (Exception exLogin)
+            {
+                logger.LogWarning(exLogin, "登录失败");
+                loginMsg = "登录失败，请稍后重试"; // 与 NTCare AuthResources.Login_Error_GeneralFailure 一致
+            }
+        }
+        catch (Exception e)
+        {
+            loginMsg = "网络错误，请重试"; // 与 NTCare AuthResources.Login_Error_NetworkError 一致
+            logger.LogError(e, "登录发生异常");
+        }
+    }
+
+    //password visibility
+    bool _isShow;
+    void SwitchPasswordVisibility()
+    {
+        _isShow = !_isShow;
+    }
+
+    private void ClearLoginMsg()
+    {
+        if (!string.IsNullOrWhiteSpace(loginMsg))
+        {
+            loginMsg = "";
+        }
+    }
+
+    private async Task HandleKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await Signin();
+        }
+    }
+}
