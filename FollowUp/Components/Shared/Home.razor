@@ -1,4 +1,32 @@
 @page "/"
 @inherits BasePage
-<PageTitle>FollowUp Index</PageTitle>
+@attribute [AllowAnonymous]
+
+<PageTitle>FollowUp 随访管理系统</PageTitle>
+
+@code {
+    protected override async Task OnPageInitializedAsync()
+    {
+        // TODO: [核心服务迁移] - 需要先迁移以下服务才能实现完整的角色路由功能
+        // 缺少的服务：
+        // 1. ICacheService - 缓存服务（用于存储用户角色、权限等信息）
+        // 2. IUserContextService - 用户上下文服务（获取用户的医院、科室、课题信息）
+        // 3. ILoginService - 登录服务（获取用户权限数据）
+        // 4. MemoryCacheKeys - 缓存键枚举
+        //
+        // 迁移完成后，需要实现以下功能：
+        // - 从 Claims 或缓存获取用户角色
+        // - 根据角色优先级跳转到不同页面：
+        //   医院管理员 → /hospitalMain
+        //   科室管理员 → /departmentMain
+        //   课题管理员 → /projectMain
+        //   随访角色 → /followupTaskManager/PendingReview
+        //   系统管理员 → /adminMain
+        //   默认 → /followupTaskManager/PendingReview
+        
+        // 临时方案：直接跳转到管理员主页进行测试
+        inj_navigationManager.NavigateTo("/adminMain", true);
+        await Task.CompletedTask;
+    }
+}
 

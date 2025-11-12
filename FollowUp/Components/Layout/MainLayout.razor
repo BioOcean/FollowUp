@@ -5,13 +5,171 @@
 <MudDialogProvider />
 <MudSnackbarProvider />
 
-<MudLayout Class="layout-container">
-    <MudMainContent Class="main-content">
+<MudLayout>
+    <MudAppBar Style="background-color:var(--bioo-main)">
+        <MudText Typo="Typo.h5" Color="Color.Inherit">@systemName</MudText>
+        <MudSpacer />
+        <MudText Style="cursor:pointer" @onclick="OnLogoutClick">@HelloMsg() @userName</MudText>
+    </MudAppBar>
+    
+    @* TODO: [导航菜单] - 添加侧边导航栏（NavMenu）
+         参考 NTCare 的实现，需要创建：
+         1. NavMenuForFollowup.razor - 随访系统导航菜单
+         2. 根据用户角色显示不同的菜单项
+         3. 支持折叠/展开功能
+         4. 根据 URL 判断是否显示菜单（AdminMain、HospitalMain、DepartmentMain 不显示）
+    *@
+    @* <MudDrawer @bind-Open="@drawerOpen"
+                ClipMode="DrawerClipMode.Always"
+                Variant="DrawerVariant.Mini"
+                Width="200px"
+                Elevation="1"
+                DisableOverlay="true"
+                Class="main-drawer">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu"
+                       OnClick="@ToggleDrawer"
+                       Style="width:45px;margin-left:5px;color:#fff"
+                       Size="Size.Medium" />
+        <NavMenuForFollowup />
+    </MudDrawer> *@
+    
+    <MudMainContent>
         @Body
     </MudMainContent>
 </MudLayout>
 
+<MudMessageBox @ref="logoutMsgBox" Title="提示">
+    <MessageContent>
+        <h6 style="width:300px;">是否退出登录？</h6>
+    </MessageContent>
+    <YesButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Error" Class="ml-4" OnClick="OnConfirmLogout">退出</MudButton>
+    </YesButton>
+    <NoButton>
+        <MudButton Variant="Variant.Outlined">取消</MudButton>
+    </NoButton>
+</MudMessageBox>
+
 @code {
+    [Inject] private IDialogService inj_dialogService { get; set; } = default!;
+    
+    private bool drawerOpen = true;
+    private string userName = "";
+    private string systemName = "";
+    private MudMessageBox? logoutMsgBox;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        // 极简实现：从配置文件读取系统名称
+        // FollowUp 单系统设计，登录页和主界面显示相同的 loginHospitalTitle
+        systemName = inj_configuration["AppSettings:loginHospitalTitle"] ?? "健康管家";
+
+        // 获取当前用户信息
+        var httpContext = inj_httpContextAccessor.HttpContext;
+        var user = httpContext?.User;
+
+        if (user?.Identity?.IsAuthenticated == true)
+        {
+            // 优先显示显示名，其次用户名（与 NTCare 完全一致）
+            userName = user.FindFirst("displayName")?.Value
+                ?? user.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value
+                ?? user.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value
+                ?? string.Empty;
+        }
+        
+        await base.OnInitializedAsync();
+    }
+    
+    private void ToggleDrawer()
+    {
+        drawerOpen = !drawerOpen;
+    }
+    
+    private async Task OnLogoutClick()
+    {
+        if (logoutMsgBox != null)
+        {
+            var result = await logoutMsgBox.ShowAsync();
+            if (result == true)
+            {
+                await OnConfirmLogout();
+            }
+        }
+    }
+    
+    private async Task OnConfirmLogout()
+    {
+        // 极简注销实现：直接调用 JS 清理 Cookie 并跳转
+        // FollowUp 不使用缓存服务，所以只需清理前端状态
+        try
+        {
+            // 清理 localStorage 中的 userId
+            await inj_jsRuntime.InvokeVoidAsync("bioAuthClearUserId");
+        }
+        catch
+        {
+            // 忽略清理异常
+        }
+
+        try
+        {
+            // 调用 JS 注销（清理 HttpOnly Cookie）
+            await inj_jsRuntime.InvokeVoidAsync("bioAuthLogout", inj_navigationManager.BaseUri);
+        }
+        catch
+        {
+            // 忽略异常，继续跳转
+        }
+
+        // 跳转到登录页
+        inj_navigationManager.NavigateTo("/login", true);
+    }
+
+    /// <summary>
+    /// 根据当前时间生成问候语
+    /// 完全复制 NTCare 的实现
+    /// </summary>
+    private string HelloMsg()
+    {
+        var msg = "";
+        int hour = DateTime.Now.Hour;
+        switch (hour)
+        {
+            case 0:
+            case 1:
+            case 2:
+            case 3:
+            case 4:
+            case 19:
+            case 20:
+            case 21:
+            case 22:
+            case 23:
+                msg = "晚上好！";
+                break;
+            case 14:
+            case 15:
+            case 16:
+            case 17:
+            case 18:
+                msg = "下午好！";
+                break;
+            case 11:
+            case 12:
+            case 13:
+                msg = "中午好！";
+                break;
+            case 9:
+            case 10:
+                msg = "上午好！";
+                break;
+            default:
+                msg = "早上好！";
+                break;
+        }
+        return msg;
+    }
+
     MudTheme BiooTheme = new MudTheme()
     {
         PaletteLight = new PaletteLight()

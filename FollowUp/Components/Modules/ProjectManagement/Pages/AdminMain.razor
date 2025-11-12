@@ -1,0 +1,274 @@
+@page "/adminMain"
+@using Microsoft.EntityFrameworkCore
+@using FollowUp.Services.Extension
+@inherits BasePage
+@inject ILogger<AdminMain> inj_logger
+
+<PageTitle>管理员主页</PageTitle>
+
+<div class="admin-main-container">
+
+    @if (isLoading)
+    {
+        <div class="d-flex justify-center align-center" style="height: 200px;">
+            <MudProgressCircular Size="Size.Large" Indeterminate="true" />
+            <MudText Class="ml-3">正在加载数据...</MudText>
+        </div>
+    }
+    else if (!hasPermission)
+    {
+        <div class="d-flex justify-center align-center" style="height: 200px;">
+            <MudText Color="Color.Error" Typo="Typo.h6">您没有访问此页面的权限。</MudText>
+        </div>
+    }
+    else if (hospitalProjects == null || !hospitalProjects.Any())
+    {
+        <div class="d-flex justify-center align-center" style="height: 200px;">
+            <MudText Color="Color.Warning" Typo="Typo.h6">暂无数据可显示。</MudText>
+        </div>
+    }
+    else
+    {
+        <MudGrid>
+            @foreach (var item in hospitalProjects)
+            {
+                <MudItem xs="3">
+                    <MudPaper Height="160px" Class="d-flex justify-content-center align-items-center flex-column admin-paper" @onclick="@(() => PageToHospital(item.hospitalId))">
+                        <p class="admin-title">@item.hospitalName</p>
+                        @if (item.hospitalId != Guid.Empty)
+                        {
+                            <div>
+                                <p class="admin-content">@($"课题项目: {item.projects.Count} 个")</p>
+                                <p class="admin-content">
+                                    @if (!item.isStatisticsLoaded)
+                                    {
+                                        <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+                                        <span class="ml-1">加载中...</span>
+                                    }
+                                    else
+                                    {
+                                        @($"患者: {item.patientsNum} 个")
+                                    }
+                                </p>
+                                <p class="admin-content">
+                                    @if (!item.isStatisticsLoaded)
+                                    {
+                                        <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+                                        <span class="ml-1">加载中...</span>
+                                    }
+                                    else
+                                    {
+                                        @($"随访任务: {item.followupTasksNum} 个")
+                                    }
+                                </p>
+                            </div>
+                        }
+                    </MudPaper>
+                </MudItem>
+            }
+        </MudGrid>
+    }
+
+</div>
+
+
+@code {
+    private List<HospitalProject> hospitalProjects = new();
+    private bool isLoading = true;
+    private bool hasPermission = false;
+
+    protected override async Task OnPageInitializedAsync()
+    {
+        // AdminMain 是系统管理员的全局视图，不需要清除缓存
+        // （NTCare 中清除缓存是为了重置"当前选择的医院/科室/课题"状态）
+        // FollowUp 采用更简单的设计：全局视图不维护"当前选择"状态
+
+        // 异步加载数据，不阻塞UI渲染
+        _ = Task.Run(async () =>
+        {
+            await LoadData();
+            await InvokeAsync(StateHasChanged);
+        });
+        
+        await Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// 检查当前用户是否有系统管理员权限
+    /// </summary>
+    private Task<bool> CheckPermissionAsync()
+    {
+        try
+        {
+            // 极简方案：直接从 Claims 读取角色信息，不使用缓存
+            var user = inj_httpContextAccessor.HttpContext?.User;
+            if (user?.Identity?.IsAuthenticated == true)
+            {
+                var roles = user.FindAll("roleName")
+                    .Select(c => System.Text.RegularExpressions.Regex.Unescape(c.Value))
+                    .ToList();
+                var roleNames = string.Join(",", roles);
+                return Task.FromResult(!string.IsNullOrEmpty(roleNames) && roleNames.Contains("系统"));
+            }
+            return Task.FromResult(false);
+        }
+        catch (Exception ex)
+        {
+            inj_logger.LogError(ex, "AdminMain 检查权限时发生错误");
+            return Task.FromResult(false);
+        }
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            isLoading = true;
+
+            hasPermission = await CheckPermissionAsync();
+
+            if (!hasPermission)
+            {
+                inj_logger.LogWarning("用户访问 AdminMain 页面权限不足");
+                isLoading = false;
+                return;
+            }
+
+            // 性能优化：分步加载，先显示基本信息，再加载统计数据
+            // 第一步：快速加载医院基本信息和课题项目
+            var basicHospitalInfo = await _context.form_form_set
+                .Where(s => s.type == "followup")
+                .Include(s => s.hospital)
+                .Include(s => s.project)
+                .GroupBy(s => new { s.hospital_id, s.hospital.name })
+                .Select(g => new HospitalProject
+                {
+                    hospitalId = g.Key.hospital_id,
+                    hospitalName = g.Key.name ?? "",
+                    projects = g.Select(s => s.project).Distinct().ToList(),
+                    patientsNum = 0, // 暂时为0，后续异步加载
+                    followupTasksNum = 0 // 暂时为0，后续异步加载
+                })
+                .ToListAsync();
+
+            // 添加系统管理入口
+            basicHospitalInfo.Insert(0, new HospitalProject
+            {
+                hospitalId = Guid.Empty,
+                hospitalName = "系统管理",
+                projects = new(),
+                patientsNum = 0,
+                followupTasksNum = 0
+            });
+
+            hospitalProjects = basicHospitalInfo;
+            isLoading = false;
+
+            // 第二步：异步加载统计数据，不阻塞UI
+            _ = Task.Run(async () =>
+            {
+                await LoadStatisticsData();
+                await InvokeAsync(StateHasChanged);
+            });
+        }
+        catch (Exception ex)
+        {
+            inj_logger.LogError(ex, "加载 AdminMain 基本数据时发生错误");
+            isLoading = false;
+
+            // 确保即使出错也有基本的系统管理入口
+            hospitalProjects = new List<HospitalProject>
+            {
+                new HospitalProject
+                {
+                    hospitalId = Guid.Empty,
+                    hospitalName = "系统管理",
+                    projects = new(),
+                    patientsNum = 0,
+                    followupTasksNum = 0
+                }
+            };
+        }
+    }
+
+    private async Task LoadStatisticsData()
+    {
+        try
+        {
+            // 批量加载统计数据
+            var hospitalIds = hospitalProjects.Where(h => h.hospitalId != Guid.Empty).Select(h => h.hospitalId).ToList();
+
+            if (!hospitalIds.Any()) return;
+
+            // 批量查询患者数量
+            var patientCounts = await _context.patient
+                .Where(p => hospitalIds.Contains(p.hospital_id) && p.source_type == "followup" && p.is_valid == true)
+                .GroupBy(p => p.hospital_id)
+                .Select(g => new { HospitalId = g.Key, Count = g.Count() })
+                .ToListAsync();
+
+            // 批量查询随访任务数量（使用 patient_event 表，优化后的查询）
+            var followupEventTypes = FollowupEventTypeExtensions.GetFollowupEventTypes();
+
+            var followupCounts = await _context.patient_event
+                .Join(_context.patient,
+                    pe => pe.patient_id,
+                    p => p.id,
+                    (pe, p) => new { pe.event_type, p.hospital_id })
+                .Where(x => hospitalIds.Contains(x.hospital_id) && followupEventTypes.Contains(x.event_type))
+                .GroupBy(x => x.hospital_id)
+                .Select(g => new { HospitalId = g.Key, Count = g.Count() })
+                .ToListAsync();
+
+            // 更新统计数据
+            foreach (var hospital in hospitalProjects.Where(h => h.hospitalId != Guid.Empty))
+            {
+                hospital.patientsNum = patientCounts.FirstOrDefault(pc => pc.HospitalId == hospital.hospitalId)?.Count ?? 0;
+                hospital.followupTasksNum = followupCounts.FirstOrDefault(fc => fc.HospitalId == hospital.hospitalId)?.Count ?? 0;
+                hospital.isStatisticsLoaded = true; // 标记统计数据已加载
+            }
+        }
+        catch (Exception ex)
+        {
+            inj_logger.LogError(ex, "加载 AdminMain 统计数据时发生错误");
+
+            // 即使出错也要标记为已加载，避免一直显示"加载中"
+            foreach (var hospital in hospitalProjects.Where(h => h.hospitalId != Guid.Empty))
+            {
+                hospital.isStatisticsLoaded = true;
+            }
+        }
+    }
+
+    private void PageToHospital(Guid hospitalId)
+    {
+        if (hospitalId == Guid.Empty)
+        {
+            // TODO: [科室管理] - 实现科室管理页面
+            // 功能说明：系统管理入口，用于管理科室、用户等系统级功能
+            // 跳转来源：AdminMain 页面点击"系统管理"卡片
+            // 路由参数：无
+            inj_navigationManager.NavigateTo("/followupDeptMgr");
+        }
+        else
+        {
+            // TODO: [医院主页] - 实现医院主页
+            // 功能说明：显示医院下的科室、课题、统计数据
+            // 跳转来源：AdminMain 页面点击医院卡片
+            // 路由参数：hospitalId - 医院ID
+            inj_navigationManager.NavigateTo($"/hospitalMain?hospitalId={hospitalId}");
+        }
+    }
+
+
+    private class HospitalProject
+    {
+        public Guid hospitalId { get; set; }
+        public string hospitalName { get; set; } = "";
+        public List<form_project> projects { get; set; } = new();
+        public int patientsNum { get; set; } = 0;
+        public int followupTasksNum { get; set; } = 0;
+        public bool isStatisticsLoaded { get; set; } = false; // 统计数据加载状态
+    }
+}
+
