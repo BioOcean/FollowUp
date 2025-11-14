@@ -1,11 +1,13 @@
 using Bio.Shared.Services;
 using Bio.Models;
 using FollowUp.Components;
+using FollowUp.Components.Modules.ProjectManagement.Services;
 using Microsoft.EntityFrameworkCore;
 using MudBlazor.Services;
 using NLog.Web;
 using System.Globalization;
 using Bio.Core.Authentication;
+using FollowUp.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,10 +15,24 @@ var cultureInfo = new CultureInfo("zh-CN");
 CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
 CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
 
-
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+// 配置 Circuit 选项以显示详细错误（开发环境）
+builder.Services.Configure<Microsoft.AspNetCore.Components.Server.CircuitOptions>(options =>
+{
+    if (builder.Environment.IsDevelopment())
+    {
+        options.DetailedErrors = true;
+    }
+});
+
+// 注册用户上下文服务
+builder.Services.AddScoped<IUserContextService, UserContextService>();
+
+// 注册项目管理模块服务
+builder.Services.AddProjectManagementServices();
 
 // 清除现有的日志提供程序
 builder.Logging.ClearProviders();
@@ -31,9 +47,9 @@ builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
 // 配置数据库
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 builder.Services.AddDbContextFactory<CubeDbContext>(options => options
-    .UseNpgsql(connectionString, npgsqlOptions => {
+    .UseNpgsql(connectionString, npgsqlOptions =>
+    {
         npgsqlOptions.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
-        // 添加DateTime转换设置，将UTC时间转换为不带时区信息的本地时间
         npgsqlOptions.SetPostgresVersion(new Version(9, 6));
         AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
     })
@@ -46,8 +62,17 @@ builder.Services.AddMudServices();
 // 添加BootstrapBlazor服务
 builder.Services.AddBootstrapBlazor();
 
+// 项目管理模块服务
+builder.Services.AddProjectManagementServices();
+
 // 添加HttpContextAccessor上下文
 builder.Services.AddHttpContextAccessor();
+
+// 添加 HttpClient（IWechatService 需要）
+builder.Services.AddHttpClient();
+
+// 注册微信服务
+builder.Services.AddScoped<Bio.Shared.Interfaces.IWechatService, Bio.Shared.Services.WechatService>();
 
 // Bio.Core认证服务 - 配置JWT和Cookie认证
 builder.Services.AddBioAuthentication(builder.Configuration);

@@ -1,32 +1,119 @@
 @page "/"
-@inherits BasePage
+@using Microsoft.EntityFrameworkCore
+@using FollowUp.Services
+@inject IUserContextService inj_userContextService
+@inject ILogger<Home> inj_logger
+@inject IHttpContextAccessor inj_httpContextAccessor
+@inject NavigationManager inj_navigationManager
 @attribute [AllowAnonymous]
 
 <PageTitle>FollowUp 随访管理系统</PageTitle>
 
+<div class="d-flex justify-center align-center" style="height: 100vh;">
+    <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
+</div>
+
 @code {
-    protected override async Task OnPageInitializedAsync()
+    protected override async Task OnInitializedAsync()
     {
-        // TODO: [核心服务迁移] - 需要先迁移以下服务才能实现完整的角色路由功能
-        // 缺少的服务：
-        // 1. ICacheService - 缓存服务（用于存储用户角色、权限等信息）
-        // 2. IUserContextService - 用户上下文服务（获取用户的医院、科室、课题信息）
-        // 3. ILoginService - 登录服务（获取用户权限数据）
-        // 4. MemoryCacheKeys - 缓存键枚举
-        //
-        // 迁移完成后，需要实现以下功能：
-        // - 从 Claims 或缓存获取用户角色
-        // - 根据角色优先级跳转到不同页面：
-        //   医院管理员 → /hospitalMain
-        //   科室管理员 → /departmentMain
-        //   课题管理员 → /projectMain
-        //   随访角色 → /followupTaskManager/PendingReview
-        //   系统管理员 → /adminMain
-        //   默认 → /followupTaskManager/PendingReview
-        
-        // 临时方案：直接跳转到管理员主页进行测试
-        inj_navigationManager.NavigateTo("/adminMain", true);
-        await Task.CompletedTask;
+        try
+        {
+            inj_logger.LogInformation("Home 页面初始化开始");
+
+            // 获取用户认证状态
+            var user = inj_httpContextAccessor.HttpContext?.User;
+            if (user?.Identity?.IsAuthenticated != true)
+            {
+                inj_logger.LogWarning("用户未认证，跳转到登录页");
+                inj_navigationManager.NavigateTo("/login", true);
+                return;
+            }
+
+            // 获取用户角色
+            var roles = user.FindAll("roleName")
+                .Select(c => System.Text.RegularExpressions.Regex.Unescape(c.Value))
+                .ToList();
+            var roleNames = string.Join(",", roles);
+
+            inj_logger.LogInformation("用户角色: {RoleNames}", roleNames);
+
+            if (string.IsNullOrEmpty(roleNames))
+            {
+                inj_logger.LogWarning("用户无角色信息，跳转到登录页");
+                inj_navigationManager.NavigateTo("/login", true);
+                return;
+            }
+
+            // 角色路由优先级：医院管理员 > 科室管理员 > 课题管理员 > 随访角色 > 系统管理员
+            if (roleNames.Contains("医院管理员"))
+            {
+                var hospitalId = await inj_userContextService.GetHospitalIdAsync();
+                if (hospitalId.HasValue)
+                {
+                    inj_logger.LogInformation("医院管理员跳转到 /hospitalMain?hospitalId={HospitalId}", hospitalId.Value);
+                    inj_navigationManager.NavigateTo($"/hospitalMain?hospitalId={hospitalId.Value}", true);
+                }
+                else
+                {
+                    // 医院管理员但没有医院信息，显示错误页面
+                    inj_logger.LogError("医院管理员无医院信息");
+                    inj_navigationManager.NavigateTo("/error?message=您暂无医院权限，请联系系统管理员分配权限", true);
+                }
+            }
+            else if (roleNames.Contains("科室管理员"))
+            {
+                var department = await inj_userContextService.GetDepartmentAsync();
+                if (department != null)
+                {
+                    inj_logger.LogInformation("科室管理员跳转到 /departmentMain");
+                    inj_navigationManager.NavigateTo($"/departmentMain?departmentId={department.id}", true);
+                }
+                else
+                {
+                    // 科室管理员但没有科室信息，显示错误页面
+                    inj_logger.LogError("科室管理员无科室信息");
+                    inj_navigationManager.NavigateTo("/error?message=您暂无科室权限，请联系系统管理员分配权限", true);
+                }
+            }
+            else if (roleNames.Contains("课题管理员"))
+            {
+                var project = await inj_userContextService.GetProjectAsync();
+                if (project != null)
+                {
+                    inj_logger.LogInformation("课题管理员跳转到 /projectMain");
+                    inj_navigationManager.NavigateTo($"/projectMain?projectId={project.id}", true);
+                }
+                else
+                {
+                    // 课题管理员但没有课题信息，显示错误页面
+                    inj_logger.LogError("课题管理员无课题信息");
+                    inj_navigationManager.NavigateTo("/error?message=您暂无课题权限，请联系系统管理员分配权限", true);
+                }
+            }
+            else if (roleNames.Contains("随访"))
+            {
+                inj_logger.LogInformation("随访角色跳转到 /followupTaskManager/PendingReview");
+                // TODO: [任务管理页面] - 实现任务管理页面后启用
+                inj_navigationManager.NavigateTo("/followupTaskManager/PendingReview", true);
+            }
+            else if (roleNames.Contains("系统"))
+            {
+                inj_logger.LogInformation("系统管理员跳转到 /adminMain");
+                inj_navigationManager.NavigateTo("/adminMain", true);
+            }
+            else
+            {
+                inj_logger.LogInformation("默认跳转到 /followupTaskManager/PendingReview");
+                // 默认跳转到任务管理
+                // TODO: [任务管理页面] - 实现任务管理页面后启用
+                inj_navigationManager.NavigateTo("/followupTaskManager/PendingReview", true);
+            }
+        }
+        catch (Exception ex)
+        {
+            inj_logger.LogError(ex, "角色路由失败");
+            inj_navigationManager.NavigateTo("/login", true);
+        }
     }
 }
 

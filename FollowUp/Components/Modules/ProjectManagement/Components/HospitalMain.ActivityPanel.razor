@@ -1,0 +1,145 @@
+@namespace FollowUp.Components.Modules.ProjectManagement.Components
+@inherits BasePage
+@inject ILogger<HospitalMain_ActivityPanel> inj_logger
+@inject IHospitalStatisticsService inj_statisticsService
+@using FollowUp.Components.Shared.Charts
+
+@* 活跃度情况 *@
+<MudPaper Elevation="1" Class="mt-3 p-3">
+    <div class="d-flex flex-column">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="d-flex align-items-center">
+                <MudText Class="fw-bold" Typo="Typo.h6">活跃度情况</MudText>
+                <MudTooltip Placement="Placement.Left" Arrow="true">
+                    <ChildContent>
+                        <MudIcon Icon="@Icons.Material.Filled.QuestionMark" Color="Color.Default" Class="icon-ques ml-2"></MudIcon>
+                    </ChildContent>
+                    <TooltipContent>
+                        <p>日活：每天进入患者端的患者数量；</p>
+                        <p>日活占比：日活数量/患者总数*100%；</p>
+                        <p>月活：每月登陆过患者端的患者数量；</p>
+                        <p>月活占比：月活数量/患者总数*100%;</p>
+                    </TooltipContent>
+                </MudTooltip>
+                <MudDatePicker @bind-Date="@selectedDate"
+                               DateFormat="@dateFormat"
+                               Editable="true"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense"
+                               Class="ml-3"
+                               Style="max-width:180px" />
+            </div>
+            <MudButtonGroup Color="Color.Success" Variant="Variant.Filled" Size="Size.Small">
+                <MudButton OnClick="@(() => SelectDimension(ActivityDimension.Daily))"
+                           Variant="@(selectedDimension == ActivityDimension.Daily ? Variant.Filled : Variant.Outlined)">
+                    日活
+                </MudButton>
+                <MudButton OnClick="@(() => SelectDimension(ActivityDimension.Monthly))"
+                           Variant="@(selectedDimension == ActivityDimension.Monthly ? Variant.Filled : Variant.Outlined)">
+                    月活
+                </MudButton>
+            </MudButtonGroup>
+        </div>
+
+        @if (isLoading)
+        {
+            <div class="d-flex justify-content-center align-items-center" style="height:400px">
+                <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+                <MudText Class="ml-3">正在加载数据...</MudText>
+            </div>
+        }
+        else if (hasData)
+        {
+            <CombinationChart BarSeriesData="@activeCounts.ToArray()"
+                              LineSeriesData="@activePercents.ToArray()"
+                              XAxisLabels="@labels.ToArray()"
+                              BarSeriesName="活跃人数"
+                              LineSeriesName="活跃占比(%)"
+                              Options="@activityChartOptions" />
+        }
+        else
+        {
+            <div style="text-align:center;padding:120px 0">
+                <MudImage Src="images/nodata.jpg" Style="width:120px" />
+                <MudText Class="mt-2">无数据</MudText>
+            </div>
+        }
+    </div>
+</MudPaper>
+
+@code {
+    [Parameter] public Guid HospitalId { get; set; }
+
+    private ActivityDimension selectedDimension = ActivityDimension.Daily;
+    private DateTime? selectedDate = DateTime.Now;
+    private bool isLoading = false;
+
+    private List<int> activeCounts = new();
+    private List<int> activePercents = new();
+    private List<string> labels = new();
+
+    private bool hasData => activeCounts.Any(c => c > 0);
+
+    private string dateFormat => selectedDimension == ActivityDimension.Daily ? "yyyy-MM" : "yyyy";
+
+    private readonly CustomChartOptions activityChartOptions = new()
+    {
+        ShowBarValues = false,
+        ShowLineValues = true,
+        ShowLegend = true,
+        LegendPosition = LegendPosition.Bottom,
+        PreserveAspectRatio = false,
+        Width = 0,
+        Height = 400,
+        BarColor = "#3CB371",
+        LineColor = "#FFA500"
+    };
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task SelectDimension(ActivityDimension dimension)
+    {
+        if (selectedDimension != dimension)
+        {
+            selectedDimension = dimension;
+            await LoadDataAsync();
+        }
+    }
+
+    private async Task LoadDataAsync()
+    {
+        try
+        {
+            isLoading = true;
+            StateHasChanged();
+
+            var stats = await inj_statisticsService.GetActivityStatsAsync(
+                HospitalId,
+                selectedDimension,
+                selectedDate ?? DateTime.Now,
+                null
+            );
+
+            activeCounts = stats.ActiveCounts.ToList();
+            activePercents = stats.ActivePercents.ToList();
+            labels = stats.Labels.ToList();
+        }
+        catch (Exception ex)
+        {
+            inj_logger.LogError(ex, "加载活跃度数据失败");
+            activeCounts = new List<int>();
+            activePercents = new List<int>();
+            labels = new List<string>();
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+}
+
+

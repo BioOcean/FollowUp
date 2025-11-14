@@ -1,0 +1,145 @@
+@page "/departmentMain"
+@using Microsoft.EntityFrameworkCore
+@inherits BasePage
+@inject ILogger<DepartmentMain> inj_logger
+
+<PageTitle>科室管理 - 健康管家</PageTitle>
+
+<div style="background-color:#f1fbf9;min-height:calc(100vh - 64px);" class="p-3">
+    @if (isLoading)
+    {
+        <div class="d-flex justify-center align-center" style="height: 200px;">
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+        </div>
+    }
+    else if (currentDepartment != null)
+    {
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <div class="ml-3 span-text">
+                <span style="font-weight:700">数据范围：</span>
+                @if (hospital != null)
+                {
+                    <span>@hospital.name</span>
+                    <span class="ml-2">@(currentDepartment.display_name ?? currentDepartment.name)</span>
+                }
+            </div>
+            @* TODO: [二维码功能] - 编辑扫码信息和下载二维码功能 *@
+        </div>
+
+        @if (projectList.Any())
+        {
+            <MudPaper Class="pa-4" Elevation="2">
+                <MudText Typo="Typo.h6" Class="mb-3">课题列表</MudText>
+                <MudGrid>
+                    @foreach (var proj in projectList)
+                    {
+                        <MudItem xs="12" sm="6" md="4" lg="3">
+                            <MudPaper Class="pa-3" Elevation="1" Style="cursor:pointer" @onclick="@(() => NavigateToProject(proj.id))">
+                                <div class="d-flex align-items-center">
+                                    <MudIcon Icon="@Icons.Material.Filled.Book" Color="Color.Primary" Class="mr-2" />
+                                    <div>
+                                        <MudText Typo="Typo.body1">@(proj.display_name ?? proj.name)</MudText>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">点击查看详情</MudText>
+                                    </div>
+                                </div>
+                            </MudPaper>
+                        </MudItem>
+                    }
+                </MudGrid>
+            </MudPaper>
+
+            @* TODO: [统计功能] - 添加科室维度的数据统计面板（DimensionStatsView 组件） *@
+        }
+        else
+        {
+            <MudAlert Severity="Severity.Info">该科室暂无课题信息</MudAlert>
+        }
+    }
+    else
+    {
+        <div class="d-flex justify-center align-center" style="height: 200px;">
+            <MudText>未找到科室数据</MudText>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public string? departmentId { get; set; }
+
+    private sys_hospital? hospital;
+    private sys_department? currentDepartment;
+    private List<form_project> projectList = new();
+    private bool isLoading = true;
+
+    protected override async Task OnPageInitializedAsync()
+    {
+        try
+        {
+            // TODO: [用户上下文服务] - 实现 IUserContextService 后从服务获取 departmentId
+            // 临时方案：从 URL 参数或用户 Claims 获取
+            if (string.IsNullOrEmpty(departmentId))
+            {
+                var user = inj_httpContextAccessor.HttpContext?.User;
+                if (user?.Identity?.IsAuthenticated == true)
+                {
+                    departmentId = user.FindFirst("departmentId")?.Value;
+                }
+            }
+
+            if (!string.IsNullOrEmpty(departmentId) && Guid.TryParse(departmentId, out var departmentGuid))
+            {
+                await LoadData(departmentGuid);
+            }
+        }
+        catch (Exception ex)
+        {
+            inj_logger.LogError(ex, "DepartmentMain 初始化失败");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task LoadData(Guid departmentGuid)
+    {
+        try
+        {
+            // 加载科室基本信息
+            currentDepartment = await _context.sys_department!
+                .AsNoTracking()
+                .Include(d => d.hospital)
+                .FirstOrDefaultAsync(d => d.id == departmentGuid);
+
+            if (currentDepartment == null)
+            {
+                inj_logger.LogWarning("未找到科室信息，departmentId: {DepartmentId}", departmentGuid);
+                return;
+            }
+
+            hospital = currentDepartment.hospital ?? null;
+
+            // 加载该科室下的所有随访课题
+            projectList = await _context.form_project
+                .AsNoTracking()
+                .Where(p => p.department_id == departmentGuid)
+                .OrderBy(p => p.display_name ?? p.name)
+                .ToListAsync();
+
+            inj_logger.LogInformation("成功加载科室信息，科室: {DeptName}, 课题数量: {ProjCount}", 
+                currentDepartment.display_name ?? currentDepartment.name, projectList.Count);
+        }
+        catch (Exception ex)
+        {
+            inj_logger.LogError(ex, "加载科室数据失败，departmentId: {DepartmentId}", departmentGuid);
+        }
+    }
+
+    private void NavigateToProject(Guid projectId)
+    {
+        inj_navigationManager.NavigateTo($"/projectMain?projectId={projectId}");
+    }
+}
+

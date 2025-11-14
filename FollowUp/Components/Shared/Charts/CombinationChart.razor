@@ -1,0 +1,349 @@
+@using System.Globalization
+@using System.Linq
+@using System.Text
+@namespace FollowUp.Components.Shared.Charts
+
+<div class="combination-chart-container" style="width:@(Options.Width == 0 ? "100%" : $"{Options.Width}px");height:@(Options.Height)px;min-width:800px;">
+    <svg width="100%" height="100%" preserveAspectRatio="@GetPreserveAspectRatio()" viewBox="0 0 @CalculateViewBoxWidth() @ViewBoxHeight" class="combination-chart">
+        @RenderChartContent()
+    </svg>
+</div>
+
+<style>
+    .combination-chart-container {
+        position: relative;
+        overflow: hidden;
+        min-width: 800px;
+        max-width: 100%;
+        margin: 0 auto;
+    }
+
+    .combination-chart {
+        font-family: Arial, sans-serif;
+        width: 100%;
+        height: 100%;
+        display: block;
+    }
+</style>
+
+@code {
+    [Parameter] public int[] BarSeriesData { get; set; } = Array.Empty<int>();
+    [Parameter] public int[] LineSeriesData { get; set; } = Array.Empty<int>();
+    [Parameter] public string[] XAxisLabels { get; set; } = Array.Empty<string>();
+    [Parameter] public string BarSeriesName { get; set; } = string.Empty;
+    [Parameter] public string LineSeriesName { get; set; } = string.Empty;
+    [Parameter] public CustomChartOptions Options { get; set; } = new();
+
+    private readonly int _height = 400;
+
+    private double _barMaxValue;
+    private double _lineMaxValue = 100;
+    private int _chartHeight => _height - EffectiveTopPadding - EffectiveBottomPadding;
+    private int _chartWidth => CalculateViewBoxWidth() - EffectiveLeftPadding - EffectiveRightPadding;
+    private float _barWidth;
+    private float _barSpacing;
+
+    private double _lineChartHeightRatio = 0.5;
+    private double _lineChartHeight => _chartHeight * _lineChartHeightRatio;
+    private double _lineChartStartY => EffectiveTopPadding;
+
+    private int _autoLeftPadding = 20;
+    private int _autoRightPadding = 20;
+    private int _autoTopPadding = 30;
+    private int _autoBottomPadding = 60;
+
+    private int EffectiveLeftPadding => Options.LeftPadding > 0 ? Options.LeftPadding : _autoLeftPadding;
+    private int EffectiveRightPadding => Options.RightPadding > 0 ? Options.RightPadding : _autoRightPadding;
+    private int EffectiveTopPadding => Options.TopPadding > 0 ? Options.TopPadding : _autoTopPadding;
+    private int EffectiveBottomPadding => Options.BottomPadding > 0 ? Options.BottomPadding : _autoBottomPadding;
+
+    private bool IsFullWidth => Options.Width == 0;
+
+    private int CalculateViewBoxWidth()
+    {
+        if (Options.Width > 0)
+            return Options.Width;
+
+        if (XAxisLabels == null || XAxisLabels.Length == 0)
+            return 1200;
+
+        int pointCount = XAxisLabels.Length;
+        int minWidthPerPoint = 40;
+        int baseWidth = 1200;
+        double widthHeightRatio = 4.0;
+        int widthBasedOnHeight = (int)(_height * widthHeightRatio);
+
+        int requiredWidthByPoints = pointCount * minWidthPerPoint + EffectiveLeftPadding + EffectiveRightPadding;
+        int requiredWidth = Math.Max(Math.Max(baseWidth, requiredWidthByPoints), widthBasedOnHeight);
+
+        return Math.Max(requiredWidth, 1200);
+    }
+
+    private string GetPreserveAspectRatio() =>
+        IsFullWidth ? "none" : (Options.PreserveAspectRatio ? "xMidYMid meet" : "none");
+
+    protected int ViewBoxHeight => _height;
+
+    protected override void OnParametersSet()
+    {
+        Options ??= new CustomChartOptions();
+
+        var computedBarMax = BarSeriesData.Length > 0 ? BarSeriesData.Max() : 0;
+        _barMaxValue = Options.YAxisMaxValue > 0 ? Options.YAxisMaxValue : computedBarMax * 1.1;
+
+        if (LineSeriesData.Length > 0)
+        {
+            var max = LineSeriesData.Max();
+            _lineMaxValue = max <= 100 ? 100 : max * 1.1;
+        }
+
+        if (XAxisLabels.Length > 0)
+        {
+            _barSpacing = XAxisLabels.Length > 15 ? 5 : 10;
+            _barWidth = (_chartWidth - (_barSpacing * (XAxisLabels.Length - 1))) / XAxisLabels.Length;
+            _barWidth = Math.Max(_barWidth, 15);
+        }
+        else
+        {
+            _barWidth = 30;
+            _barSpacing = 10;
+        }
+
+        CalculateAutoPadding();
+    }
+
+    private void CalculateAutoPadding()
+    {
+        _autoLeftPadding = 20;
+        _autoRightPadding = 20;
+        _autoTopPadding = 30;
+        _autoBottomPadding = 60;
+
+        if (XAxisLabels.Length > 0)
+        {
+            int maxLabelLength = XAxisLabels.Max(l => l?.Length ?? 0);
+            if (maxLabelLength > 5)
+            {
+                _autoBottomPadding = Math.Max(_autoBottomPadding, 40 + (maxLabelLength * 2));
+            }
+        }
+
+        if (Options.ShowLegend)
+        {
+            if (Options.LegendPosition == LegendPosition.Bottom)
+            {
+                _autoBottomPadding = Math.Max(_autoBottomPadding, 80);
+            }
+            else if (Options.LegendPosition == LegendPosition.Top)
+            {
+                _autoTopPadding = Math.Max(_autoTopPadding, 50);
+            }
+        }
+    }
+
+    private double CalculateLineY(int value)
+    {
+        double proportion = Math.Min(1.0, (double)value / _lineMaxValue);
+        return _lineChartStartY + _lineChartHeight - (_lineChartHeight * proportion);
+    }
+
+    private RenderFragment RenderChartContent() => builder =>
+    {
+        builder.OpenElement(10, "line");
+        builder.AddAttribute(11, "x1", EffectiveLeftPadding);
+        builder.AddAttribute(12, "y1", _height - EffectiveBottomPadding);
+        builder.AddAttribute(13, "x2", _chartWidth - EffectiveRightPadding);
+        builder.AddAttribute(14, "y2", _height - EffectiveBottomPadding);
+        builder.AddAttribute(15, "stroke", "#ccc");
+        builder.AddAttribute(16, "stroke-width", "1");
+        builder.CloseElement();
+
+        if (XAxisLabels != null)
+        {
+            for (int i = 0; i < XAxisLabels.Length; i++)
+            {
+                var x = EffectiveLeftPadding + (_barWidth + _barSpacing) * i + _barWidth / 2;
+
+                builder.OpenElement(200 + i * 10, "text");
+                builder.AddAttribute(201 + i * 10, "x", x);
+                builder.AddAttribute(202 + i * 10, "y", _height - EffectiveBottomPadding + 20);
+                builder.AddAttribute(203 + i * 10, "text-anchor", "middle");
+                builder.AddAttribute(204 + i * 10, "font-size", "12");
+                builder.AddAttribute(205 + i * 10, "fill", "#666");
+                builder.AddContent(206 + i * 10, XAxisLabels[i]);
+                builder.CloseElement();
+            }
+        }
+
+        for (int i = 0; i < BarSeriesData.Length; i++)
+        {
+            var value = BarSeriesData[i];
+            var proportion = _barMaxValue > 0 ? (double)value / _barMaxValue : 0;
+            var barHeight = _chartHeight * proportion;
+            var x = EffectiveLeftPadding + (_barWidth + _barSpacing) * i;
+            var y = _height - EffectiveBottomPadding - barHeight;
+
+            builder.OpenElement(300 + i * 10, "rect");
+            builder.AddAttribute(301 + i * 10, "x", x);
+            builder.AddAttribute(302 + i * 10, "y", y);
+            builder.AddAttribute(303 + i * 10, "width", _barWidth);
+            builder.AddAttribute(304 + i * 10, "height", barHeight);
+            builder.AddAttribute(305 + i * 10, "fill", Options.BarColor);
+            builder.CloseElement();
+
+            if (Options.ShowBarValues)
+            {
+                builder.OpenElement(306 + i * 10, "text");
+                builder.AddAttribute(307 + i * 10, "x", x + _barWidth / 2);
+                builder.AddAttribute(308 + i * 10, "y", y + barHeight / 2 + 5);
+                builder.AddAttribute(309 + i * 10, "text-anchor", "middle");
+                builder.AddAttribute(310 + i * 10, "font-size", "12");
+                builder.AddAttribute(311 + i * 10, "fill", "white");
+                builder.AddContent(312 + i * 10, value);
+                builder.CloseElement();
+            }
+        }
+
+        if (LineSeriesData.Length > 0)
+        {
+            builder.OpenElement(400, "path");
+            builder.AddAttribute(401, "d", GenerateLinePath());
+            builder.AddAttribute(402, "fill", "none");
+            builder.AddAttribute(403, "stroke", Options.LineColor);
+            builder.AddAttribute(404, "stroke-width", "2");
+            builder.CloseElement();
+
+            for (int i = 0; i < LineSeriesData.Length; i++)
+            {
+                var value = LineSeriesData[i];
+                var x = EffectiveLeftPadding + (_barWidth + _barSpacing) * i + _barWidth / 2;
+                var y = CalculateLineY(value);
+
+                builder.OpenElement(410 + i * 10, "circle");
+                builder.AddAttribute(411 + i * 10, "cx", x);
+                builder.AddAttribute(412 + i * 10, "cy", y);
+                builder.AddAttribute(413 + i * 10, "r", "4");
+                builder.AddAttribute(414 + i * 10, "fill", Options.LineColor);
+                builder.CloseElement();
+
+                if (Options.ShowLineValues)
+                {
+                    var formattedValue = $"{value}%";
+
+                    builder.OpenElement(415 + i * 10, "text");
+                    builder.AddAttribute(416 + i * 10, "x", x);
+                    builder.AddAttribute(417 + i * 10, "y", y - 10);
+                    builder.AddAttribute(418 + i * 10, "text-anchor", "middle");
+                    builder.AddAttribute(419 + i * 10, "font-size", "12");
+                    builder.AddAttribute(420 + i * 10, "fill", Options.LineColor);
+                    builder.AddContent(421 + i * 10, formattedValue);
+                    builder.CloseElement();
+                }
+            }
+        }
+
+        if (Options.ShowLegend)
+        {
+            builder.OpenElement(500, "g");
+            builder.AddAttribute(501, "transform", $"translate({GetLegendX()}, {GetLegendY()})");
+
+            if (!string.IsNullOrWhiteSpace(BarSeriesName))
+            {
+                builder.OpenElement(510, "rect");
+                builder.AddAttribute(511, "x", "0");
+                builder.AddAttribute(512, "y", "0");
+                builder.AddAttribute(513, "width", "15");
+                builder.AddAttribute(514, "height", "15");
+                builder.AddAttribute(515, "fill", Options.BarColor);
+                builder.CloseElement();
+
+                builder.OpenElement(516, "text");
+                builder.AddAttribute(517, "x", "20");
+                builder.AddAttribute(518, "y", "12");
+                builder.AddAttribute(519, "text-anchor", "start");
+                builder.AddAttribute(520, "font-size", "12");
+                builder.AddAttribute(521, "fill", "#666");
+                builder.AddContent(522, BarSeriesName);
+                builder.CloseElement();
+            }
+
+            if (!string.IsNullOrWhiteSpace(LineSeriesName))
+            {
+                var offset = !string.IsNullOrWhiteSpace(BarSeriesName) ? 120 : 0;
+                builder.OpenElement(530, "g");
+                builder.AddAttribute(531, "transform", $"translate({offset}, 0)");
+
+                builder.OpenElement(532, "line");
+                builder.AddAttribute(533, "x1", "0");
+                builder.AddAttribute(534, "y1", "7.5");
+                builder.AddAttribute(535, "x2", "15");
+                builder.AddAttribute(536, "y2", "7.5");
+                builder.AddAttribute(537, "stroke", Options.LineColor);
+                builder.AddAttribute(538, "stroke-width", "2");
+                builder.CloseElement();
+
+                builder.OpenElement(539, "circle");
+                builder.AddAttribute(540, "cx", "7.5");
+                builder.AddAttribute(541, "cy", "7.5");
+                builder.AddAttribute(542, "r", "3");
+                builder.AddAttribute(543, "fill", Options.LineColor);
+                builder.CloseElement();
+
+                builder.OpenElement(544, "text");
+                builder.AddAttribute(545, "x", "20");
+                builder.AddAttribute(546, "y", "12");
+                builder.AddAttribute(547, "text-anchor", "start");
+                builder.AddAttribute(548, "font-size", "12");
+                builder.AddAttribute(549, "fill", "#666");
+                builder.AddContent(550, LineSeriesName);
+                builder.CloseElement();
+
+                builder.CloseElement();
+            }
+
+            builder.CloseElement();
+        }
+    };
+
+    private string GenerateLinePath()
+    {
+        if (LineSeriesData == null || LineSeriesData.Length == 0)
+            return string.Empty;
+
+        var sb = new StringBuilder();
+        for (int i = 0; i < LineSeriesData.Length; i++)
+        {
+            var value = LineSeriesData[i];
+            var x = EffectiveLeftPadding + (_barWidth + _barSpacing) * i + _barWidth / 2;
+            var y = CalculateLineY(value);
+
+            if (i == 0)
+                sb.Append($"M {x} {y}");
+            else
+                sb.Append($" L {x} {y}");
+        }
+
+        return sb.ToString();
+    }
+
+    private int GetLegendX() =>
+        Options.LegendPosition switch
+        {
+            LegendPosition.Top => _chartWidth / 2 - 120,
+            LegendPosition.Bottom => _chartWidth / 2 - 120,
+            LegendPosition.Left => EffectiveLeftPadding,
+            LegendPosition.Right => _chartWidth - 250,
+            _ => _chartWidth / 2 - 120
+        };
+
+    private int GetLegendY() =>
+        Options.LegendPosition switch
+        {
+            LegendPosition.Top => 10,
+            LegendPosition.Bottom => _height - 25,
+            LegendPosition.Left => EffectiveTopPadding,
+            LegendPosition.Right => EffectiveTopPadding,
+            _ => _height - 25
+        };
+}
+

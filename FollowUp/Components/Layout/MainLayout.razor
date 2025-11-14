@@ -6,33 +6,34 @@
 <MudSnackbarProvider />
 
 <MudLayout>
-    <MudAppBar Style="background-color:var(--bioo-main)">
-        <MudText Typo="Typo.h5" Color="Color.Inherit">@systemName</MudText>
+    <MudAppBar Elevation="1" Class="app-bar-custom">
+        <MudText Typo="Typo.h5" Class="system-name">@systemName</MudText>
         <MudSpacer />
-        <MudText Style="cursor:pointer" @onclick="OnLogoutClick">@HelloMsg() @userName</MudText>
+        <MudText Class="user-info" Style="cursor:pointer" @onclick="OnLogoutClick">
+            @HelloMsg() @userName
+        </MudText>
     </MudAppBar>
     
-    @* TODO: [导航菜单] - 添加侧边导航栏（NavMenu）
-         参考 NTCare 的实现，需要创建：
-         1. NavMenuForFollowup.razor - 随访系统导航菜单
-         2. 根据用户角色显示不同的菜单项
-         3. 支持折叠/展开功能
-         4. 根据 URL 判断是否显示菜单（AdminMain、HospitalMain、DepartmentMain 不显示）
-    *@
-    @* <MudDrawer @bind-Open="@drawerOpen"
-                ClipMode="DrawerClipMode.Always"
-                Variant="DrawerVariant.Mini"
-                Width="200px"
-                Elevation="1"
-                DisableOverlay="true"
-                Class="main-drawer">
-        <MudIconButton Icon="@Icons.Material.Filled.Menu"
-                       OnClick="@ToggleDrawer"
-                       Style="width:45px;margin-left:5px;color:#fff"
-                       Size="Size.Medium" />
-        <NavMenuForFollowup />
-    </MudDrawer> *@
-    
+    @* 导航菜单：在主页面显示 *@
+    @if (IsShowMenu())
+    {
+        <MudDrawer @bind-Open="@drawerOpen"
+                   ClipMode="DrawerClipMode.Always"
+                   Variant="DrawerVariant.Mini"
+                   Width="200px"
+                   Elevation="1"
+                   DisableOverlay="true"
+                   Class="main-drawer">
+            <MudIconButton Icon="@Icons.Material.Filled.Menu"
+                           OnClick="@ToggleDrawer"
+                           Style="width:45px;margin-left:5px;color:#fff"
+                           Class="menu-btn"
+                           Size="Size.Medium" />
+
+            <NavMenuForFollowup />
+        </MudDrawer>
+    }
+
     <MudMainContent>
         @Body
     </MudMainContent>
@@ -83,6 +84,19 @@
     private void ToggleDrawer()
     {
         drawerOpen = !drawerOpen;
+    }
+
+    /// <summary>
+    /// 判断是否显示菜单
+    /// AdminMain、HospitalMain、DepartmentMain 三个主页面不显示菜单
+    /// </summary>
+    private bool IsShowMenu()
+    {
+        string url = inj_navigationManager.Uri;
+        return !url.Contains("/adminMain") && 
+               !url.Contains("/hospitalMain") && 
+               !url.Contains("/departmentMain") &&
+               !url.Contains("/projectMain");
     }
     
     private async Task OnLogoutClick()

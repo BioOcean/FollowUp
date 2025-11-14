@@ -67,7 +67,7 @@ FollowupWx/
 | 类型 | 位置 | 命名 | 引用方式 |
 |------|------|------|----------|
 | 页面组件 | `Modules/{模块}/Pages/` | `UserList.razor` | `<UserList />` |
-| 页面子组件 | `Modules/{模块}/Pages/` | `UserList.FilterPanel.razor` | `<UserList_FilterPanel />` |
+| 页面子组件 | `Modules/{模块}/Components/` | `UserList.FilterPanel.razor` | `<UserList_FilterPanel />` |
 | 模块内组件 | `Modules/{模块}/Components/` | `DataGrid.razor` | `<DataGrid />` |
 | 全局组件 | `Components/Shared/` | `LoadingSpinner.razor` | `<LoadingSpinner />` |
 | 模块对话框 | `Modules/{模块}/Dialogs/` | `EditDialog.razor` | - |
@@ -75,7 +75,7 @@ FollowupWx/
 
 **组件位置决策：**
 - 有 `@page` → `Pages/`
-- 单页面使用 → `Pages/`，命名 `PageName.SubComponent.razor`
+- 页面子组件 → `Components/`，命名 `PageName.SubComponent.razor`
 - 模块内复用 → `Modules/{模块}/Components/`
 - 跨模块复用 → `Components/Shared/`
 
@@ -111,7 +111,7 @@ FollowupWx/
 
 **页面子组件必须添加：**
 ```razor
-@namespace ProjectName.Components.Modules.ModuleName.Pages
+@namespace ProjectName.Components.Modules.ModuleName.Components
 ```
 
 ### 3. 组件文件三件套
@@ -173,7 +173,7 @@ protected override async Task OnPageInitializedAsync()
 | 错误 | 原因 | 解决方案 |
 |------|------|----------|
 | 页面子组件无法渲染 | 使用 `<Home.Header />` | 改为 `<Home_Header />` |
-| CS0103 命名空间不一致 | 子组件未添加 @namespace | 添加与父页面一致的命名空间 |
+| CS0103 命名空间不一致 | 子组件未添加 @namespace | 添加 `@namespace ProjectName.Components.Modules.ModuleName.Components` |
 | CS0122 访问 BasePage 属性错误 | 直接注入 | 通过继承访问 protected 属性 |
 | Logger 泛型错误 | 使用 `ILogger<BasePage>` | 使用 `ILogger<当前组件类型>` |
 
@@ -183,7 +183,7 @@ protected override async Task OnPageInitializedAsync()
 2. 创建 `_Imports.razor`，包含模块命名空间
 3. 创建页面组件，继承 `BasePage`
 4. 创建同名 `.razor.css` 样式文件
-5. 复杂页面拆分为 `PageName.SubComponent.razor` 子组件（使用 `PageName_SubComponent` 引用）
+5. 复杂页面拆分为 `PageName.SubComponent.razor` 子组件，放在 `Components/` 目录（使用 `PageName_SubComponent` 引用）
 
 ## 七、性能优化
 

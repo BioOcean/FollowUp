@@ -1,5 +1,37 @@
+/* AppBar - 白色专业风格 */
+.app-bar-custom {
+    background-color: #FFFFFF !important;
+    color: #2D3748 !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06) !important;
+}
+
+.system-name {
+    color: #2D3748 !important;
+    font-weight: 600;
+    font-size: 20px;
+}
+
+.user-info {
+    color: #718096;
+    font-size: 14px;
+    transition: color 0.2s ease;
+}
+
+.user-info:hover {
+    color: #2D3748;
+}
+
+/* 侧边导航 - 深色渐变 */
 .main-drawer ::deep .mud-drawer {
-    background-color: #266F5E !important;
+    background: linear-gradient(180deg, #0A7A63 0%, #085A4A 100%) !important;
+}
+
+.menu-btn {
+    background-color: transparent;
+}
+
+.menu-btn:hover {
+    background-color: rgba(255, 255, 255, 0.15);
 }
 
 .main-drawer ::deep .menu-btn {

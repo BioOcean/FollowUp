@@ -1,0 +1,192 @@
+@using Microsoft.AspNetCore.Components.Authorization
+@inject IHttpContextAccessor inj_httpContextAccessor
+@inject NavigationManager inj_navigationManager
+
+<style>
+    .nav-menu .mud-icon-root.mud-svg-icon {
+        fill: #fff !important;
+    }
+
+    .nav-menu .mud-nav-link {
+        color: rgba(255, 255, 255, 0.85);
+        border-radius: 8px;
+        margin: 4px 8px;
+        transition: all 0.2s ease;
+    }
+
+    .nav-menu .mud-nav-link:hover:not(.mud-nav-link-disabled) {
+        background-color: rgba(255, 255, 255, 0.12);
+        color: #FFFFFF;
+    }
+
+    .nav-menu.mud-navmenu.mud-navmenu-default .mud-nav-link.active:not(.mud-nav-link-disabled) {
+        background-color: rgba(255, 255, 255, 0.18);
+        color: #FFFFFF;
+        font-weight: 500;
+    }
+
+    .nav-menu.mud-navmenu.mud-navmenu-default .mud-nav-link.active:not(.mud-nav-link-disabled):hover:not(.mud-nav-link-disabled) {
+        background-color: rgba(255, 255, 255, 0.22);
+    }
+</style>
+
+<MudNavMenu style="color:#fff" Class="nav-menu">
+    @* 
+        角色菜单说明：
+        1. 系统管理员（在系统页面）：科室管理、课题管理、功能配置、健康资讯、权限管理、运营管理、数据迁移
+        2. 医院/科室/课题管理员：首页、患者管理、随访管理、宣教管理、权限管理
+        3. 随访角色：首页、患者管理、任务管理
+    *@
+    
+    @if (!string.IsNullOrEmpty(roleNames))
+    {
+        @* 首页链接 *@
+        <MudNavLink Href="@MainHref()" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.ManageAccounts">首页</MudNavLink>
+        
+        @* 非系统管理员菜单 *@
+        @if (!IsAdmin())
+        {
+            @* TODO: [患者管理] - 实现患者管理页面 *@
+            <MudNavLink Href="/FollowupPatientManage" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.SupervisorAccount">患者管理</MudNavLink>
+            
+            @* 随访角色只显示任务管理 *@
+            @if (roleNames.Contains("随访"))
+            {
+                @* TODO: [任务管理] - 实现任务管理页面 *@
+                <MudNavLink Href="/followupTaskManager/ALL" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Task">任务管理</MudNavLink>
+            }
+            else
+            {
+                @* 管理员角色显示完整的随访管理 *@
+                <MudNavGroup Title="随访管理" Icon="@Icons.Material.Filled.AssignmentInd" Expanded="false">
+                    @* TODO: [任务管理] - 实现任务管理页面 *@
+                    <MudNavLink Href="/followupTaskManager/ALL" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Task">任务管理</MudNavLink>
+                    @* TODO: [模板管理] - 实现模板管理页面 *@
+                    <MudNavLink Href="/taskVisitManager" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.AutoAwesomeMotion">模板管理</MudNavLink>
+                </MudNavGroup>
+            }
+            
+            @* 非随访角色显示宣教模板 *@
+            @if (!roleNames.Contains("随访"))
+            {
+                @* TODO: [宣教模板] - 实现宣教模板页面 *@
+                <MudNavLink Href="/PublicityAndEducationManage" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.MenuBook">宣教模板</MudNavLink>
+            }
+            
+            @* TODO: [功能配置] - 门诊管理和排床管理需要根据科室功能配置动态显示 *@
+            @* 暂时注释，等待功能配置功能实现后再启用 *@
+            @* 
+            @if (isShowOutpatientCheckIn)
+            {
+                <MudNavLink Href="/outpatientMgr" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.LocalHospital">门诊管理</MudNavLink>
+            }
+            @if (isShowInpatientClinical)
+            {
+                <MudNavLink Href="/waitingBedMgr" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.SingleBed">排床管理</MudNavLink>
+            }
+            *@
+        }
+
+        @* 系统管理员菜单（仅在系统管理页面显示） *@
+        @if (roleNames.Contains("系统") && IsAdmin())
+        {
+            @* TODO: [科室管理] - 实现科室管理页面 *@
+            <MudNavLink Href="/followupDeptMgr" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.LocalHospital">科室管理</MudNavLink>
+            @* TODO: [课题管理] - 实现课题管理页面 *@
+            <MudNavLink Href="/followupProjMgr" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Book">课题管理</MudNavLink>
+            @* TODO: [功能配置] - 实现功能配置页面 *@
+            <MudNavLink Href="/followupFuncConfig" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.DisplaySettings">功能配置</MudNavLink>
+            @* TODO: [健康资讯] - 实现健康资讯页面 *@
+            <MudNavLink Href="/healthyNews" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Newspaper">健康资讯</MudNavLink>
+            @* TODO: [权限管理] - 实现权限管理页面 *@
+            <MudNavLink Href="/followupPremMgr" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Badge">权限管理</MudNavLink>
+            @* TODO: [运营管理] - 实现运营管理页面 *@
+            <MudNavLink Href="/operationMgr" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Equalizer">运营管理</MudNavLink>
+            @* TODO: [数据迁移] - 实现数据迁移页面 *@
+            <MudNavLink Href="/data-migration" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.MoveToInbox">数据迁移</MudNavLink>
+        }
+        
+        @* 管理员但非系统管理员的权限管理（医生管理） *@
+        @if ((roleNames.Contains("系统") || roleNames.Contains("管理员") || roleNames.Contains("随访组长")) && !IsAdmin())
+        {
+            @* TODO: [医生管理] - 实现医生管理页面（课题下的权限管理） *@
+            <MudNavLink Href="/projectPremMgr" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Badge">医生管理</MudNavLink>
+        }
+    }
+</MudNavMenu>
+
+@code {
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public string? projectId { get; set; }
+
+    private string roleNames = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // 极简实现：直接从 Claims 读取角色信息
+        var user = inj_httpContextAccessor.HttpContext?.User;
+        if (user?.Identity?.IsAuthenticated == true)
+        {
+            var roles = user.FindAll("roleName")
+                .Select(c => System.Text.RegularExpressions.Regex.Unescape(c.Value))
+                .ToList();
+            roleNames = string.Join(",", roles);
+        }
+
+        await base.OnInitializedAsync();
+    }
+
+    /// <summary>
+    /// 判断是否在系统管理页面
+    /// </summary>
+    private bool IsAdmin()
+    {
+        string url = inj_navigationManager.Uri;
+        return url.Contains("/adminMain") || 
+               url.Contains("/followupDeptMgr") || 
+               url.Contains("/followupProjMgr") || 
+               url.Contains("/operationMgr") ||
+               url.Contains("followupFuncConfig") || 
+               url.Contains("followupPremMgr") || 
+               url.Contains("healthyNews") || 
+               url.Contains("/data-migration");
+    }
+
+    /// <summary>
+    /// 根据角色返回首页链接
+    /// </summary>
+    private string MainHref()
+    {
+        string href = "/adminMain";
+        
+        if (string.IsNullOrEmpty(roleNames))
+        {
+            return href;
+        }
+
+        // 角色优先级：医院管理员 > 科室管理员 > 课题管理员 > 随访角色 > 系统管理员
+        if (roleNames.Contains("医院管理员"))
+        {
+            href = "/hospitalMain";
+        }
+        else if (roleNames.Contains("科室管理员"))
+        {
+            href = "/departmentMain";
+        }
+        else if (roleNames.Contains("课题管理员"))
+        {
+            href = "/projectMain";
+        }
+        else if (roleNames.Contains("随访")) // 随访医生、随访护士、随访组长
+        {
+            href = "/followupTaskManager/PendingReview";
+        }
+
+        return href;
+    }
+}
+
+
+
+

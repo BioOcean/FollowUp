@@ -1,16 +1,27 @@
 window.bioAuthLogin = async function (basePath, account, password) {
 	const url = (basePath || '/') + 'api/auth/login';
-	const res = await fetch(url, {
-		method: 'POST',
-		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify({ account, password }),
-		credentials: 'include'
-	});
-	if (!res.ok) {
+	try {
+		const res = await fetch(url, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ account, password }),
+			credentials: 'include'
+		});
+		
 		const text = await res.text();
-		throw new Error(`登录失败: ${res.status} ${text}`);
+		
+		return {
+			success: res.ok,
+			status: res.status,
+			message: text || (res.ok ? '登录成功' : '登录失败')
+		};
+	} catch (error) {
+		return {
+			success: false,
+			status: 0,
+			message: '网络错误，请检查网络连接'
+		};
 	}
-	return true;
 }
 
 

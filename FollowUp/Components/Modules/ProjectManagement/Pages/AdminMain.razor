@@ -7,68 +7,123 @@
 <PageTitle>管理员主页</PageTitle>
 
 <div class="admin-main-container">
-
     @if (isLoading)
     {
-        <div class="d-flex justify-center align-center" style="height: 200px;">
-            <MudProgressCircular Size="Size.Large" Indeterminate="true" />
-            <MudText Class="ml-3">正在加载数据...</MudText>
+        <div class="loading-wrapper">
+            <MudProgressCircular Color="Color.Success" Size="Size.Large" Indeterminate="true" />
+            <MudText Typo="Typo.h6" Class="mt-3" Style="color: #18B797;">正在加载数据...</MudText>
         </div>
     }
     else if (!hasPermission)
     {
-        <div class="d-flex justify-center align-center" style="height: 200px;">
-            <MudText Color="Color.Error" Typo="Typo.h6">您没有访问此页面的权限。</MudText>
+        <div class="empty-wrapper">
+            <MudIcon Icon="@Icons.Material.Filled.Lock" Size="Size.Large" Style="color: #999; font-size: 64px;" />
+            <MudText Typo="Typo.h6" Class="mt-3" Style="color: #666;">您没有访问此页面的权限</MudText>
         </div>
     }
     else if (hospitalProjects == null || !hospitalProjects.Any())
     {
-        <div class="d-flex justify-center align-center" style="height: 200px;">
-            <MudText Color="Color.Warning" Typo="Typo.h6">暂无数据可显示。</MudText>
+        <div class="empty-wrapper">
+            <MudIcon Icon="@Icons.Material.Filled.FolderOpen" Size="Size.Large" Style="color: #999; font-size: 64px;" />
+            <MudText Typo="Typo.h6" Class="mt-3" Style="color: #666;">暂无数据可显示</MudText>
         </div>
     }
     else
     {
-        <MudGrid>
+        <MudGrid Spacing="4">
             @foreach (var item in hospitalProjects)
             {
-                <MudItem xs="3">
-                    <MudPaper Height="160px" Class="d-flex justify-content-center align-items-center flex-column admin-paper" @onclick="@(() => PageToHospital(item.hospitalId))">
-                        <p class="admin-title">@item.hospitalName</p>
-                        @if (item.hospitalId != Guid.Empty)
-                        {
-                            <div>
-                                <p class="admin-content">@($"课题项目: {item.projects.Count} 个")</p>
-                                <p class="admin-content">
-                                    @if (!item.isStatisticsLoaded)
-                                    {
-                                        <MudProgressCircular Size="Size.Small" Indeterminate="true" />
-                                        <span class="ml-1">加载中...</span>
-                                    }
-                                    else
-                                    {
-                                        @($"患者: {item.patientsNum} 个")
-                                    }
-                                </p>
-                                <p class="admin-content">
-                                    @if (!item.isStatisticsLoaded)
-                                    {
-                                        <MudProgressCircular Size="Size.Small" Indeterminate="true" />
-                                        <span class="ml-1">加载中...</span>
-                                    }
-                                    else
-                                    {
-                                        @($"随访任务: {item.followupTasksNum} 个")
-                                    }
-                                </p>
+                @if (item.hospitalId == Guid.Empty)
+                {
+                    <!-- 系统管理卡片 -->
+                    <MudItem xs="12" sm="6" md="4" lg="3">
+                        <div class="hospital-card system-card" @onclick="@(() => PageToHospital(item.hospitalId))">
+                            <div class="hospital-card-header">
+                                <div class="hospital-icon">
+                                    <MudIcon Icon="@Icons.Material.Filled.Settings" />
+                                </div>
+                                <MudText Typo="Typo.h6" Class="hospital-name">
+                                    @item.hospitalName
+                                </MudText>
                             </div>
-                        }
-                    </MudPaper>
-                </MudItem>
+
+                            <div class="hospital-card-body">
+                                <div class="system-description">
+                                    管理系统科室、用户权限、配置等全局功能
+                                </div>
+                            </div>
+
+                            <div class="hospital-card-footer">
+                                <MudText Typo="Typo.caption">点击进入管理</MudText>
+                                <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Size="Size.Small" />
+                            </div>
+                        </div>
+                    </MudItem>
+                }
+                else
+                {
+                    <!-- 医院卡片 -->
+                    <MudItem xs="12" sm="6" md="4" lg="3">
+                        <div class="hospital-card" @onclick="@(() => PageToHospital(item.hospitalId))">
+                            <div class="hospital-card-header">
+                                <div class="hospital-icon">
+                                    <MudIcon Icon="@Icons.Material.Filled.LocalHospital" />
+                                </div>
+                                <MudText Typo="Typo.h6" Class="hospital-name">
+                                    @item.hospitalName
+                                </MudText>
+                            </div>
+                            
+                            <div class="hospital-card-body">
+                                <div class="stat-item">
+                                    <MudText Typo="Typo.body2" Class="stat-label">
+                                        <MudIcon Icon="@Icons.Material.Filled.Book" Class="stat-icon" />
+                                        课题项目
+                                    </MudText>
+                                    <MudText Class="stat-value">@item.projects.Count</MudText>
+                                </div>
+
+                                <div class="stat-item">
+                                    <MudText Typo="Typo.body2" Class="stat-label">
+                                        <MudIcon Icon="@Icons.Material.Filled.People" Class="stat-icon" />
+                                        患者人数
+                                    </MudText>
+                                    @if (!item.isStatisticsLoaded)
+                                    {
+                                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="stat-loading" />
+                                    }
+                                    else
+                                    {
+                                        <MudText Class="stat-value">@item.patientsNum</MudText>
+                                    }
+                                </div>
+
+                                <div class="stat-item">
+                                    <MudText Typo="Typo.body2" Class="stat-label">
+                                        <MudIcon Icon="@Icons.Material.Filled.Assignment" Class="stat-icon" />
+                                        随访任务
+                                    </MudText>
+                                    @if (!item.isStatisticsLoaded)
+                                    {
+                                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="stat-loading" />
+                                    }
+                                    else
+                                    {
+                                        <MudText Class="stat-value">@item.followupTasksNum</MudText>
+                                    }
+                                </div>
+                            </div>
+                            
+                            <div class="hospital-card-footer">
+                                <MudText Typo="Typo.caption">点击查看详情</MudText>
+                                <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Size="Size.Small" />
+                            </div>
+                        </div>
+                    </MudItem>
+                }
             }
         </MudGrid>
     }
-
 </div>
 
 
@@ -136,11 +191,12 @@
 
             // 性能优化：分步加载，先显示基本信息，再加载统计数据
             // 第一步：快速加载医院基本信息和课题项目
-            var basicHospitalInfo = await _context.form_form_set
+            var basicHospitalInfo = await _context.form_form_set!
                 .Where(s => s.type == "followup")
                 .Include(s => s.hospital)
                 .Include(s => s.project)
-                .GroupBy(s => new { s.hospital_id, s.hospital.name })
+                .Where(s => s.hospital != null)
+                .GroupBy(s => new { s.hospital_id, s.hospital!.name })
                 .Select(g => new HospitalProject
                 {
                     hospitalId = g.Key.hospital_id,
@@ -201,7 +257,7 @@
             if (!hospitalIds.Any()) return;
 
             // 批量查询患者数量
-            var patientCounts = await _context.patient
+            var patientCounts = await _context.patient!
                 .Where(p => hospitalIds.Contains(p.hospital_id) && p.source_type == "followup" && p.is_valid == true)
                 .GroupBy(p => p.hospital_id)
                 .Select(g => new { HospitalId = g.Key, Count = g.Count() })

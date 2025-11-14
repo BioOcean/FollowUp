@@ -1,0 +1,35 @@
+@page "/error"
+@inject NavigationManager inj_navigationManager
+@attribute [AllowAnonymous]
+
+<PageTitle>错误提示</PageTitle>
+
+<div class="d-flex justify-center align-center" style="height: 100vh; background-color: #f5f5f5;">
+    <MudPaper Class="pa-8" Elevation="3" Width="500px">
+        <div class="d-flex flex-column align-center">
+            <MudIcon Icon="@Icons.Material.Filled.ErrorOutline" Color="Color.Error" Size="Size.Large" Class="mb-4" />
+            <MudText Typo="Typo.h5" Class="mb-4">提示</MudText>
+            <MudText Typo="Typo.body1" Align="Align.Center" Class="mb-6">
+                @(string.IsNullOrEmpty(Message) ? "发生了一个错误" : Message)
+            </MudText>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="BackToLogin">
+                返回登录
+            </MudButton>
+        </div>
+    </MudPaper>
+</div>
+
+@code {
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public string? Message { get; set; }
+
+    private void BackToLogin()
+    {
+        inj_navigationManager.NavigateTo("/login", true);
+    }
+}
+
+
+
+

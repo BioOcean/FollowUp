@@ -1,0 +1,197 @@
+@inherits BasePage
+@inject ILogger<EditScanDialog> inj_logger
+@using Microsoft.EntityFrameworkCore
+
+<MudDialog Style="width:700px;max-height:80vh;overflow:auto">
+    <TitleContent>
+        <MudText Typo="Typo.h6">扫码消息</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudTextField T="string" Label="" Variant="Variant.Outlined" Lines="12" Value="@Message" ValueChanged="OnValueChanged" />
+        <div class="d-flex flex-column align-items-lg-start">
+            <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small" OnClick="@(() => ScanPatientInfo(1))">⭐点击完善患者信息</MudButton>
+            @if (User == null)
+            {
+                <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small" OnClick="@(() => ScanPatientInfo(2))">⭐点击完善出院患者信息</MudButton>
+            }
+            else
+            {
+                <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small" OnClick="@(() => ScanPatientInfo(4))">⭐点击门诊报到</MudButton>
+                <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small" OnClick="@(() => ScanPatientInfo(5))">⭐点击门诊签到</MudButton>
+            }
+            @if (Project != null)
+            {
+                <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small" OnClick="@(() => ScanPatientInfo(3))">⭐点击申请排床</MudButton>
+            }
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" Variant="Variant.Outlined" Color="Color.Default">取消</MudButton>
+        <MudButton OnClick="Submit" Variant="Variant.Filled" Color="Color.Primary">确定</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
+    [Parameter] public form_project? Project { get; set; }
+    [Parameter] public sys_user? User { get; set; }
+    [Parameter] public Guid? HospitalId { get; set; }
+    [Parameter] public Guid? DepartmentId { get; set; }
+
+    private string _message = string.Empty;
+
+    private string Message
+    {
+        get => _message;
+        set
+        {
+            _message = value;
+            if (Project != null)
+            {
+                Project.scan_code_msg = value;
+            }
+            else if (User != null)
+            {
+                User.weixin_message = value;
+            }
+            StateHasChanged();
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            if (User != null)
+            {
+                Message = User.weixin_message ?? string.Empty;
+                return;
+            }
+
+            if (Project != null)
+            {
+                Message = Project.scan_code_msg ?? string.Empty;
+                return;
+            }
+
+            await using var context = await ContextFactory.CreateDbContextAsync();
+
+            if (HospitalId.HasValue)
+            {
+                // 新数据结构：直接从 sys_hospital 表读取 scan_code_msg 字段
+                var hospital = await context.sys_hospital
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(x => x.id == HospitalId.Value);
+                
+                // 尝试通过反射获取字段（兼容字段可能不存在的情况）
+                var scanMsgProperty = hospital?.GetType().GetProperty("scan_code_msg");
+                Message = scanMsgProperty?.GetValue(hospital) as string ?? string.Empty;
+            }
+            else if (DepartmentId.HasValue)
+            {
+                // 新数据结构：直接从 sys_department 表读取 scan_code_msg 字段
+                var department = await context.sys_department
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(x => x.id == DepartmentId.Value);
+                
+                // 尝试通过反射获取字段（兼容字段可能不存在的情况）
+                var scanMsgProperty = department?.GetType().GetProperty("scan_code_msg");
+                Message = scanMsgProperty?.GetValue(department) as string ?? string.Empty;
+            }
+            else
+            {
+                Message = string.Empty;
+            }
+        }
+        catch (Exception ex)
+        {
+            inj_logger.LogError(ex, "加载扫码消息内容失败");
+            Message = string.Empty;
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task Submit()
+    {
+        try
+        {
+            await using var context = await ContextFactory.CreateDbContextAsync();
+
+            if (User != null)
+            {
+                User.weixin_message = Message;
+                context.sys_user.Update(User);
+            }
+            else if (Project != null)
+            {
+                Project.scan_code_msg = Message;
+                context.form_project.Update(Project);
+            }
+            else if (HospitalId.HasValue)
+            {
+                var hospital = await context.sys_hospital.FirstOrDefaultAsync(x => x.id == HospitalId.Value);
+                if (hospital != null)
+                {
+                    // 新数据结构：直接更新 sys_hospital.scan_code_msg 字段
+                    var scanMsgProperty = hospital.GetType().GetProperty("scan_code_msg");
+                    if (scanMsgProperty != null && scanMsgProperty.CanWrite)
+                    {
+                        scanMsgProperty.SetValue(hospital, Message);
+                        context.sys_hospital.Update(hospital);
+                    }
+                    else
+                    {
+                        inj_logger.LogWarning("sys_hospital 表缺少 scan_code_msg 字段，请执行 SQL/structure/001_add_core_columns.sql");
+                        throw new Exception("数据库结构未更新，请联系管理员执行数据库迁移脚本");
+                    }
+                }
+            }
+            else if (DepartmentId.HasValue)
+            {
+                var department = await context.sys_department.FirstOrDefaultAsync(x => x.id == DepartmentId.Value);
+                if (department != null)
+                {
+                    // 新数据结构：直接更新 sys_department.scan_code_msg 字段
+                    var scanMsgProperty = department.GetType().GetProperty("scan_code_msg");
+                    if (scanMsgProperty != null && scanMsgProperty.CanWrite)
+                    {
+                        scanMsgProperty.SetValue(department, Message);
+                        context.sys_department.Update(department);
+                    }
+                    else
+                    {
+                        inj_logger.LogWarning("sys_department 表缺少 scan_code_msg 字段，请执行 SQL/structure/001_add_core_columns.sql");
+                        throw new Exception("数据库结构未更新，请联系管理员执行数据库迁移脚本");
+                    }
+                }
+            }
+
+            await context.SaveChangesAsync();
+            inj_snackbar.Add("保存成功", Severity.Success);
+            MudDialog.Close(MudBlazor.DialogResult.Ok(true));
+        }
+        catch (Exception ex)
+        {
+            inj_logger.LogError(ex, "保存扫码消息失败");
+            inj_snackbar.Add($"保存失败：{ex.Message}", Severity.Error);
+        }
+    }
+
+    private void ScanPatientInfo(int type)
+    {
+        string msg = type switch
+        {
+            1 => "\n⭐点击完善患者信息",
+            2 => "\n⭐点击完善出院患者信息",
+            3 => "\n⭐点击申请排床",
+            4 => "\n⭐点击门诊报到",
+            5 => "\n⭐点击门诊签到",
+            _ => string.Empty
+        };
+
+        Message = (Message ?? string.Empty) + msg;
+    }
+
+    private void OnValueChanged(string value) => Message = value;
+}

@@ -1,0 +1,134 @@
+@page "/projectMain"
+@using Microsoft.EntityFrameworkCore
+@inherits BasePage
+@inject ILogger<ProjectMain> inj_logger
+
+<PageTitle>课题管理 - 健康管家</PageTitle>
+
+<div style="background-color:#f1fbf9;min-height:calc(100vh - 64px);" class="p-3">
+    @if (isLoading)
+    {
+        <div class="d-flex justify-center align-center" style="height: 200px;">
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+        </div>
+    }
+    else if (project != null)
+    {
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <div class="ml-3 span-text">
+                <span style="font-weight:700">数据范围：</span>
+                <span>@project.hospital.name</span>
+                <span class="ml-2">@(project.department.display_name ?? project.department.name)</span>
+                <span class="ml-2">@(project.display_name ?? project.name)</span>
+            </div>
+            @* TODO: [二维码功能] - 编辑扫码信息和下载二维码功能 *@
+        </div>
+
+        <MudPaper Class="pa-4" Elevation="2">
+            <MudText Typo="Typo.h6" Class="mb-3">课题信息</MudText>
+            <MudGrid>
+                <MudItem xs="12" sm="6">
+                    <MudText><strong>课题名称：</strong>@(project.display_name ?? project.name)</MudText>
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudText><strong>所属医院：</strong>@project.hospital.name</MudText>
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudText><strong>所属科室：</strong>@(project.department.display_name ?? project.department.name)</MudText>
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudText><strong>创建时间：</strong>@project.created_at.ToString("yyyy-MM-dd")</MudText>
+                </MudItem>
+            </MudGrid>
+        </MudPaper>
+
+        @* TODO: [统计功能] - 添加课题维度的数据统计 *@
+        @* 包括：
+            1. 平台用户数据（累计扫码数、随访次数、随访人数）
+            2. 随访数据统计（9项统计指标）
+            3. 年龄分布饼图
+            4. 任务与宣教视图（TaskOrNewsView 组件）
+        *@
+        
+        <MudPaper Class="pa-4 mt-3" Elevation="2">
+            <MudAlert Severity="Severity.Info">
+                <MudText>课题统计功能开发中...</MudText>
+                <MudText Typo="Typo.caption" Class="mt-2">
+                    将包含：平台用户数据、随访数据统计、年龄分布图表、任务与宣教视图等功能
+                </MudText>
+            </MudAlert>
+        </MudPaper>
+    }
+    else
+    {
+        <div class="d-flex justify-center align-center" style="height: 200px;">
+            <MudText>未找到课题数据</MudText>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public string? projectId { get; set; }
+
+    private form_project? project;
+    private bool isLoading = true;
+
+    protected override async Task OnPageInitializedAsync()
+    {
+        try
+        {
+            // TODO: [用户上下文服务] - 实现 IUserContextService 后从服务获取 projectId
+            // 临时方案：从 URL 参数或用户 Claims 获取
+            if (string.IsNullOrEmpty(projectId))
+            {
+                var user = inj_httpContextAccessor.HttpContext?.User;
+                if (user?.Identity?.IsAuthenticated == true)
+                {
+                    projectId = user.FindFirst("projectId")?.Value;
+                }
+            }
+
+            if (!string.IsNullOrEmpty(projectId) && Guid.TryParse(projectId, out var projectGuid))
+            {
+                await LoadData(projectGuid);
+            }
+        }
+        catch (Exception ex)
+        {
+            inj_logger.LogError(ex, "ProjectMain 初始化失败");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task LoadData(Guid projectGuid)
+    {
+        try
+        {
+            // 加载课题基本信息
+            project = await _context.form_project!
+                .AsNoTracking()
+                .Include(p => p.hospital)
+                .Include(p => p.department)
+                .FirstOrDefaultAsync(p => p.id == projectGuid);
+
+            if (project == null)
+            {
+                inj_logger.LogWarning("未找到课题信息，projectId: {ProjectId}", projectGuid);
+                return;
+            }
+
+            inj_logger.LogInformation("成功加载课题信息，课题: {ProjectName}", 
+                project.display_name ?? project.name);
+        }
+        catch (Exception ex)
+        {
+            inj_logger.LogError(ex, "加载课题数据失败，projectId: {ProjectId}", projectGuid);
+        }
+    }
+}
+

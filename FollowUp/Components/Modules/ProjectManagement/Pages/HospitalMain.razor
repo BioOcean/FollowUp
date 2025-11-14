@@ -1,0 +1,306 @@
+@page "/hospitalMain"
+@inherits BasePage
+@implements IDisposable
+@inject ILogger<HospitalMain> inj_logger
+@inject IDialogService inj_dialogService
+@inject ISnackbar inj_snackbar
+@inject IWechatService inj_wechatService
+@inject IJSRuntime inj_jsRuntime
+@inject IHospitalStatisticsService inj_statisticsService
+@using FollowUp.Components.Modules.ProjectManagement.Dialogs
+
+<PageTitle>医院概览</PageTitle>
+
+@if (isInitialLoading)
+{
+    <div style="background-color:#f1fbf9;min-height:calc(100vh - 64px);" class="p-4">
+        <MudSkeleton Width="300px" Height="30px" Animation="Animation.Wave" Class="mb-4" />
+        <div class="row mt-5">
+            <div class="col-8">
+                <MudSkeleton Height="400px" Animation="Animation.Wave" Class="mb-3" />
+                <MudSkeleton Height="350px" Animation="Animation.Wave" Class="mb-3" />
+                <MudSkeleton Height="450px" Animation="Animation.Wave" />
+            </div>
+            <div class="col-4">
+                <MudSkeleton Height="200px" Animation="Animation.Wave" Class="mb-3" />
+                <MudSkeleton Height="200px" Animation="Animation.Wave" />
+            </div>
+        </div>
+    </div>
+}
+else if (hospital != null)
+{
+    <div style="background-color:#f1fbf9;min-height:calc(100vh - 64px);" class="p-4">
+        @* 页面头部 *@
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <div class="ml-3" style="font-size:16px">
+                <span style="font-weight:700">数据范围：</span>
+                <span>@hospital.name</span>
+            </div>
+            <div>
+                <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@EditScanMsg">编辑扫码信息</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@DownloadQrCode">下载二维码</MudButton>
+            </div>
+        </div>
+
+        <div class="row mt-5">
+            @* 左侧 col-8 *@
+            <div class="col-8">
+                @* 用户数据统计面板 *@
+                <HospitalMain_UserStatsPanel HospitalId="@Guid.Parse(hospitalId!)"
+                                             DepartmentList="@departmentList"
+                                             DepartmentProjects="@departmentProjectMaps" />
+
+                @* 随访/宣教趋势 *@
+                <HospitalMain_TrendPanel HospitalId="@Guid.Parse(hospitalId!)" />
+
+                @* 活跃度图表 *@
+                <HospitalMain_ActivityPanel HospitalId="@Guid.Parse(hospitalId!)" />
+            </div>
+
+            @* 右侧 col-4 *@
+            <div class="col-4">
+                @if (isDepartmentSummaryLoading)
+                {
+                    <MudSkeleton Height="200px" Animation="Animation.Wave" Class="mb-3" />
+                    <MudSkeleton Height="200px" Animation="Animation.Wave" Class="mb-3" />
+                }
+                else
+                {
+                    @foreach (var dept in departmentList)
+                    {
+                        var hasSummary = departmentSummaries.TryGetValue(dept.id, out var summary);
+                        <HospitalMain_DepartmentCard Department="@dept" Summary="@(hasSummary ? summary : null)" />
+                    }
+                }
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="d-flex justify-center align-center" style="height: 300px;">
+        <MudText>未找到医院数据</MudText>
+    </div>
+}
+
+@code {
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public string? hospitalId { get; set; }
+
+    private sys_hospital? hospital;
+    private List<sys_department> departmentList = new();
+    private List<DepartmentProjectMap> departmentProjectMaps = new();
+    private Dictionary<Guid, DepartmentSummaryDto> departmentSummaries = new();
+    private bool isInitialLoading = true;
+    private bool isDepartmentSummaryLoading = false;
+    private readonly CancellationTokenSource _cts = new();
+
+    protected override async Task OnPageInitializedAsync()
+    {
+        try
+        {
+            await ResolveHospitalIdAsync();
+            if (string.IsNullOrWhiteSpace(hospitalId))
+            {
+                return;
+            }
+
+            await LoadHospitalDataAsync();
+        }
+        catch (Exception ex)
+        {
+            inj_logger.LogError(ex, "初始化医院主页失败");
+        }
+        finally
+        {
+            isInitialLoading = false;
+        }
+    }
+
+    private Task ResolveHospitalIdAsync()
+    {
+        if (!string.IsNullOrWhiteSpace(hospitalId))
+        {
+            return Task.CompletedTask;
+        }
+
+        var user = inj_httpContextAccessor.HttpContext?.User;
+        if (user?.Identity?.IsAuthenticated == true)
+        {
+            hospitalId = user.FindFirst("hospitalId")?.Value;
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private async Task LoadHospitalDataAsync()
+    {
+        if (!Guid.TryParse(hospitalId, out var hospitalGuid))
+        {
+            return;
+        }
+
+        await using var context = await ContextFactory.CreateDbContextAsync(_cts.Token);
+
+        // 加载医院信息
+        hospital = await context.sys_hospital.AsNoTracking()
+            .FirstOrDefaultAsync(h => h.id == hospitalGuid, _cts.Token);
+
+        if (hospital == null)
+        {
+            return;
+        }
+
+        // 加载科室列表 - 只加载有随访表单集的科室
+        var formSets = await context.form_form_set.AsNoTracking()
+            .Where(fs => fs.hospital_id == hospitalGuid && fs.type == "followup")
+            .Include(fs => fs.department)
+            .Include(fs => fs.project)
+            .ToListAsync(_cts.Token);
+
+        // 按科室分组
+        var departmentGroups = formSets
+            .Where(fs => fs.department != null)
+            .GroupBy(fs => fs.department!.id)
+            .OrderBy(g => g.First().department!.display_name ?? g.First().department!.name)
+            .ToList();
+
+        departmentList = new List<sys_department>();
+
+        foreach (var group in departmentGroups)
+        {
+            var dept = group.First().department!;
+            
+            // 为科室加载课题
+            dept.form_project = group
+                .Where(fs => fs.project != null)
+                .Select(fs => fs.project!)
+                .GroupBy(p => p.id)
+                .Select(pg => pg.First())
+                .OrderBy(p => p.display_name ?? p.name)
+                .ToList();
+
+            departmentList.Add(dept);
+        }
+
+        departmentProjectMaps = BuildDepartmentProjectMaps(departmentList);
+        await LoadDepartmentSummariesAsync();
+    }
+
+    private async Task EditScanMsg()
+    {
+        if (string.IsNullOrWhiteSpace(hospitalId)) return;
+
+        var parameters = new DialogParameters
+        {
+            ["HospitalId"] = Guid.Parse(hospitalId)
+        };
+
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.ExtraExtraLarge,
+            FullScreen = false
+        };
+
+        await inj_dialogService.ShowAsync<EditScanDialog>("扫码信息", parameters, options);
+        await LoadHospitalDataAsync();
+    }
+
+    private async Task DownloadQrCode()
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(hospitalId) || hospital == null)
+            {
+                inj_snackbar.Add("医院信息未加载完成，请稍后重试", Severity.Warning);
+                return;
+            }
+
+            bool isXuanWuProject = false;
+            var qrCodeResponse = await inj_wechatService.CreateQrCodeAsync("hospitalId", hospitalId, isXuanWuProject);
+
+            if (qrCodeResponse?.Ticket != null)
+            {
+                var fileName = $"医院二维码_{hospital.name}.png";
+                var fileUrl = await inj_wechatService.GetQrCodeAndSaveAsync(qrCodeResponse.Ticket, fileName);
+                var fullUrl = inj_navigationManager.BaseUri + fileUrl;
+
+                await inj_jsRuntime.InvokeVoidAsync("eval", $@"
+(function() {{
+    const link = document.createElement('a');
+    link.href = '{fullUrl}';
+    link.download = '{fileName}';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}})();
+");
+                inj_snackbar.Add("二维码下载成功", Severity.Success);
+            }
+            else
+            {
+                inj_snackbar.Add("生成二维码失败，请稍后重试", Severity.Error);
+                inj_logger.LogWarning("生成二维码失败: Ticket为空");
+            }
+        }
+        catch (Exception ex)
+        {
+            inj_logger.LogError(ex, "生成二维码时出错");
+            inj_snackbar.Add($"生成二维码时出错: {ex.Message}", Severity.Error);
+        }
+    }
+
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
+
+    private static List<DepartmentProjectMap> BuildDepartmentProjectMaps(IEnumerable<sys_department> departments)
+    {
+        return departments.Select(dept =>
+        {
+            var projectIds = dept.form_project?
+                .Select(p => p.id)
+                .Where(id => id != Guid.Empty)
+                .ToList() ?? new List<Guid>();
+
+            var name = dept.display_name ?? dept.name ?? string.Empty;
+            return new DepartmentProjectMap(dept.id, name, projectIds);
+        }).ToList();
+    }
+
+    private async Task LoadDepartmentSummariesAsync()
+    {
+        if (string.IsNullOrWhiteSpace(hospitalId) || !departmentProjectMaps.Any())
+        {
+            departmentSummaries = new Dictionary<Guid, DepartmentSummaryDto>();
+            return;
+        }
+
+        try
+        {
+            isDepartmentSummaryLoading = true;
+            StateHasChanged();
+
+            var summaries = await inj_statisticsService.GetDepartmentSummariesAsync(
+                Guid.Parse(hospitalId!),
+                departmentProjectMaps,
+                _cts.Token);
+
+            departmentSummaries = summaries.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+        }
+        catch (Exception ex)
+        {
+            inj_logger.LogError(ex, "加载科室统计数据失败");
+            departmentSummaries = new Dictionary<Guid, DepartmentSummaryDto>();
+        }
+        finally
+        {
+            isDepartmentSummaryLoading = false;
+            StateHasChanged();
+        }
+    }
+}

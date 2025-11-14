@@ -1,14 +1,49 @@
 ﻿:root {
+    /* 主题色系 - 医疗绿 */
     --bioo-main: #18b797;
+    --primary-color: #18B797;          /* 主题色 */
+    --primary-light: #4ECDB3;          /* 浅色版本 - 用于悬停、高亮 */
+    --primary-lighter: #E8F8F5;        /* 极浅版本 - 用于背景、标签 */
+    --primary-dark: #0D9B7E;           /* 深色版本 - 用于按钮按下 */
+    --primary-darker: #0A7A63;         /* 极深版本 - 用于导航菜单 */
+
+    /* 兼容旧变量 */
     --bioo-secondary: #1AB394;
     --bioo-blue: #1C84C6;
-    --bioo-text-primary: #333333;
-    --bioo-text-secondary: #666666;
-    --bioo-line: #cccccc;
-    --bioo-screen-bg: #F5F5F5;
-    --bioo-light-green: #F1FBF9;
+
+    /* 中性色系 - 专业灰 */
+    --bg-primary: #F7F9FC;             /* 主背景 - 淡蓝灰 */
+    --bg-secondary: #FFFFFF;           /* 卡片背景 - 纯白 */
+    --bg-tertiary: #EDF2F7;            /* 次要背景 - 浅灰 */
+
+    --text-primary: #2D3748;           /* 主文本 - 深灰 */
+    --text-secondary: #718096;         /* 次要文本 - 中灰 */
+    --text-tertiary: #A0AEC0;          /* 辅助文本 - 浅灰 */
+
+    /* 兼容旧变量 */
+    --bioo-text-primary: #2D3748;
+    --bioo-text-secondary: #718096;
+
+    --border-color: #E2E8F0;           /* 边框色 */
+    --divider-color: #EDF2F7;          /* 分割线 */
+    --bioo-line: #E2E8F0;
+
+    --bioo-screen-bg: #F7F9FC;         /* 更新为淡蓝灰 */
+    --bioo-light-green: #E8F8F5;
     --bioo-top-height: 64px;
     --bioo-content-pt: 12px;
+
+    /* 功能色系 */
+    --success-color: #48BB78;          /* 成功 - 绿色 */
+    --warning-color: #ED8936;          /* 警告 - 橙色 */
+    --error-color: #F56565;            /* 错误 - 红色 */
+    --info-color: #4299E1;             /* 信息 - 蓝色 */
+
+    /* 阴影系统 */
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.05), 0 2px 4px rgba(0, 0, 0, 0.03);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.06), 0 4px 6px rgba(0, 0, 0, 0.04);
+    --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.08), 0 10px 10px rgba(0, 0, 0, 0.04);
 }
 
 .bioo-btn {

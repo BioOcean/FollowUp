@@ -1,0 +1,259 @@
+@namespace FollowUp.Components.Modules.ProjectManagement.Components
+@inherits BasePage
+@inject ILogger<HospitalMain_UserStatsPanel> inj_logger
+@inject IHospitalStatisticsService inj_statisticsService
+
+<MudPaper Elevation="1" Class="mb-3">
+    <div class="d-flex align-items-center pa-3 justify-content-between">
+        <div class="d-flex align-items-center">
+            <MudText Class="fw-bold" Typo="Typo.h6">平台用户数据</MudText>
+            <MudTooltip Placement="Placement.Right" Arrow="true">
+                <ChildContent>
+                    <MudIcon Icon="@Icons.Material.Filled.QuestionMark" Color="Color.Default" Class="icon-ques ml-2"></MudIcon>
+                </ChildContent>
+                <TooltipContent>
+                    <p>累计扫码上平台数量：注册博远健康管理平台患者数量</p>
+                    <p>随访次数：推送随访任务次数</p>
+                    <p>随访人数：推送随访任务的患者数量</p>
+                </TooltipContent>
+            </MudTooltip>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <MudButtonGroup Color="Color.Success" Variant="Variant.Filled" Size="Size.Small">
+                <MudButton OnClick="@(() => SelectFilter("全部"))"
+                           Variant="@(selectedFilter == "全部" ? Variant.Filled : Variant.Outlined)">
+                    全部
+                </MudButton>
+                <MudButton OnClick="@(() => SelectFilter("年度数据"))"
+                           Variant="@(selectedFilter == "年度数据" ? Variant.Filled : Variant.Outlined)">
+                    年度数据
+                </MudButton>
+            </MudButtonGroup>
+            @if (selectedFilter == "年度数据")
+            {
+                <MudSelect T="int" Value="@selectedYear" ValueChanged="@OnYearChanged"
+                           Variant="Variant.Outlined" Margin="Margin.Dense" Style="min-width:100px">
+                    @foreach (var y in yearOptions)
+                    {
+                        <MudSelectItem Value="@y">@y</MudSelectItem>
+                    }
+                </MudSelect>
+            }
+        </div>
+    </div>
+
+    @if (isLoading || currentStats is null)
+    {
+        <div class="p-3">
+            <MudSkeleton Height="260px" Animation="Animation.Wave" />
+        </div>
+    }
+    else
+    {
+        <div class="d-flex p-3 flex-wrap gap-3">
+            <MudPaper Class="user-stats-card flex-grow-1" Elevation="0">
+                <div class="d-flex align-items-center justify-content-between mb-3" style="text-align:center">
+                    <div>
+                        <MudText Typo="Typo.button">累计扫码上平台数量</MudText>
+                        <p class="stats-primary-text">@currentStats.TotalPatients</p>
+                    </div>
+                    <div>
+                        <MudText Typo="Typo.button">随访次数</MudText>
+                        <p class="stats-secondary-text">@currentStats.TotalFollowupTasks</p>
+                    </div>
+                    <div>
+                        <MudText Typo="Typo.button">随访人数</MudText>
+                        <p class="stats-secondary-text">@currentStats.TotalFollowupPatients</p>
+                    </div>
+                </div>
+
+                @if (currentStats.AgeValues.Any(v => v > 0))
+                {
+                    <BiooCharts ChartType="ChartType.Pie"
+                                Labels="@currentStats.AgeLabels"
+                                Series="@AgeSeries" />
+                }
+                else
+                {
+                    <div class="chart-empty">
+                        <MudImage Src="images/nodata.jpg" Style="width:120px" />
+                        <MudText Class="mt-2">无数据</MudText>
+                    </div>
+                }
+            </MudPaper>
+
+            <MudPaper Class="user-stats-card flex-grow-1" Elevation="0">
+                <div class="d-flex justify-content-between mb-2">
+                    <MudText Typo="Typo.button">患者数量：@currentStats.TotalPatients 人</MudText>
+                    <MudText Typo="Typo.button">科室数量：@DepartmentList.Count</MudText>
+                </div>
+                @if (currentStats.DepartmentPatientValues.Any(v => v > 0))
+                {
+                    <BiooCharts ChartType="ChartType.Donut"
+                                Labels="@currentStats.DepartmentLabels"
+                                Series="@DepartmentSeries" />
+                }
+                else
+                {
+                    <div class="chart-empty">
+                        <MudImage Src="images/nodata.jpg" Style="width:120px" />
+                        <MudText Class="mt-2">无数据</MudText>
+                    </div>
+                }
+            </MudPaper>
+
+            <MudPaper Class="user-stats-card flex-grow-1" Elevation="0">
+                <MudText Typo="Typo.button" Class="mb-2">今日新增患者：@currentStats.TodayNewPatients 人</MudText>
+                @if (currentStats.TodayPatientValues.Any(v => v > 0))
+                {
+                    <BiooCharts ChartType="ChartType.Donut"
+                                Labels="@currentStats.TodayLabels"
+                                Series="@TodaySeries" />
+                }
+                else
+                {
+                    <div class="chart-empty">
+                        <MudImage Src="images/nodata.jpg" Style="width:120px" />
+                        <MudText Class="mt-2">无数据</MudText>
+                    </div>
+                }
+            </MudPaper>
+        </div>
+    }
+</MudPaper>
+
+@code {
+    [Parameter] public Guid HospitalId { get; set; }
+    [Parameter] public List<sys_department> DepartmentList { get; set; } = new();
+    [Parameter] public IReadOnlyList<DepartmentProjectMap> DepartmentProjects { get; set; } = Array.Empty<DepartmentProjectMap>();
+
+    private string selectedFilter = "全部";
+    private int selectedYear = DateTime.Now.Year;
+    private bool isLoading = false;
+    private HospitalUserStatsDto? currentStats;
+    private List<int> yearOptions = new();
+
+    private IReadOnlyList<BiooCharts.ChartSeriesData> AgeSeries =>
+        currentStats is null
+            ? Array.Empty<BiooCharts.ChartSeriesData>()
+            : new[] { new BiooCharts.ChartSeriesData("年龄分布", currentStats.AgeValues) };
+
+    private IReadOnlyList<BiooCharts.ChartSeriesData> DepartmentSeries =>
+        currentStats is null
+            ? Array.Empty<BiooCharts.ChartSeriesData>()
+            : new[] { new BiooCharts.ChartSeriesData("科室分布", currentStats.DepartmentPatientValues) };
+
+    private IReadOnlyList<BiooCharts.ChartSeriesData> TodaySeries =>
+        currentStats is null
+            ? Array.Empty<BiooCharts.ChartSeriesData>()
+            : new[] { new BiooCharts.ChartSeriesData("今日新增", currentStats.TodayPatientValues) };
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadYearOptionsAsync();
+        if (!yearOptions.Contains(selectedYear) && yearOptions.Any())
+        {
+            selectedYear = yearOptions.First();
+        }
+        await LoadStatsAsync();
+    }
+
+    private async Task SelectFilter(string filter)
+    {
+        if (selectedFilter == filter)
+        {
+            return;
+        }
+
+        selectedFilter = filter;
+        await LoadStatsAsync();
+    }
+
+    private async Task OnYearChanged(int year)
+    {
+        selectedYear = year;
+        if (selectedFilter == "年度数据")
+        {
+            await LoadStatsAsync();
+        }
+    }
+
+    private async Task LoadStatsAsync()
+    {
+        if (HospitalId == Guid.Empty)
+        {
+            return;
+        }
+
+        try
+        {
+            isLoading = true;
+            StateHasChanged();
+
+            int? year = selectedFilter == "年度数据" ? selectedYear : null;
+            currentStats = await inj_statisticsService.GetHospitalUserStatsAsync(
+                HospitalId,
+                DepartmentProjects,
+                year);
+        }
+        catch (Exception ex)
+        {
+            inj_logger.LogError(ex, "加载用户统计数据失败");
+            currentStats = null;
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadYearOptionsAsync()
+    {
+        try
+        {
+            await using var context = await ContextFactory.CreateDbContextAsync();
+
+            var patientYears = await context.patient.AsNoTracking()
+                .Where(p => p.hospital_id == HospitalId && p.create_time.HasValue)
+                .Select(p => p.create_time!.Value.Year)
+                .Distinct()
+                .ToListAsync();
+
+            var projectIds = DepartmentProjects.SelectMany(d => d.ProjectIds)
+                .Where(id => id != Guid.Empty)
+                .Distinct()
+                .ToList();
+
+            var followupYears = new List<int>();
+            if (projectIds.Any())
+            {
+                followupYears = await context.patient_event.AsNoTracking()
+                    .Where(pe => projectIds.Contains(pe.project_id) && pe.push_time.HasValue)
+                    .Select(pe => pe.push_time!.Value.Year)
+                    .Distinct()
+                    .ToListAsync();
+            }
+
+            yearOptions = patientYears
+                .Concat(followupYears)
+                .Where(y => y > 0)
+                .Distinct()
+                .OrderByDescending(y => y)
+                .ToList();
+
+            if (!yearOptions.Any())
+            {
+                var nowYear = DateTime.Now.Year;
+                yearOptions = Enumerable.Range(nowYear - 5, 6).Reverse().ToList();
+            }
+        }
+        catch (Exception ex)
+        {
+            inj_logger.LogError(ex, "加载平台用户数据年份列表失败");
+            var nowYear = DateTime.Now.Year;
+            yearOptions = Enumerable.Range(nowYear - 5, 6).Reverse().ToList();
+        }
+    }
+}
+

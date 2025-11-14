@@ -1,27 +1,262 @@
+/* ========================================
+   AdminMain 页面样式（医疗专业版）
+   主题色: rgb(24, 183, 151) #18B797
+   设计理念: 专业、清晰、值得信赖
+   ======================================== */
+
+/* 页面容器 - 淡蓝灰背景 */
 .admin-main-container {
-    background-color: #e7f9f5;
-    height: calc(100vh - 64px);
-    overflow-y: auto;
-    padding: 50px 250px;
+    background: #F7F9FC;
+    min-height: calc(100vh - 64px);
+    padding: 40px;
 }
 
-.admin-title {
-    font-size: 16px;
-    color: #45795b;
-    font-weight: 700;
+/* 加载状态 */
+.loading-wrapper {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 400px;
+    color: #718096;
 }
 
-.admin-content {
-    margin-top: 10px;
-    font-size: 14px;
-    color: #666;
+/* 空状态 */
+.empty-wrapper {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 300px;
+    color: #A0AEC0;
 }
 
-.admin-paper {
+/* 医院卡片 - 专业医疗风格 */
+.hospital-card {
+    background: #FFFFFF;
+    border-radius: 12px;
+    padding: 28px;
     cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+    border-left: 4px solid #18B797; /* 左侧色条 */
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
 }
 
-.admin-paper:hover {
-    box-shadow: 0 0 10px 0 rgba(69, 121, 91, 0.6);
+.hospital-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 100px;
+    height: 100px;
+    background: radial-gradient(circle, rgba(24, 183, 151, 0.05) 0%, transparent 70%);
+    pointer-events: none;
 }
 
+.hospital-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.06), 0 4px 6px rgba(0, 0, 0, 0.04);
+    border-left-color: #0D9B7E;
+}
+
+.hospital-card:active {
+    transform: translateY(-2px);
+}
+
+/* 医院卡片头部 */
+.hospital-card-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #EDF2F7;
+}
+
+.hospital-icon {
+    width: 52px;
+    height: 52px;
+    background: rgba(24, 183, 151, 0.1);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #18B797;
+    flex-shrink: 0;
+}
+
+.hospital-name {
+    color: #2D3748;
+    font-weight: 600;
+    font-size: 17px;
+    margin: 0;
+    line-height: 1.4;
+    word-break: break-word;
+}
+
+/* 医院卡片主体 */
+.hospital-card-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 0;
+    border-bottom: 1px solid #F7F9FC;
+    transition: all 0.2s ease;
+}
+
+.stat-item:last-child {
+    border-bottom: none;
+}
+
+.stat-item:hover {
+    padding-left: 4px;
+}
+
+.stat-icon {
+    font-size: 18px;
+    color: #A0AEC0;
+    margin-right: 8px;
+}
+
+.stat-label {
+    color: #718096;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+}
+
+.stat-value {
+    color: #18B797;
+    font-weight: 600;
+    font-size: 26px;
+    font-family: 'Segoe UI', -apple-system, system-ui;
+    margin: 0;
+}
+
+.stat-loading {
+    width: 20px !important;
+    height: 20px !important;
+    color: #18B797;
+}
+
+/* 医院卡片底部 */
+.hospital-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #EDF2F7;
+    color: #18B797;
+    font-size: 13px;
+}
+
+.hospital-card-footer .mud-icon-root {
+    transition: transform 0.3s ease;
+    font-size: 18px;
+}
+
+.hospital-card:hover .hospital-card-footer .mud-icon-root {
+    transform: translateX(4px);
+}
+
+/* 系统管理卡片特殊样式 */
+.system-card {
+    background: linear-gradient(135deg, #F7FAFC 0%, #EDF2F7 100%);
+    border-left-color: #4299E1;
+}
+
+.system-card::before {
+    background: radial-gradient(circle, rgba(66, 153, 225, 0.05) 0%, transparent 70%);
+}
+
+.system-card:hover {
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.06), 0 4px 6px rgba(0, 0, 0, 0.04);
+    border-left-color: #3182CE;
+}
+
+.system-card .hospital-icon {
+    background: rgba(66, 153, 225, 0.1);
+    color: #4299E1;
+}
+
+.system-card .hospital-card-header {
+    border-bottom-color: #EDF2F7;
+}
+
+.system-card .hospital-card-footer {
+    border-top-color: #EDF2F7;
+    color: #4299E1;
+}
+
+.system-card .stat-value {
+    color: #4299E1;
+}
+
+.system-card .system-description {
+    color: #718096;
+    font-size: 14px;
+    line-height: 1.6;
+    padding: 20px;
+    background: rgba(66, 153, 225, 0.05);
+    border-radius: 8px;
+    text-align: center;
+}
+
+/* 响应式设计 */
+@media (max-width: 1280px) {
+    .admin-main-container {
+        padding: 32px;
+    }
+}
+
+@media (max-width: 960px) {
+    .admin-main-container {
+        padding: 24px;
+    }
+
+    .hospital-card {
+        padding: 24px;
+    }
+
+    .stat-value {
+        font-size: 22px;
+    }
+}
+
+@media (max-width: 600px) {
+    .admin-main-container {
+        padding: 20px;
+    }
+
+    .hospital-card {
+        padding: 20px;
+    }
+
+    .hospital-icon {
+        width: 44px;
+        height: 44px;
+    }
+
+    .stat-item {
+        padding: 14px 0;
+    }
+
+    .stat-value {
+        font-size: 20px;
+    }
+}
