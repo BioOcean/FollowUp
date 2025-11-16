@@ -13,7 +13,7 @@
 
 @if (isInitialLoading)
 {
-    <div style="background-color:#f1fbf9;min-height:calc(100vh - 64px);" class="p-4">
+    <div class="hospital-main-container">
         <MudSkeleton Width="300px" Height="30px" Animation="Animation.Wave" Class="mb-4" />
         <div class="row mt-5">
             <div class="col-8">
@@ -30,16 +30,16 @@
 }
 else if (hospital != null)
 {
-    <div style="background-color:#f1fbf9;min-height:calc(100vh - 64px);" class="p-4">
+    <div class="hospital-main-container">
         @* 页面头部 *@
-        <div class="d-flex align-items-center justify-content-between mb-4">
-            <div class="ml-3" style="font-size:16px">
+        <div class="hospital-main-header">
+            <div class="hospital-main-title">
                 <span style="font-weight:700">数据范围：</span>
                 <span>@hospital.name</span>
             </div>
-            <div>
-                <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@EditScanMsg">编辑扫码信息</MudButton>
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@DownloadQrCode">下载二维码</MudButton>
+            <div class="hospital-main-actions">
+                <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@EditScanMsg" Class="button-press">编辑扫码信息</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@DownloadQrCode" Class="button-press">下载二维码</MudButton>
             </div>
         </div>
 

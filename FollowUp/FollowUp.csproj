@@ -13,6 +13,7 @@
 		<PackageReference Include="Bio.FormSetLib" />
 		<PackageReference Include="Bio.Shared" />
 		<PackageReference Include="BootstrapBlazor" />
+		<PackageReference Include="BootstrapBlazor.Chart" />
 		<PackageReference Include="BootstrapBlazor.FontAwesome" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
 		<PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" />

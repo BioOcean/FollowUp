@@ -1,0 +1,53 @@
+@namespace FollowUp.Components.Shared.Charts
+
+<div>
+    @if (!string.IsNullOrWhiteSpace(Title))
+    {
+        <p>@Title</p>
+    }
+    <Chart @ref="Chart" ChartType="@ChartType" OnInitAsync="@OnInit" Height="@Height" Width="@Width"/>
+</div>
+
+
+@code {
+    private Chart? Chart { get; set; }
+
+    [Parameter]
+    public string? Title { get; set; }
+
+    [Parameter]
+    public List<string> TitleLabels { get; set; } = new();
+
+    [Parameter]
+    public BChartType ChartType { get; set; } = BChartType.Bar;
+
+    [Parameter]
+    public List<ChartDataset> Items { get; set; } = new();
+
+    [Parameter]
+    public BChartOptions ChartOptions { get; set; } = new();
+
+    [Parameter]
+    public string Width { get; set; } = "100%";
+    
+    [Parameter]
+    public string Height { get; set; } = "300px";
+
+
+    private Task<ChartDataSource> OnInit()
+    {
+        var ds = new ChartDataSource();
+        ds.Options.X.Title = ChartOptions.X.Title;
+        ds.Options.Y.Title = ChartOptions.Y.Title;
+        ds.Options.Title = "";
+        ds.Options.LegendPosition = ChartOptions.LegendPosition;
+        ds.Options.LegendLabelsFontSize = 11;
+        ds.Options.ShowLegend = ChartOptions.ShowLegend;
+        ds.Labels = TitleLabels;
+
+        ds.Data.AddRange(Items);
+
+        return Task.FromResult(ds);
+    }
+}
+

@@ -4,10 +4,11 @@ BEGIN;
 
 DROP TABLE IF EXISTS followup.followup_record;
 DROP TABLE IF EXISTS followup.followup_education_history;
-DROP TABLE IF EXISTS followup.followup_patient_visit_behavior_record;
+-- 保留 followup.followup_patient_visit_behavior_record 表用于日活月活统计
 DROP TABLE IF EXISTS followup.scan_code_message;
 
 COMMIT;
+
 
 
 

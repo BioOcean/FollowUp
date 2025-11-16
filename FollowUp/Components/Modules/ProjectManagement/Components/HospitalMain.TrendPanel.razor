@@ -4,59 +4,30 @@
 @inject IHospitalStatisticsService inj_statisticsService
 
 @* 随访率/宣教阅读率趋势 *@
-<MudPaper Elevation="1" Class="mt-3 p-3">
-    <div class="d-flex justify-content-between mb-3">
+<MudPaper Elevation="1" Class="mt-3 p-2 trend-panel" Height="350px">
+    <div class="d-flex justify-content-between align-items-center">
         <div class="d-flex align-items-center">
-            <MudTooltip Placement="Placement.Left" Arrow="true">
-                <ChildContent>
-                    <MudIcon Icon="@Icons.Material.Filled.QuestionMark" Color="Color.Default" Class="icon-ques mr-2"></MudIcon>
-                </ChildContent>
-                <TooltipContent>
-                    <p>随访率：患者提交随访任务的比例</p>
-                    <p>随访率计算公式：患者提交随访任务数量/系统推送随访任务数量×100%</p>
-                    <p>宣教阅读率：阅读宣教文章的比例</p>
-                    <p>宣教阅读率公式：已阅读宣教数量/推送的宣教数量×100%</p>
-                </TooltipContent>
-            </MudTooltip>
-            <MudText Class="fw-bold" Typo="Typo.h6">@(selectedMode == "随访率" ? "随访完成率趋势" : "宣教阅读率趋势")</MudText>
+            <RadioList IsButton="true" TValue="string" Items="@modeSelectList" @bind-Value="selectedMode" Color="BColor.Success" OnSelectedChanged="@OnModeChanged"></RadioList>
         </div>
-        <div class="d-flex align-items-center gap-2">
-            <MudSelect T="int" Value="@selectedYear" ValueChanged="@OnYearChanged" Variant="Variant.Outlined" Margin="Margin.Dense" Style="min-width:100px">
-                @foreach (var y in yearOptions)
-                {
-                    <MudSelectItem Value="@y">@y</MudSelectItem>
-                }
-            </MudSelect>
-            <MudButtonGroup Color="Color.Success" Variant="Variant.Filled" Size="Size.Small">
-                <MudButton OnClick="@(() => SelectMode("随访率"))" 
-                           Variant="@(selectedMode == "随访率" ? Variant.Filled : Variant.Outlined)">
-                    随访率
-                </MudButton>
-                <MudButton OnClick="@(() => SelectMode("宣教阅读率"))"
-                           Variant="@(selectedMode == "宣教阅读率" ? Variant.Filled : Variant.Outlined)">
-                    宣教阅读率
-                </MudButton>
-            </MudButtonGroup>
+        <div class="d-flex align-items-center">
+            <DateTimePicker @bind-Value="yearValue" ViewMode="DatePickerViewMode.Year" DateFormat="yyyy" class="mb-0" OnValueChanged="@OnYearValueChanged" />
         </div>
     </div>
 
     @if (isLoading)
     {
-        <div class="d-flex justify-content-center align-items-center" style="height:400px">
+        <div class="d-flex justify-content-center align-items-center" style="height:300px">
             <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+            <MudText Class="ml-3">正在加载数据...</MudText>
         </div>
     }
-    else if (chartData.Any(d => d > 0))
+    else if (isShowChart)
     {
-        <BiooCharts ChartType="ChartType.Line"
-                    Labels="@monthLabels"
-                    Series="@chartSeries"
-                    Options="@CurrentChartOptions"
-                    Height="400px" />
+        <FollowUp.Components.Shared.Charts.BiooChartsLegacy Width="100%" Height="300px" ChartType="BChartType.Line" TitleLabels="@monthLabels" ChartOptions="@chartOptions" Items="@chartDatasets" @key="@chartRenderKey" />
     }
     else
     {
-        <div style="text-align:center;padding:120px 0">
+        <div style="text-align:center" class="mt-10">
             <MudImage Src="images/nodata.jpg" Style="width:120px" />
             <MudText Class="mt-2">无数据</MudText>
         </div>
@@ -66,72 +37,43 @@
 @code {
     [Parameter] public Guid HospitalId { get; set; }
 
+    private List<SelectedItem> modeSelectList = new();
     private string selectedMode = "随访率";
-    private int selectedYear = DateTime.Now.Year;
+    private DateTime yearValue = DateTime.Now;
     private bool isLoading = false;
 
-    private List<int> yearOptions = new();
-    private List<double> chartData = new();
-    private List<string> monthLabels = Enumerable.Range(1, 12).Select(m => $"{m}月").ToList();
+    private List<string> monthLabels = new List<string> { "1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月" };
 
-    private IReadOnlyList<BiooCharts.ChartSeriesData> chartSeries => new List<BiooCharts.ChartSeriesData>
+    private BChartOptions chartOptions = new();
+    private List<ChartDataset> chartDatasets = new List<ChartDataset>();
+    private bool isShowChart = false;
+    private int chartRenderKey = 0;
+
+    protected override async Task OnInitializedAsync()
     {
-        new BiooCharts.ChartSeriesData(selectedMode, chartData)
-    };
+        modeSelectList = new List<SelectedItem>
+        {
+            new SelectedItem { Text = "随访率", Value = "随访率" },
+            new SelectedItem { Text = "宣教阅读率", Value = "宣教阅读率" }
+        };
 
-    private static readonly BiooCharts.ChartOptions FollowupChartOptions = new()
-    {
-        ShowLegend = false,
-        YAxisTicks = 5,
-        MaxNumYAxisTicks = 10,
-        YAxisRequireZeroPoint = true,
-        YAxisLines = true,
-        XAxisLines = false,
-        LineStrokeWidth = 2.5,
-        InterpolationOption = InterpolationOption.Straight,
-        ChartPalette = new[] { "#18B797" },
-        ShowToolTips = true
-    };
-
-    private static readonly BiooCharts.ChartOptions EducationChartOptions = new()
-    {
-        ShowLegend = false,
-        YAxisTicks = 5,
-        MaxNumYAxisTicks = 10,
-        YAxisRequireZeroPoint = true,
-        YAxisLines = true,
-        XAxisLines = false,
-        LineStrokeWidth = 2.5,
-        InterpolationOption = InterpolationOption.Straight,
-        ChartPalette = new[] { "#1C84C6" },
-        ShowToolTips = true
-    };
-
-    private BiooCharts.ChartOptions CurrentChartOptions =>
-        selectedMode == "随访率" ? FollowupChartOptions : EducationChartOptions;
+        await base.OnInitializedAsync();
+    }
 
     protected override async Task OnParametersSetAsync()
     {
-        await LoadYearOptionsAsync();
-        if (!yearOptions.Contains(selectedYear) && yearOptions.Any())
-        {
-            selectedYear = yearOptions.First();
-        }
         await LoadDataAsync();
     }
 
-    private async Task SelectMode(string mode)
+    private async Task OnModeChanged(IEnumerable<SelectedItem> values, string value)
     {
-        if (selectedMode != mode)
-        {
-            selectedMode = mode;
-            await LoadDataAsync();
-        }
+        selectedMode = value;
+        await LoadDataAsync();
     }
 
-    private async Task OnYearChanged(int year)
+    private async Task OnYearValueChanged(DateTime dateTime)
     {
-        selectedYear = year;
+        yearValue = dateTime;
         await LoadDataAsync();
     }
 
@@ -142,21 +84,24 @@
             isLoading = true;
             StateHasChanged();
 
+            List<double> monthlyRates;
             if (selectedMode == "随访率")
             {
-                var trend = await inj_statisticsService.GetFollowupTrendAsync(HospitalId, selectedYear);
-                chartData = trend.MonthlyRates.ToList();
+                var trend = await inj_statisticsService.GetFollowupTrendAsync(HospitalId, yearValue.Year);
+                monthlyRates = trend.MonthlyRates.ToList();
             }
             else
             {
-                var trend = await inj_statisticsService.GetEducationTrendAsync(HospitalId, selectedYear);
-                chartData = trend.MonthlyRates.ToList();
+                var trend = await inj_statisticsService.GetEducationTrendAsync(HospitalId, yearValue.Year);
+                monthlyRates = trend.MonthlyRates.ToList();
             }
+
+            UpdateChartData(monthlyRates);
         }
         catch (Exception ex)
         {
             inj_logger.LogError(ex, "加载趋势数据失败");
-            chartData = new List<double>();
+            UpdateChartData(new List<double>());
         }
         finally
         {
@@ -165,43 +110,25 @@
         }
     }
 
-    private async Task LoadYearOptionsAsync()
+    private void UpdateChartData(List<double> monthlyRates)
     {
-        try
+        chartOptions.LegendPosition = ChartLegendPosition.Bottom;
+        chartOptions.ShowLegend = false;
+        chartDatasets = new List<ChartDataset>();
+
+        isShowChart = !monthlyRates.All(a => a == 0);
+
+        if (isShowChart)
         {
-            await using var context = await ContextFactory.CreateDbContextAsync();
-
-            var followYears = await context.patient_event.AsNoTracking()
-                .Where(pe => pe.patient.hospital_id == HospitalId && pe.push_time.HasValue)
-                .Select(pe => pe.push_time!.Value.Year)
-                .Distinct()
-                .ToListAsync();
-
-            var educationYears = await context.followup_education_push.AsNoTracking()
-                .Where(p => p.followup_education != null && p.followup_education.hospital_id == HospitalId)
-                .Select(p => p.push_time.Year)
-                .Distinct()
-                .ToListAsync();
-
-            yearOptions = followYears
-                .Concat(educationYears)
-                .Where(y => y > 0)
-                .Distinct()
-                .OrderByDescending(y => y)
-                .ToList();
-
-            if (!yearOptions.Any())
+            string label = selectedMode == "随访率" ? "随访率(%)" : "阅读率(%)";
+            chartDatasets.Add(new ChartDataset
             {
-                var nowYear = DateTime.Now.Year;
-                yearOptions = Enumerable.Range(nowYear - 5, 6).Reverse().ToList();
-            }
+                Label = label,
+                Data = monthlyRates.Cast<object>().ToArray(),
+            });
         }
-        catch (Exception ex)
-        {
-            inj_logger.LogError(ex, "加载趋势年份列表失败");
-            var nowYear = DateTime.Now.Year;
-            yearOptions = Enumerable.Range(nowYear - 5, 6).Reverse().ToList();
-        }
+
+        chartRenderKey++;
     }
 }
 

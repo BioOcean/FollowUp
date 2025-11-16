@@ -1,8 +1,36 @@
+/* ========================================
+   活跃度面板样式
+   使用设计系统变量,确保UI一致性
+   ======================================== */
 
-.icon-ques {
-    border: 2px solid #7a706b;
-    border-radius: 50%;
-    width: 20px;
-    height: 20px;
+.activity-panel {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transition: all var(--transition-base) var(--ease-in-out);
+    position: relative;
+    overflow: hidden;
+}
+
+.activity-panel::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--secondary-color) 0%, var(--primary-color) 100%);
+    opacity: 0;
+    transition: opacity var(--transition-base) var(--ease-in-out);
+}
+
+.activity-panel:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    transform: translateY(-2px);
+}
+
+.activity-panel:hover::before {
+    opacity: 1;
 }
 

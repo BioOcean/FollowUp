@@ -1,76 +1,43 @@
 @namespace FollowUp.Components.Modules.ProjectManagement.Components
 @inherits BasePage
-@inject ILogger<HospitalMain_DepartmentCard> inj_logger
 
-@* 科室信息卡片 - 完全按照 NTCare DepProInfoView 布局 *@
-<MudPaper Class="pa-3 mb-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
+@* 科室信息卡片 - 采用 NTCare 原始设计 *@
+<MudPaper Class="pa-2 mb-4">
+    <div class="d-flex justify-content-between">
         <MudButton Variant="Variant.Text"
                    Color="Color.Primary"
                    OnClick="@PageToDepartment"
                    Class="pa-0"
-                   Style="min-width:unset">
+                   Style="min-width:unset;">
             <MudText Color="Color.Primary" Typo="Typo.h6">@(Department.display_name ?? Department.name)</MudText>
         </MudButton>
     </div>
-
-    @if (Summary is null)
-    {
-        <MudSkeleton Height="140px" Animation="Animation.Wave" Class="mb-3" />
-    }
-    else
-    {
-        @* 核心统计数据 - 3个并排 *@
-        <div class="d-flex mb-4" style="gap:8px">
-            <div class="stat-box">
-                <MudText Typo="Typo.button" Color="Color.Primary" Class="mb-1">患者数量</MudText>
-                <MudText Class="fw-bold" Style="font-size:1.2rem">@PatientCount 个</MudText>
-            </div>
-            <div class="stat-box">
-                <MudText Typo="Typo.button" Color="Color.Primary" Class="mb-1">随访任务</MudText>
-                <MudText Class="fw-bold" Style="font-size:1.2rem">@FollowupTaskCount 个</MudText>
-            </div>
-            <div class="stat-box">
-                <MudText Typo="Typo.button" Color="Color.Primary" Class="mb-1">本月随访率</MudText>
-                <MudText Class="fw-bold" Style="font-size:1.2rem">@FollowupRate.ToString("0.0")%</MudText>
-            </div>
+    <div class="d-flex mt-4 mb-8">
+        <div class="div-block width33">
+            <MudText Typo="Typo.button" Color="Color.Primary">患者数量</MudText>
+            <MudText Class="fw-bold">@PatientCount 个</MudText>
         </div>
-
-        @* 状态统计 - 4个并排 *@
-        <div class="d-flex mb-3" style="gap:8px">
-            <div class="status-box">
-                <MudText Class="fw-bold">已随访</MudText>
-                <MudText>@StatusCompleted</MudText>
-            </div>
-            <div class="status-box">
-                <MudText Class="fw-bold">待审核</MudText>
-                <MudText>@StatusPending</MudText>
-            </div>
-            <div class="status-box">
-                <MudText Class="fw-bold">患者未提交</MudText>
-                <MudText>@StatusNotSubmitted</MudText>
-            </div>
-            <div class="status-box">
-                <MudText Class="fw-bold">已超时</MudText>
-                <MudText>@StatusOverdue</MudText>
-            </div>
+        <div class="div-block width33">
+            <MudText Typo="Typo.button" Color="Color.Primary">随访任务</MudText>
+            <MudText Class="fw-bold">@FollowupTaskCount 个</MudText>
         </div>
-    }
-
-    @* 科室内课题列表 *@
+        <div class="div-block width33">
+            <MudText Typo="Typo.button" Color="Color.Primary">本月随访率</MudText>
+            <MudText Class="fw-bold">@FollowupRate.ToString("0")%</MudText>
+        </div>
+    </div>
     @if (Department.form_project != null && Department.form_project.Any())
     {
-        <MudText Class="fw-bold mt-3 mb-2">科室内课题</MudText>
-        <MudGrid Spacing="2">
+        <MudText Class="fw-bold mt-2">科室内课题</MudText>
+        <MudGrid Class="mt-0">
             @foreach (var project in Department.form_project)
             {
-                <MudItem xs="12" sm="6">
+                <MudItem xs="4">
                     <MudButton Variant="Variant.Text"
                                Color="Color.Primary"
                                OnClick="@(() => PageToProject(project.id))"
-                               FullWidth="true"
-                               Class="pa-1"
-                               Style="justify-content:flex-start;text-transform:none">
+                               Class="pa-0 span_text"
+                               Style="min-width:unset;">
                         @(project.display_name ?? project.name)
                     </MudButton>
                 </MudItem>
@@ -86,10 +53,6 @@
     private int PatientCount => Summary?.PatientCount ?? 0;
     private int FollowupTaskCount => Summary?.FollowupTaskCount ?? 0;
     private double FollowupRate => Summary?.FollowupRate ?? 0;
-    private int StatusCompleted => Summary?.StatusCounts.TryGetValue("已随访", out var value) == true ? value : 0;
-    private int StatusPending => Summary?.StatusCounts.TryGetValue("待审核", out var value) == true ? value : 0;
-    private int StatusNotSubmitted => Summary?.StatusCounts.TryGetValue("患者未提交", out var value) == true ? value : 0;
-    private int StatusOverdue => Summary?.StatusCounts.TryGetValue("已超时", out var value) == true ? value : 0;
 
     private void PageToDepartment()
     {
@@ -101,23 +64,3 @@
         inj_navigationManager.NavigateTo($"/projectMain?projectId={projectId}");
     }
 }
-
-<style>
-    .stat-box {
-        flex: 1;
-        text-align: center;
-        padding: 12px;
-        background: rgba(24, 183, 151, 0.05);
-        border-radius: 8px;
-    }
-
-    .status-box {
-        flex: 1;
-        text-align: center;
-        padding: 8px;
-        border-radius: 6px;
-        background: rgba(0, 0, 0, 0.02);
-    }
-</style>
-
-

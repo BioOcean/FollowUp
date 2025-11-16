@@ -6,10 +6,10 @@
 
 | 序号 | 变更内容 | 说明 |
 |------|----------|------|
-| 1 | `public.patient` 新增 `last_login_time` | 替代 `followup.followup_patient_visit_behavior_record` 表，用于活跃度统计（日活/月活） |
-| 2 | `system.sys_hospital` / `system.sys_department` 新增 `scan_code_msg` | 扫码提示文案移动至医院/科室基础表，对应原 `followup.scan_code_message` |
-| 3 | `care.patient_event` 扩展随访字段 | 合并原 `followup.followup_record` 字段：`create_time`、`audit_doctor`、`task_name`、`push_time`、`input_time`、`audit_time`、`stop_time`、`event_type_definition_id`、`audit_result`、`followup_education_id`、`file_list`、`scode`、`push_flag`；**不再新增** `followup_type`、`outpatient_date`、`hospitalized_*`，改由 `event_type_definition` 及 `care.patient_hospitalized` / `care.patient_outpatient` 维护 |
-| 4 | `followup.followup_education_push` 新增 `read_time` 以及状态约定 | `status` 仅允许 `default`/`sent`，并吸收原 `followup.followup_education_history` 里的数据 |
+| 1 | `system.sys_hospital` / `system.sys_department` 新增 `scan_code_msg` | 扫码提示文案移动至医院/科室基础表，对应原 `followup.scan_code_message` |
+| 2 | `care.patient_event` 扩展随访字段 | 合并原 `followup.followup_record` 字段：`create_time`、`audit_doctor`、`task_name`、`push_time`、`input_time`、`audit_time`、`stop_time`、`event_type_definition_id`、`audit_result`、`followup_education_id`、`file_list`、`scode`、`push_flag`；**不再新增** `followup_type`、`outpatient_date`、`hospitalized_*`，改由 `event_type_definition` 及 `care.patient_hospitalized` / `care.patient_outpatient` 维护 |
+| 3 | `followup.followup_education_push` 新增 `read_time` 以及状态约定 | `status` 仅允许 `default`/`sent`，并吸收原 `followup.followup_education_history` 里的数据 |
+| 4 | **保留** `followup.followup_patient_visit_behavior_record` | 继续用于活跃度统计（日活/月活），不迁移到 `patient` 表 |
 
 结构脚本：`SQL/structure/001_add_core_columns.sql`
 
@@ -63,8 +63,10 @@
 |----------|------|
 | `followup.followup_record` | 随访任务信息已合并至 `care.patient_event` |
 | `followup.followup_education_history` | 数据迁移至 `followup_education_push` 的 `read_time` 字段 |
-| `followup.followup_patient_visit_behavior_record` | 活跃度统计改用 `patient.last_login_time` |
 | `followup.scan_code_message` | 医院/科室扫码文案改由 `system` schema 维护 |
+
+**保留的表**：
+- `followup.followup_patient_visit_behavior_record` - 继续用于日活月活统计
 
 执行前务必确认：
 - 迁移数据校验通过；
@@ -90,8 +92,8 @@
    - 去重维度与脚本一致，可复用 `(followup_education_id, patient_id, push_time)` 作为业务键。
 
 4. **活跃度统计**
-   - 以 `public.patient.last_login_time` 统计日活/月活。
-   - 查询建议：筛选 `source_type = 'followup'` 且 `is_valid = true` 的患者，再按日期分组。
+   - 使用 `followup.followup_patient_visit_behavior_record` 表统计日活/月活。
+   - 查询建议：先筛选 `source_type = 'followup'` 且 `is_valid = true` 的患者ID，再关联 `visit_time` 按日期分组统计去重患者数。
 
 5. **脚本执行顺序示例**
 

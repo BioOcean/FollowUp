@@ -47,10 +47,10 @@ public sealed class HospitalStatisticsService : IHospitalStatisticsService
             .ToListAsync(cancellationToken);
 
         var eventsQuery = context.patient_event.AsNoTracking()
-            .Where(pe => pe.patient.hospital_id == hospitalId && pe.is_valid == true);
+            .Where(pe => pe.patient.hospital_id == hospitalId && pe.is_valid == true && pe.push_time.HasValue);
         if (year.HasValue)
         {
-            eventsQuery = eventsQuery.Where(pe => pe.push_time.HasValue && pe.push_time.Value.Year == year.Value);
+            eventsQuery = eventsQuery.Where(pe => pe.push_time.Value.Year == year.Value);
         }
 
         var events = await eventsQuery
@@ -174,12 +174,18 @@ public sealed class HospitalStatisticsService : IHospitalStatisticsService
             patientQuery = patientQuery.Where(p => p.hospital_id == hospitalId);
         }
 
-        // 查询患者及其最近登录时间（使用新字段 last_login_time）
-        var patients = await patientQuery
-            .Select(p => new { p.id, p.last_login_time })
+        // 查询患者ID列表
+        var patientIds = await patientQuery
+            .Select(p => p.id)
             .ToListAsync(cancellationToken);
-        
-        var totalPatients = patients.Count;
+
+        var totalPatients = patientIds.Count;
+
+        // 查询访问行为记录
+        var visitRecords = await context.followup_patient_visit_behavior_record.AsNoTracking()
+            .Where(v => patientIds.Contains(v.patient_id))
+            .Select(v => new { v.patient_id, v.visit_time })
+            .ToListAsync(cancellationToken);
 
         List<int> activeCounts = new();
         List<int> activePercents = new();
@@ -193,9 +199,12 @@ public sealed class HospitalStatisticsService : IHospitalStatisticsService
             for (int day = 0; day < daysInMonth; day++)
             {
                 var currentDate = firstDay.AddDays(day);
-                var activePatients = patients
-                    .Count(p => p.last_login_time.HasValue && p.last_login_time.Value.Date == currentDate.Date);
-                
+                var activePatients = visitRecords
+                    .Where(v => v.visit_time.Date == currentDate.Date)
+                    .Select(v => v.patient_id)
+                    .Distinct()
+                    .Count();
+
                 activeCounts.Add(activePatients);
                 activePercents.Add(totalPatients == 0 ? 0 : (int)Math.Round((double)activePatients / totalPatients * 100));
                 labels.Add($"{currentDate:dd}日");
@@ -205,11 +214,12 @@ public sealed class HospitalStatisticsService : IHospitalStatisticsService
         {
             for (int month = 1; month <= 12; month++)
             {
-                var activePatients = patients
-                    .Count(p => p.last_login_time.HasValue 
-                             && p.last_login_time.Value.Year == targetDate.Year 
-                             && p.last_login_time.Value.Month == month);
-                
+                var activePatients = visitRecords
+                    .Where(v => v.visit_time.Year == targetDate.Year && v.visit_time.Month == month)
+                    .Select(v => v.patient_id)
+                    .Distinct()
+                    .Count();
+
                 activeCounts.Add(activePatients);
                 activePercents.Add(totalPatients == 0 ? 0 : (int)Math.Round((double)activePatients / totalPatients * 100));
                 labels.Add($"{month}月");

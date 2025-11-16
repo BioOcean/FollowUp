@@ -1,22 +1,22 @@
 namespace FollowUp.Components.Modules.ProjectManagement.Models;
 
-public sealed record DepartmentOverviewItem(Guid DepartmentId, string DepartmentName);
-public sealed record ProjectOverviewItem(Guid ProjectId, string ProjectName);
-public sealed record DepartmentWithProjectsDto(Guid DepartmentId, string DepartmentName, IReadOnlyList<ProjectOverviewItem> Projects);
+/// <summary>
+/// 科室与课题映射关系
+/// </summary>
 public sealed record DepartmentProjectMap(Guid DepartmentId, string DepartmentName, IReadOnlyList<Guid> ProjectIds);
 
-public sealed record HospitalOverviewDto(
-    Guid hospital_id,
-    string hospital_name,
-    string? scan_code_msg,
-    IReadOnlyList<DepartmentWithProjectsDto> departments);
-
+/// <summary>
+/// 活跃度统计维度
+/// </summary>
 public enum ActivityDimension
 {
-    Daily,
-    Monthly
+    Daily,   // 日维度
+    Monthly  // 月维度
 }
 
+/// <summary>
+/// 活跃度统计数据
+/// </summary>
 public sealed record ActivityStatsDto(
     ActivityDimension Dimension,
     DateTime TargetDate,
@@ -24,9 +24,19 @@ public sealed record ActivityStatsDto(
     IReadOnlyList<int> ActivePercents,
     IReadOnlyList<string> Labels);
 
+/// <summary>
+/// 随访率趋势数据
+/// </summary>
 public sealed record FollowupTrendDto(int Year, IReadOnlyList<double> MonthlyRates);
+
+/// <summary>
+/// 宣教阅读率趋势数据
+/// </summary>
 public sealed record EducationTrendDto(int Year, IReadOnlyList<double> MonthlyRates);
 
+/// <summary>
+/// 科室统计摘要
+/// </summary>
 public sealed record DepartmentSummaryDto(
     Guid DepartmentId,
     string DepartmentName,
@@ -35,6 +45,9 @@ public sealed record DepartmentSummaryDto(
     double FollowupRate,
     IReadOnlyDictionary<string, int> StatusCounts);
 
+/// <summary>
+/// 课题统计摘要
+/// </summary>
 public sealed record ProjectSummaryDto(
     Guid ProjectId,
     string ProjectName,
@@ -43,6 +56,9 @@ public sealed record ProjectSummaryDto(
     double FollowupRate,
     IReadOnlyDictionary<string, int> StatusCounts);
 
+/// <summary>
+/// 医院用户统计数据
+/// </summary>
 public sealed record HospitalUserStatsDto(
     int TotalPatients,
     int TotalFollowupTasks,

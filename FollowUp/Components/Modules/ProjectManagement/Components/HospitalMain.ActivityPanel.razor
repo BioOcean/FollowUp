@@ -5,40 +5,16 @@
 @using FollowUp.Components.Shared.Charts
 
 @* 活跃度情况 *@
-<MudPaper Elevation="1" Class="mt-3 p-3">
+<MudPaper Elevation="1" Class="mt-3 p-3 activity-panel">
     <div class="d-flex flex-column">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <div class="d-flex align-items-center">
                 <MudText Class="fw-bold" Typo="Typo.h6">活跃度情况</MudText>
-                <MudTooltip Placement="Placement.Left" Arrow="true">
-                    <ChildContent>
-                        <MudIcon Icon="@Icons.Material.Filled.QuestionMark" Color="Color.Default" Class="icon-ques ml-2"></MudIcon>
-                    </ChildContent>
-                    <TooltipContent>
-                        <p>日活：每天进入患者端的患者数量；</p>
-                        <p>日活占比：日活数量/患者总数*100%；</p>
-                        <p>月活：每月登陆过患者端的患者数量；</p>
-                        <p>月活占比：月活数量/患者总数*100%;</p>
-                    </TooltipContent>
-                </MudTooltip>
-                <MudDatePicker @bind-Date="@selectedDate"
-                               DateFormat="@dateFormat"
-                               Editable="true"
-                               Variant="Variant.Outlined"
-                               Margin="Margin.Dense"
-                               Class="ml-3"
-                               Style="max-width:180px" />
             </div>
-            <MudButtonGroup Color="Color.Success" Variant="Variant.Filled" Size="Size.Small">
-                <MudButton OnClick="@(() => SelectDimension(ActivityDimension.Daily))"
-                           Variant="@(selectedDimension == ActivityDimension.Daily ? Variant.Filled : Variant.Outlined)">
-                    日活
-                </MudButton>
-                <MudButton OnClick="@(() => SelectDimension(ActivityDimension.Monthly))"
-                           Variant="@(selectedDimension == ActivityDimension.Monthly ? Variant.Filled : Variant.Outlined)">
-                    月活
-                </MudButton>
-            </MudButtonGroup>
+            <div class="d-flex align-items-center">
+                <RadioList IsButton="true" TValue="string" Items="@dimensionSelectList" @bind-Value="selectedDimensionStr" Color="BColor.Success" OnSelectedChanged="@OnDimensionChanged" class="mr-3"></RadioList>
+                <DateTimePicker @bind-Value="selectedDateValue" ViewMode="@datePickerViewMode" DateFormat="@dateFormat" class="mb-0" OnValueChanged="@OnDateValueChanged" />
+            </div>
         </div>
 
         @if (isLoading)
@@ -70,8 +46,10 @@
 @code {
     [Parameter] public Guid HospitalId { get; set; }
 
-    private ActivityDimension selectedDimension = ActivityDimension.Daily;
-    private DateTime? selectedDate = DateTime.Now;
+    private List<SelectedItem> dimensionSelectList = new();
+    private string selectedDimensionStr = "日活";
+    private ActivityDimension selectedDimension => selectedDimensionStr == "日活" ? ActivityDimension.Daily : ActivityDimension.Monthly;
+    private DateTime selectedDateValue = DateTime.Now;
     private bool isLoading = false;
 
     private List<int> activeCounts = new();
@@ -81,10 +59,11 @@
     private bool hasData => activeCounts.Any(c => c > 0);
 
     private string dateFormat => selectedDimension == ActivityDimension.Daily ? "yyyy-MM" : "yyyy";
+    private DatePickerViewMode datePickerViewMode => selectedDimension == ActivityDimension.Daily ? DatePickerViewMode.Month : DatePickerViewMode.Year;
 
     private readonly CustomChartOptions activityChartOptions = new()
     {
-        ShowBarValues = false,
+        ShowBarValues = true,
         ShowLineValues = true,
         ShowLegend = true,
         LegendPosition = LegendPosition.Bottom,
@@ -95,18 +74,32 @@
         LineColor = "#FFA500"
     };
 
+    protected override async Task OnInitializedAsync()
+    {
+        dimensionSelectList = new List<SelectedItem>
+        {
+            new SelectedItem { Text = "日活", Value = "日活" },
+            new SelectedItem { Text = "月活", Value = "月活" }
+        };
+
+        await base.OnInitializedAsync();
+    }
+
     protected override async Task OnParametersSetAsync()
     {
         await LoadDataAsync();
     }
 
-    private async Task SelectDimension(ActivityDimension dimension)
+    private async Task OnDimensionChanged(IEnumerable<SelectedItem> values, string value)
     {
-        if (selectedDimension != dimension)
-        {
-            selectedDimension = dimension;
-            await LoadDataAsync();
-        }
+        selectedDimensionStr = value;
+        await LoadDataAsync();
+    }
+
+    private async Task OnDateValueChanged(DateTime dateTime)
+    {
+        selectedDateValue = dateTime;
+        await LoadDataAsync();
     }
 
     private async Task LoadDataAsync()
@@ -119,7 +112,7 @@
             var stats = await inj_statisticsService.GetActivityStatsAsync(
                 HospitalId,
                 selectedDimension,
-                selectedDate ?? DateTime.Now,
+                selectedDateValue,
                 null
             );
 

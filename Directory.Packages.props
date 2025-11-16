@@ -11,7 +11,8 @@
     <PackageVersion Include="Bio.Models" Version="0.2.1010.5" />
     <PackageVersion Include="Bio.Shared" Version="0.2.927" />
     <!-- Blazor UI 框架 -->
-    <PackageVersion Include="BootstrapBlazor" Version="9.11.2" />
+    <PackageVersion Include="BootstrapBlazor" Version="9.12.1" />
+    <PackageVersion Include="BootstrapBlazor.Chart" Version="10.0.0" />
     <PackageVersion Include="BootstrapBlazor.FontAwesome" Version="9.1.2" />
     <PackageVersion Include="HtmlSanitizer" Version="9.0.886" />
     <PackageVersion Include="Microsoft.CodeAnalysis.Common" Version="4.14.0" />

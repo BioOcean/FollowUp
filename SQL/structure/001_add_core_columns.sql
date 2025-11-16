@@ -2,23 +2,12 @@
 -- 执行前请确认已在维护窗口，并做好备份
 BEGIN;
 
--- 患者表新增最近登录时间（用于活跃度统计）
-ALTER TABLE public.patient
-    ADD COLUMN IF NOT EXISTS last_login_time timestamp without time zone;
-
 -- 医院与科室表新增扫码文案字段
 ALTER TABLE system.sys_hospital
     ADD COLUMN IF NOT EXISTS scan_code_msg text;
 
 ALTER TABLE system.sys_department
     ADD COLUMN IF NOT EXISTS scan_code_msg text;
-
--- 先移除历史脚本遗留的冗余字段
-ALTER TABLE care.patient_event
-    DROP COLUMN IF EXISTS followup_type,
-    DROP COLUMN IF EXISTS outpatient_date,
-    DROP COLUMN IF EXISTS hospitalized_in_date,
-    DROP COLUMN IF EXISTS hospitalized_out_date;
 
 -- patient_event 扩展随访字段
 ALTER TABLE care.patient_event

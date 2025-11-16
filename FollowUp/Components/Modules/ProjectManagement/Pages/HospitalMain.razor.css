@@ -1,4 +1,51 @@
-/* HospitalMain 页面样式 */
+/* ========================================
+   HospitalMain 页面样式
+   使用设计系统变量,确保UI一致性
+   ======================================== */
 
-/* 页面子组件不需要额外的全局样式 */
-/* 所有样式都在各自的 razor 文件中通过 <style> 标签定义 */
+/* 页面容器 */
+.hospital-main-container {
+    background: linear-gradient(135deg, #F7FAFC 0%, #EDF2F7 100%);
+    min-height: calc(100vh - 64px);
+    padding: var(--spacing-lg);
+    animation: fadeIn var(--transition-base) var(--ease-out);
+}
+
+/* 页面头部 */
+.hospital-main-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-lg);
+    padding: var(--spacing-lg);
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+}
+
+.hospital-main-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--primary-gradient);
+}
+
+.hospital-main-title {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.hospital-main-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+}

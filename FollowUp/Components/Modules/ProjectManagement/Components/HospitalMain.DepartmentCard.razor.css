@@ -1,0 +1,19 @@
+﻿/* ========================================
+   科室卡片样式 - NTCare 原始设计
+   ======================================== */
+
+.div-block {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.width33 {
+    width: 33%;
+}
+
+.span_text {
+    font-size: 16px;
+    cursor: pointer;
+}
