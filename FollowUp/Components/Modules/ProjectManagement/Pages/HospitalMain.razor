@@ -149,15 +149,20 @@ else
 
     private async Task LoadHospitalDataAsync()
     {
+        if (_context == null)
+        {
+            inj_logger.LogWarning("HospitalMain: _context 未初始化");
+            return;
+        }
+
         if (!Guid.TryParse(hospitalId, out var hospitalGuid))
         {
             return;
         }
 
-        await using var context = await ContextFactory.CreateDbContextAsync(_cts.Token);
-
+        // 使用 BasePage 提供的 _context，避免手动创建导致资源泄漏
         // 加载医院信息
-        hospital = await context.sys_hospital.AsNoTracking()
+        hospital = await _context.sys_hospital.AsNoTracking()
             .FirstOrDefaultAsync(h => h.id == hospitalGuid, _cts.Token);
 
         if (hospital == null)
@@ -166,7 +171,7 @@ else
         }
 
         // 加载科室列表 - 只加载有随访表单集的科室
-        var formSets = await context.form_form_set.AsNoTracking()
+        var formSets = await _context.form_form_set.AsNoTracking()
             .Where(fs => fs.hospital_id == hospitalGuid && fs.type == "followup")
             .Include(fs => fs.department)
             .Include(fs => fs.project)
@@ -184,7 +189,7 @@ else
         foreach (var group in departmentGroups)
         {
             var dept = group.First().department!;
-            
+
             // 为科室加载课题
             dept.form_project = group
                 .Where(fs => fs.project != null)

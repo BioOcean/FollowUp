@@ -1,3 +1,5 @@
+using FollowUp.Constants;
+
 namespace FollowUp.Services;
 
 /// <summary>
@@ -49,7 +51,7 @@ public class NavigationService : INavigationService
             var user = _httpContextAccessor.HttpContext?.User;
             if (user?.Identity?.IsAuthenticated != true)
             {
-                return "/login";
+                return RouteConstants.Login;
             }
 
             // 从 Claims 读取角色列表
@@ -59,7 +61,7 @@ public class NavigationService : INavigationService
 
             if (roles.Count == 0)
             {
-                return "/login";
+                return RouteConstants.Login;
             }
 
             // 角色优先级：医院管理员 > 科室管理员 > 课题管理员 > 随访角色 > 系统管理员
@@ -69,51 +71,51 @@ public class NavigationService : INavigationService
                 var hospitalId = await _userContextService.GetHospitalIdAsync();
                 if (hospitalId.HasValue)
                 {
-                    _cachedHomePage = $"/hospitalMain?hospitalId={hospitalId.Value}";
+                    _cachedHomePage = RouteConstants.BuildHospitalMainUrl(hospitalId.Value);
                     return _cachedHomePage;
                 }
-                return "/error?message=您暂无医院权限，请联系系统管理员分配权限";
+                return $"{RouteConstants.Error}?message=您暂无医院权限，请联系系统管理员分配权限";
             }
             else if (roles.Contains("科室管理员"))
             {
                 var department = await _userContextService.GetDepartmentAsync();
                 if (department != null)
                 {
-                    _cachedHomePage = $"/departmentMain?departmentId={department.id}";
+                    _cachedHomePage = RouteConstants.BuildDepartmentMainUrl(department.id);
                     return _cachedHomePage;
                 }
-                return "/error?message=您暂无科室权限，请联系系统管理员分配权限";
+                return $"{RouteConstants.Error}?message=您暂无科室权限，请联系系统管理员分配权限";
             }
             else if (roles.Contains("课题管理员"))
             {
                 var project = await _userContextService.GetProjectAsync();
                 if (project != null)
                 {
-                    _cachedHomePage = $"/projectMain?projectId={project.id}";
+                    _cachedHomePage = RouteConstants.BuildProjectMainUrl(project.id);
                     return _cachedHomePage;
                 }
-                return "/error?message=您暂无课题权限，请联系系统管理员分配权限";
+                return $"{RouteConstants.Error}?message=您暂无课题权限，请联系系统管理员分配权限";
             }
             // 随访和系统角色使用 Contains 模糊匹配（因为可能有多个随访角色）
             else if (roles.Any(r => r.Contains("随访")))
             {
-                _cachedHomePage = "/followupTaskManager/PendingReview";
+                _cachedHomePage = $"{RouteConstants.TaskManager}/PendingReview";
                 return _cachedHomePage;
             }
             else if (roles.Any(r => r.Contains("系统")))
             {
-                _cachedHomePage = "/adminMain";
+                _cachedHomePage = RouteConstants.AdminMain;
                 return _cachedHomePage;
             }
 
             // 默认跳转到任务管理
-            _cachedHomePage = "/followupTaskManager/PendingReview";
+            _cachedHomePage = $"{RouteConstants.TaskManager}/PendingReview";
             return _cachedHomePage;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "获取用户首页路径失败");
-            return "/login";
+            return RouteConstants.Login;
         }
     }
     

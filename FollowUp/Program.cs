@@ -31,10 +31,11 @@ builder.Services.Configure<Microsoft.AspNetCore.Components.Server.CircuitOptions
     }
 });
 
-// 注册用户上下文服务
+// 注册核心服务
 builder.Services.AddScoped<IUserContextService, UserContextService>();
-// 注册导航服务
-builder.Services.AddScoped<INavigationService, NavigationService>(); 
+builder.Services.AddScoped<INavigationService, NavigationService>();
+builder.Services.AddScoped<FollowUp.Services.IAuthorizationService, FollowUp.Services.AuthorizationService>();
+builder.Services.AddScoped<IErrorHandlingService, ErrorHandlingService>(); 
 
 
 // 注册项目管理模块服务

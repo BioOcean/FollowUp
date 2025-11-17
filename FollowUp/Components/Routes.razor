@@ -1,15 +1,17 @@
 ﻿<BootstrapBlazorRoot>
     <CascadingAuthenticationState>
-        <Router AppAssembly="typeof(Program).Assembly">
-            <Found Context="routeData">
-                <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)">
-                    <NotAuthorized>
-                        <RedirectToSignIn />
-                    </NotAuthorized>
-                </AuthorizeRouteView>
-                <FocusOnNavigate RouteData="routeData" Selector="h1" />
-            </Found>
-        </Router>
+        <GlobalErrorBoundary>
+            <Router AppAssembly="typeof(Program).Assembly">
+                <Found Context="routeData">
+                    <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)">
+                        <NotAuthorized>
+                            <RedirectToSignIn />
+                        </NotAuthorized>
+                    </AuthorizeRouteView>
+                    <FocusOnNavigate RouteData="routeData" Selector="h1" />
+                </Found>
+            </Router>
+        </GlobalErrorBoundary>
     </CascadingAuthenticationState>
 </BootstrapBlazorRoot>
 

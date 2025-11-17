@@ -1,0 +1,71 @@
+@namespace FollowUp.Components.Shared
+
+@* 无数据展示组件 - 统一的空状态UI *@
+<div class="empty-data-view" style="text-align:center; padding:@Padding">
+    @if (!string.IsNullOrEmpty(ImageUrl))
+    {
+        <MudImage Src="@ImageUrl" Style="@($"width:{ImageSize}")" Alt="无数据" />
+    }
+    else
+    {
+        <MudIcon Icon="@Icons.Material.Filled.FolderOpen"
+                 Size="Size.Large"
+                 Style="@($"font-size:{ImageSize}; color:#ccc;")" />
+    }
+    
+    <MudText Class="mt-2" Typo="@MessageTypo" Color="@MessageColor">
+        @Message
+    </MudText>
+    
+    @if (ChildContent != null)
+    {
+        <div class="mt-3">
+            @ChildContent
+        </div>
+    }
+</div>
+
+@code {
+    /// <summary>
+    /// 显示的消息文本
+    /// </summary>
+    [Parameter]
+    public string Message { get; set; } = "暂无数据";
+
+    /// <summary>
+    /// 图片URL（可选，默认使用图标）
+    /// </summary>
+    [Parameter]
+    public string? ImageUrl { get; set; } = "images/nodata.jpg";
+
+    /// <summary>
+    /// 图片/图标大小
+    /// </summary>
+    [Parameter]
+    public string ImageSize { get; set; } = "120px";
+
+    /// <summary>
+    /// 内边距
+    /// </summary>
+    [Parameter]
+    public string Padding { get; set; } = "60px 0";
+
+    /// <summary>
+    /// 消息文本样式
+    /// </summary>
+    [Parameter]
+    public Typo MessageTypo { get; set; } = Typo.body2;
+
+    /// <summary>
+    /// 消息文本颜色
+    /// </summary>
+    [Parameter]
+    public Color MessageColor { get; set; } = Color.Secondary;
+
+    /// <summary>
+    /// 自定义内容（如操作按钮）
+    /// </summary>
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+}
+

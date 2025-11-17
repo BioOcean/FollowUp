@@ -1,0 +1,115 @@
+@using Microsoft.AspNetCore.Components.Web
+@inject ILogger<GlobalErrorBoundary> inj_logger
+@inject NavigationManager inj_navigationManager
+
+<ErrorBoundary @ref="errorBoundary">
+    <ChildContent>
+        @ChildContent
+    </ChildContent>
+    <ErrorContent Context="exception">
+        <div class="error-boundary-container">
+            <MudPaper Class="error-boundary-paper" Elevation="3">
+                <div class="error-boundary-content">
+                    <MudIcon Icon="@Icons.Material.Filled.ErrorOutline" 
+                             Color="Color.Error" 
+                             Size="Size.Large" 
+                             Class="error-boundary-icon" />
+                    
+                    <MudText Typo="Typo.h5" Class="error-boundary-title">
+                        页面加载出错
+                    </MudText>
+                    
+                    <MudText Typo="Typo.body1" Class="error-boundary-message">
+                        @GetUserFriendlyMessage(exception)
+                    </MudText>
+                    
+                    @if (showDetails)
+                    {
+                        <MudPaper Class="error-boundary-details" Elevation="0">
+                            <MudText Typo="Typo.caption" Class="mb-2">
+                                <strong>错误详情：</strong>
+                            </MudText>
+                            <MudText Typo="Typo.caption" Class="error-boundary-details-text">
+                                @exception.Message
+                            </MudText>
+                            @if (!string.IsNullOrEmpty(exception.StackTrace))
+                            {
+                                <MudText Typo="Typo.caption" Class="mt-2 error-boundary-details-text">
+                                    @exception.StackTrace
+                                </MudText>
+                            }
+                        </MudPaper>
+                    }
+                    
+                    <div class="error-boundary-actions">
+                        <MudButton Variant="Variant.Filled" 
+                                   Color="Color.Primary" 
+                                   OnClick="Recover"
+                                   Class="mr-2">
+                            重新加载
+                        </MudButton>
+                        
+                        <MudButton Variant="Variant.Outlined" 
+                                   Color="Color.Default" 
+                                   OnClick="GoHome">
+                            返回首页
+                        </MudButton>
+                        
+                        <MudButton Variant="Variant.Text" 
+                                   Color="Color.Default" 
+                                   OnClick="ToggleDetails"
+                                   Class="ml-2">
+                            @(showDetails ? "隐藏详情" : "显示详情")
+                        </MudButton>
+                    </div>
+                </div>
+            </MudPaper>
+        </div>
+    </ErrorContent>
+</ErrorBoundary>
+
+@code {
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    private ErrorBoundary? errorBoundary;
+    private bool showDetails = false;
+
+    protected override void OnParametersSet()
+    {
+        // 重置错误边界
+        errorBoundary?.Recover();
+    }
+
+    private void Recover()
+    {
+        showDetails = false;
+        errorBoundary?.Recover();
+    }
+
+    private void GoHome()
+    {
+        inj_navigationManager.NavigateTo("/", true);
+    }
+
+    private void ToggleDetails()
+    {
+        showDetails = !showDetails;
+    }
+
+    private string GetUserFriendlyMessage(Exception exception)
+    {
+        // 记录错误日志
+        inj_logger.LogError(exception, "全局错误边界捕获异常");
+
+        // 返回用户友好的错误消息
+        return exception switch
+        {
+            InvalidOperationException => "页面状态异常，请重新加载",
+            NullReferenceException => "页面数据加载失败，请重新加载",
+            UnauthorizedAccessException => "您没有权限访问此页面",
+            _ => "页面加载失败，请重新加载或返回首页"
+        };
+    }
+}
+

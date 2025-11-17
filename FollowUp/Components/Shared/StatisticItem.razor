@@ -1,0 +1,122 @@
+@namespace FollowUp.Components.Shared
+
+@* 统计数据项组件 - 统一的数据展示块 *@
+<div class="statistic-item" style="@GetContainerStyle()">
+    @if (!string.IsNullOrEmpty(Label))
+    {
+        <MudText Typo="@LabelTypo" Color="@LabelColor" Class="@LabelClass">
+            @Label
+        </MudText>
+    }
+    
+    <MudText Class="@ValueClass" 
+             Typo="@ValueTypo" 
+             Color="@ValueColor"
+             Style="@ValueStyle">
+        @Value@Unit
+    </MudText>
+    
+    @if (ChildContent != null)
+    {
+        @ChildContent
+    }
+</div>
+
+@code {
+    /// <summary>
+    /// 标签文本
+    /// </summary>
+    [Parameter]
+    public string Label { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 数值
+    /// </summary>
+    [Parameter]
+    public string Value { get; set; } = "0";
+
+    /// <summary>
+    /// 单位
+    /// </summary>
+    [Parameter]
+    public string Unit { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 标签样式
+    /// </summary>
+    [Parameter]
+    public Typo LabelTypo { get; set; } = Typo.button;
+
+    /// <summary>
+    /// 标签颜色
+    /// </summary>
+    [Parameter]
+    public Color LabelColor { get; set; } = Color.Default;
+
+    /// <summary>
+    /// 标签CSS类
+    /// </summary>
+    [Parameter]
+    public string LabelClass { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 数值样式
+    /// </summary>
+    [Parameter]
+    public Typo ValueTypo { get; set; } = Typo.h6;
+
+    /// <summary>
+    /// 数值颜色
+    /// </summary>
+    [Parameter]
+    public Color ValueColor { get; set; } = Color.Primary;
+
+    /// <summary>
+    /// 数值CSS类
+    /// </summary>
+    [Parameter]
+    public string ValueClass { get; set; } = "fw-bold";
+
+    /// <summary>
+    /// 数值自定义样式
+    /// </summary>
+    [Parameter]
+    public string ValueStyle { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 容器对齐方式
+    /// </summary>
+    [Parameter]
+    public string TextAlign { get; set; } = "center";
+
+    /// <summary>
+    /// 容器宽度
+    /// </summary>
+    [Parameter]
+    public string? Width { get; set; }
+
+    /// <summary>
+    /// 自定义内容
+    /// </summary>
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    private string GetContainerStyle()
+    {
+        var styles = new List<string>
+        {
+            $"text-align:{TextAlign}",
+            "display:flex",
+            "flex-direction:column",
+            "justify-content:center"
+        };
+
+        if (!string.IsNullOrEmpty(Width))
+        {
+            styles.Add($"width:{Width}");
+        }
+
+        return string.Join("; ", styles);
+    }
+}
+

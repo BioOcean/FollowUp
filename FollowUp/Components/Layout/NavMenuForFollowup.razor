@@ -1,34 +1,8 @@
 @using Microsoft.AspNetCore.Components.Authorization
+@using FollowUp.Constants
 @inject IHttpContextAccessor inj_httpContextAccessor
 @inject NavigationManager inj_navigationManager
-
-<style>
-    .nav-menu .mud-icon-root.mud-svg-icon {
-        fill: #fff !important;
-    }
-
-    .nav-menu .mud-nav-link {
-        color: rgba(255, 255, 255, 0.85);
-        border-radius: 8px;
-        margin: 4px 8px;
-        transition: all 0.2s ease;
-    }
-
-    .nav-menu .mud-nav-link:hover:not(.mud-nav-link-disabled) {
-        background-color: rgba(255, 255, 255, 0.12);
-        color: #FFFFFF;
-    }
-
-    .nav-menu.mud-navmenu.mud-navmenu-default .mud-nav-link.active:not(.mud-nav-link-disabled) {
-        background-color: rgba(255, 255, 255, 0.18);
-        color: #FFFFFF;
-        font-weight: 500;
-    }
-
-    .nav-menu.mud-navmenu.mud-navmenu-default .mud-nav-link.active:not(.mud-nav-link-disabled):hover:not(.mud-nav-link-disabled) {
-        background-color: rgba(255, 255, 255, 0.22);
-    }
-</style>
+@inject FollowUp.Services.IAuthorizationService inj_authService
 
 <MudNavMenu style="color:#fff" Class="nav-menu">
     @* 
@@ -124,15 +98,9 @@
 
     protected override async Task OnInitializedAsync()
     {
-        // 极简实现：直接从 Claims 读取角色信息
-        var user = inj_httpContextAccessor.HttpContext?.User;
-        if (user?.Identity?.IsAuthenticated == true)
-        {
-            var roles = user.FindAll("roleName")
-                .Select(c => System.Text.RegularExpressions.Regex.Unescape(c.Value))
-                .ToList();
-            roleNames = string.Join(",", roles);
-        }
+        // 使用统一的权限服务获取角色信息
+        var roles = inj_authService.GetUserRoles();
+        roleNames = string.Join(",", roles);
 
         await base.OnInitializedAsync();
     }
@@ -142,15 +110,7 @@
     /// </summary>
     private bool IsAdmin()
     {
-        string url = inj_navigationManager.Uri;
-        return url.Contains("/adminMain") || 
-               url.Contains("/followupDeptMgr") || 
-               url.Contains("/followupProjMgr") || 
-               url.Contains("/operationMgr") ||
-               url.Contains("followupFuncConfig") || 
-               url.Contains("followupPremMgr") || 
-               url.Contains("healthyNews") || 
-               url.Contains("/data-migration");
+        return inj_authService.IsAdminPage(inj_navigationManager.Uri);
     }
 
     /// <summary>

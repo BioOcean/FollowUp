@@ -19,10 +19,7 @@
 
         @if (isLoading)
         {
-            <div class="d-flex justify-content-center align-items-center" style="height:400px">
-                <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
-                <MudText Class="ml-3">正在加载数据...</MudText>
-            </div>
+            <LoadingView Height="400px" />
         }
         else if (hasData)
         {
@@ -35,10 +32,7 @@
         }
         else
         {
-            <div style="text-align:center;padding:120px 0">
-                <MudImage Src="images/nodata.jpg" Style="width:120px" />
-                <MudText Class="mt-2">无数据</MudText>
-            </div>
+            <EmptyDataView Padding="120px 0" Message="无数据" />
         }
     </div>
 </MudPaper>

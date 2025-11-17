@@ -1,8 +1,10 @@
 @page "/adminMain"
 @using Microsoft.EntityFrameworkCore
 @using FollowUp.Services.Extension
+@using FollowUp.Constants
 @inherits BasePage
 @inject ILogger<AdminMain> inj_logger
+@inject FollowUp.Services.IAuthorizationService inj_authService
 
 <PageTitle>管理员主页</PageTitle>
 
@@ -138,14 +140,8 @@
         // （NTCare 中清除缓存是为了重置"当前选择的医院/科室/课题"状态）
         // FollowUp 采用更简单的设计：全局视图不维护"当前选择"状态
 
-        // 异步加载数据，不阻塞UI渲染
-        _ = Task.Run(async () =>
-        {
-            await LoadData();
-            await InvokeAsync(StateHasChanged);
-        });
-        
-        await Task.CompletedTask;
+        // 直接异步加载数据（Blazor 已在线程池中运行，无需 Task.Run）
+        await LoadData();
     }
 
     /// <summary>
@@ -155,17 +151,8 @@
     {
         try
         {
-            // 极简方案：直接从 Claims 读取角色信息，不使用缓存
-            var user = inj_httpContextAccessor.HttpContext?.User;
-            if (user?.Identity?.IsAuthenticated == true)
-            {
-                var roles = user.FindAll("roleName")
-                    .Select(c => System.Text.RegularExpressions.Regex.Unescape(c.Value))
-                    .ToList();
-                var roleNames = string.Join(",", roles);
-                return Task.FromResult(!string.IsNullOrEmpty(roleNames) && roleNames.Contains("系统"));
-            }
-            return Task.FromResult(false);
+            // 使用统一的权限服务检查
+            return Task.FromResult(inj_authService.IsSystemAdmin());
         }
         catch (Exception ex)
         {
@@ -220,12 +207,11 @@
             hospitalProjects = basicHospitalInfo;
             isLoading = false;
 
-            // 第二步：异步加载统计数据，不阻塞UI
-            _ = Task.Run(async () =>
-            {
-                await LoadStatisticsData();
-                await InvokeAsync(StateHasChanged);
-            });
+            // 触发UI更新，显示基本信息
+            StateHasChanged();
+
+            // 第二步：异步加载统计数据（在后台继续执行）
+            await LoadStatisticsData();
         }
         catch (Exception ex)
         {
@@ -251,22 +237,20 @@
     {
         try
         {
-            // 批量加载统计数据
+            // 批量加载统计数据（优化：使用字典提高查找效率）
             var hospitalIds = hospitalProjects.Where(h => h.hospitalId != Guid.Empty).Select(h => h.hospitalId).ToList();
 
             if (!hospitalIds.Any()) return;
 
-            // 批量查询患者数量
-            var patientCounts = await _context.patient!
+            // 并行执行两个查询，提高性能
+            var patientCountsTask = _context.patient!
                 .Where(p => hospitalIds.Contains(p.hospital_id) && p.source_type == "followup" && p.is_valid == true)
                 .GroupBy(p => p.hospital_id)
                 .Select(g => new { HospitalId = g.Key, Count = g.Count() })
-                .ToListAsync();
+                .ToDictionaryAsync(x => x.HospitalId, x => x.Count);
 
-            // 批量查询随访任务数量（使用 patient_event 表，优化后的查询）
             var followupEventTypes = FollowupEventTypeExtensions.GetFollowupEventTypes();
-
-            var followupCounts = await _context.patient_event
+            var followupCountsTask = _context.patient_event
                 .Join(_context.patient,
                     pe => pe.patient_id,
                     p => p.id,
@@ -274,13 +258,19 @@
                 .Where(x => hospitalIds.Contains(x.hospital_id) && followupEventTypes.Contains(x.event_type))
                 .GroupBy(x => x.hospital_id)
                 .Select(g => new { HospitalId = g.Key, Count = g.Count() })
-                .ToListAsync();
+                .ToDictionaryAsync(x => x.HospitalId, x => x.Count);
 
-            // 更新统计数据
+            // 等待两个查询完成
+            await Task.WhenAll(patientCountsTask, followupCountsTask);
+
+            var patientCounts = await patientCountsTask;
+            var followupCounts = await followupCountsTask;
+
+            // 更新统计数据（使用字典查找，O(1) 复杂度）
             foreach (var hospital in hospitalProjects.Where(h => h.hospitalId != Guid.Empty))
             {
-                hospital.patientsNum = patientCounts.FirstOrDefault(pc => pc.HospitalId == hospital.hospitalId)?.Count ?? 0;
-                hospital.followupTasksNum = followupCounts.FirstOrDefault(fc => fc.HospitalId == hospital.hospitalId)?.Count ?? 0;
+                hospital.patientsNum = patientCounts.TryGetValue(hospital.hospitalId, out var pCount) ? pCount : 0;
+                hospital.followupTasksNum = followupCounts.TryGetValue(hospital.hospitalId, out var fCount) ? fCount : 0;
                 hospital.isStatisticsLoaded = true; // 标记统计数据已加载
             }
         }

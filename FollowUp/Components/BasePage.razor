@@ -6,6 +6,7 @@
 
     [Inject] protected IDbContextFactory<CubeDbContext> ContextFactory { get; set; } = default!;
     [Inject] ILogger<BasePage> inj_Logger { get; set; } = default!;
+    [Inject] protected FollowUp.Services.IErrorHandlingService inj_errorHandler { get; set; } = default!;
 
     protected override async Task OnInitializedAsync()
     {
@@ -33,6 +34,32 @@
     protected virtual Task OnPageInitializedAsync() => Task.CompletedTask;
 
     protected virtual async Task OnPageDisposedAsync() => await Task.CompletedTask;
+
+    // 错误处理辅助方法
+    protected async Task HandleExceptionAsync(Exception ex, string? userMessage = null, string? logContext = null)
+    {
+        await inj_errorHandler.HandleExceptionAsync(ex, userMessage, logContext);
+    }
+
+    protected async Task ShowSuccessAsync(string message)
+    {
+        await inj_errorHandler.ShowSuccessAsync(message);
+    }
+
+    protected async Task ShowWarningAsync(string message)
+    {
+        await inj_errorHandler.ShowWarningAsync(message);
+    }
+
+    protected async Task ShowErrorAsync(string message)
+    {
+        await inj_errorHandler.ShowErrorAsync(message);
+    }
+
+    protected async Task ShowInfoAsync(string message)
+    {
+        await inj_errorHandler.ShowInfoAsync(message);
+    }
 
     public async ValueTask DisposeAsync()
     {

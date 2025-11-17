@@ -1,0 +1,83 @@
+@namespace FollowUp.Components.Shared
+
+@* 加载状态组件 - 统一的加载UI *@
+<div class="loading-view" style="@GetContainerStyle()">
+    @if (ShowSpinner)
+    {
+        <MudProgressCircular Color="@SpinnerColor" 
+                             Indeterminate="true" 
+                             Size="@SpinnerSize" />
+    }
+    
+    @if (!string.IsNullOrEmpty(Message))
+    {
+        <MudText Class="@(ShowSpinner ? "ml-3" : "")" 
+                 Typo="@MessageTypo" 
+                 Color="@MessageColor">
+            @Message
+        </MudText>
+    }
+    
+    @if (ChildContent != null)
+    {
+        <div class="mt-3">
+            @ChildContent
+        </div>
+    }
+</div>
+
+@code {
+    /// <summary>
+    /// 加载提示消息
+    /// </summary>
+    [Parameter]
+    public string Message { get; set; } = "正在加载数据...";
+
+    /// <summary>
+    /// 是否显示加载动画
+    /// </summary>
+    [Parameter]
+    public bool ShowSpinner { get; set; } = true;
+
+    /// <summary>
+    /// 加载动画颜色
+    /// </summary>
+    [Parameter]
+    public Color SpinnerColor { get; set; } = Color.Primary;
+
+    /// <summary>
+    /// 加载动画大小
+    /// </summary>
+    [Parameter]
+    public Size SpinnerSize { get; set; } = Size.Medium;
+
+    /// <summary>
+    /// 容器高度
+    /// </summary>
+    [Parameter]
+    public string Height { get; set; } = "300px";
+
+    /// <summary>
+    /// 消息文本样式
+    /// </summary>
+    [Parameter]
+    public Typo MessageTypo { get; set; } = Typo.body1;
+
+    /// <summary>
+    /// 消息文本颜色
+    /// </summary>
+    [Parameter]
+    public Color MessageColor { get; set; } = Color.Default;
+
+    /// <summary>
+    /// 自定义内容
+    /// </summary>
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    private string GetContainerStyle()
+    {
+        return $"display:flex; justify-content:center; align-items:center; height:{Height};";
+    }
+}
+

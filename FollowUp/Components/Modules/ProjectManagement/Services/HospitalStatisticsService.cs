@@ -86,7 +86,7 @@ public sealed class OverviewStatisticsService : IOverviewStatisticsService
         var totalFollowupPatients = events.Select(e => e.PatientId).Distinct().Count();
         var today = DateTime.Today;
         var todayNewPatients = patients.Count(p => p.CreateTime.HasValue && p.CreateTime.Value.Date == today);
-
+         
         return new HospitalUserStatsDto(
             patients.Count,
             totalFollowupTasks,
