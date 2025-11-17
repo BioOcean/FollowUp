@@ -1,0 +1,122 @@
+/* ========================================
+   LoadingView 组件样式
+   多种加载模式的视觉效果
+   ======================================== */
+
+.loading-view {
+    width: 100%;
+}
+
+/* 旋转加载容器 */
+.spinner-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+/* 加载消息 */
+.loading-message {
+    margin-top: var(--spacing-sm);
+    color: var(--text-secondary);
+}
+
+/* 骨架屏容器 */
+.skeleton-container {
+    animation: fadeIn var(--transition-base) var(--ease-out);
+}
+
+.skeleton-row {
+    display: flex;
+    gap: var(--spacing-md);
+}
+
+.skeleton-card-layout {
+    padding: var(--spacing-md) 0;
+}
+
+.skeleton-list-layout {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.skeleton-list-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-sm);
+    animation: fadeIn var(--transition-base) var(--ease-out);
+    animation-fill-mode: both;
+}
+
+.skeleton-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.skeleton-text-layout {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.skeleton-chart-layout {
+    padding: var(--spacing-md) 0;
+}
+
+/* 点状加载容器 */
+.dots-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+/* 脉冲加载容器 */
+.pulse-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-md);
+    position: relative;
+}
+
+.pulse-ring {
+    position: absolute;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border: 3px solid var(--primary-color);
+    opacity: 0;
+    animation: pulseRing 2s ease-out infinite;
+}
+
+.pulse-icon {
+    position: relative;
+    z-index: 1;
+    animation: pulseIcon 2s ease-in-out infinite;
+}
+
+@keyframes pulseRing {
+    0% {
+        transform: scale(0.5);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1.5);
+        opacity: 0;
+    }
+}
+
+@keyframes pulseIcon {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+}
+

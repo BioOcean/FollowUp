@@ -1,21 +1,56 @@
 @namespace FollowUp.Components.Shared
 
-@* 统计数据项组件 - 统一的数据展示块 *@
-<div class="statistic-item" style="@GetContainerStyle()">
+@* 统计数据项组件 - 统一的数据展示块（带动画和趋势指示） *@
+<div class="statistic-item @GetAnimationClass()" style="@GetContainerStyle()">
     @if (!string.IsNullOrEmpty(Label))
     {
-        <MudText Typo="@LabelTypo" Color="@LabelColor" Class="@LabelClass">
+        <MudText Typo="@LabelTypo" Color="@LabelColor" Class="@($"{LabelClass} statistic-label")">
             @Label
         </MudText>
     }
-    
-    <MudText Class="@ValueClass" 
-             Typo="@ValueTypo" 
-             Color="@ValueColor"
-             Style="@ValueStyle">
-        @Value@Unit
-    </MudText>
-    
+
+    <div class="statistic-value-wrapper">
+        <MudText Class="@GetValueClasses()"
+                 Typo="@ValueTypo"
+                 Color="@ValueColor"
+                 Style="@ValueStyle">
+            @if (EnableCountAnimation && _isVisible)
+            {
+                <span class="count-value">@_displayValue</span>
+            }
+            else
+            {
+                @Value
+            }
+            @if (!string.IsNullOrEmpty(Unit))
+            {
+                <span class="statistic-unit">@Unit</span>
+            }
+        </MudText>
+
+        @if (ShowTrend && Trend != TrendDirection.None)
+        {
+            <span class="trend-indicator @GetTrendClass()">
+                @if (Trend == TrendDirection.Up)
+                {
+                    <MudIcon Icon="@Icons.Material.Filled.TrendingUp" Size="Size.Small" />
+                    @if (!string.IsNullOrEmpty(TrendValue))
+                    {
+                        <span class="trend-value">@TrendValue</span>
+                    }
+                }
+                else if (Trend == TrendDirection.Down)
+                {
+                    <MudIcon Icon="@Icons.Material.Filled.TrendingDown" Size="Size.Small" />
+                    @if (!string.IsNullOrEmpty(TrendValue))
+                    {
+                        <span class="trend-value">@TrendValue</span>
+                    }
+                }
+            </span>
+        }
+    </div>
+
     @if (ChildContent != null)
     {
         @ChildContent
@@ -96,10 +131,100 @@
     public string? Width { get; set; }
 
     /// <summary>
+    /// 启用数字滚动动画
+    /// </summary>
+    [Parameter]
+    public bool EnableCountAnimation { get; set; } = true;
+
+    /// <summary>
+    /// 动画延迟索引（用于依次出现效果）
+    /// </summary>
+    [Parameter]
+    public int AnimationDelay { get; set; } = 0;
+
+    /// <summary>
+    /// 显示趋势指示
+    /// </summary>
+    [Parameter]
+    public bool ShowTrend { get; set; } = false;
+
+    /// <summary>
+    /// 趋势方向
+    /// </summary>
+    [Parameter]
+    public TrendDirection Trend { get; set; } = TrendDirection.None;
+
+    /// <summary>
+    /// 趋势数值（如 "+5%"）
+    /// </summary>
+    [Parameter]
+    public string TrendValue { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 启用悬浮效果
+    /// </summary>
+    [Parameter]
+    public bool EnableHover { get; set; } = true;
+
+    /// <summary>
     /// 自定义内容
     /// </summary>
     [Parameter]
     public RenderFragment? ChildContent { get; set; }
+
+    private string _displayValue = "0";
+    private bool _isVisible = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && EnableCountAnimation)
+        {
+            _isVisible = true;
+            await AnimateCountAsync();
+        }
+    }
+
+    private async Task AnimateCountAsync()
+    {
+        if (!double.TryParse(Value.Replace(",", ""), out double targetValue))
+        {
+            _displayValue = Value;
+            StateHasChanged();
+            return;
+        }
+
+        var duration = 600; // 毫秒
+        var steps = 20;
+        var stepDuration = duration / steps;
+        var increment = targetValue / steps;
+
+        for (int i = 1; i <= steps; i++)
+        {
+            var currentValue = increment * i;
+            if (i == steps)
+            {
+                currentValue = targetValue;
+            }
+
+            // 保持原始格式
+            if (Value.Contains("."))
+            {
+                var decimalPlaces = Value.Split('.').Last().Length;
+                _displayValue = currentValue.ToString($"F{decimalPlaces}");
+            }
+            else if (Value.Contains(","))
+            {
+                _displayValue = currentValue.ToString("N0");
+            }
+            else
+            {
+                _displayValue = ((int)currentValue).ToString();
+            }
+
+            StateHasChanged();
+            await Task.Delay(stepDuration);
+        }
+    }
 
     private string GetContainerStyle()
     {
@@ -116,7 +241,51 @@
             styles.Add($"width:{Width}");
         }
 
+        if (AnimationDelay > 0)
+        {
+            styles.Add($"animation-delay:{AnimationDelay * 100}ms");
+        }
+
         return string.Join("; ", styles);
+    }
+
+    private string GetAnimationClass()
+    {
+        var classes = new List<string> { "number-grow" };
+
+        if (EnableHover)
+        {
+            classes.Add("hover-lift");
+        }
+
+        if (AnimationDelay > 0 && AnimationDelay <= 8)
+        {
+            classes.Add($"stagger-{AnimationDelay}");
+        }
+
+        return string.Join(" ", classes);
+    }
+
+    private string GetValueClasses()
+    {
+        return $"{ValueClass} statistic-number";
+    }
+
+    private string GetTrendClass()
+    {
+        return Trend switch
+        {
+            TrendDirection.Up => "trend-up arrow-up-anim",
+            TrendDirection.Down => "trend-down arrow-down-anim",
+            _ => ""
+        };
+    }
+
+    public enum TrendDirection
+    {
+        None,
+        Up,
+        Down
     }
 }
 

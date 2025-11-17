@@ -5,9 +5,9 @@
 
 /* 页面容器 */
 .department-main-container {
-    background: linear-gradient(135deg, #F7FAFC 0%, #EDF2F7 100%);
+    background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-tertiary) 100%);
     min-height: calc(100vh - 64px);
-    padding: var(--spacing-lg);
+    padding: var(--spacing-md);
     animation: fadeIn var(--transition-base) var(--ease-out);
 }
 

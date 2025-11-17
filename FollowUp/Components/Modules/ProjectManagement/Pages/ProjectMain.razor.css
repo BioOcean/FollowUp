@@ -1,10 +1,16 @@
 /* ========================================
-   ProjectMain 页面样式 - 参照 NTCare
+   ProjectMain 页面样式 - 深色医疗风
    ======================================== */
 
+/* 页面最外层容器 */
+.project-main-page {
+    background-color: var(--bg-primary);
+    padding: var(--spacing-md);
+}
+
+/* 页面内容容器 */
 .project-main-container {
-    background-color: #f1fbf9;
-    min-height: calc(100vh - 64px);
+    /* 移除了硬编码的背景色，使用父容器背景 */
 }
 
 .span-text {
@@ -24,9 +30,88 @@
 }
 
 .icon-ques {
-    border: 2px solid #7a706b;
+    border: 2px solid var(--text-tertiary);
     border-radius: 50%;
     width: 15px;
     height: 15px;
+}
+
+/* 图表空状态容器 - 与图表组件样式保持一致 */
+.chart-empty-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-light);
+}
+
+/* 随访数据面板 - 分组横向布局 */
+.followup-data-panel {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md) !important;
+    border: 1px solid var(--border-light) !important;
+}
+
+.followup-data-panel .data-container {
+    padding: 0 8px 8px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.followup-data-panel .data-group {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+}
+
+/* 第一组 - 关键统计（3个，浅色背景） */
+.followup-data-panel .data-group-primary {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+}
+
+.followup-data-panel .data-group-primary .data-label {
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.followup-data-panel .data-group-primary .data-value {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+/* 第二组 - 详细统计（6个，更浅的背景） */
+.followup-data-panel .data-group-secondary {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+}
+
+.followup-data-panel .data-group-secondary .data-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.followup-data-panel .data-group-secondary .data-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+/* 数据项基础样式 */
+.followup-data-panel .data-item {
+    flex: 1;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 }
 

@@ -1,12 +1,13 @@
 @namespace FollowUp.Components.Modules.ProjectManagement.Components
 @inherits BasePage
+@implements IDisposable
 @inject ILogger<HospitalMain_TrendPanel> inj_logger
 @inject IFollowupStatisticsService inj_followupStatisticsService
 @inject IEducationStatisticsService inj_educationStatisticsService
 
 @* 随访率/宣教阅读率趋势 *@
-<MudPaper Elevation="1" Class="mt-3 p-2 trend-panel" Height="350px">
-    <div class="d-flex justify-content-between align-items-center">
+<MudPaper Elevation="1" Class="mt-3 trend-panel">
+    <div class="trend-panel-header">
         <div class="d-flex align-items-center">
             <RadioList IsButton="true" TValue="string" Items="@modeSelectList" @bind-Value="selectedMode" Color="BColor.Success" OnSelectedChanged="@OnModeChanged"></RadioList>
         </div>
@@ -15,18 +16,20 @@
         </div>
     </div>
 
-    @if (isLoading)
-    {
-        <LoadingView Height="300px" />
-    }
-    else if (isShowChart)
-    {
-        <FollowUp.Components.Shared.Charts.BiooChartsLegacy Width="100%" Height="300px" ChartType="BChartType.Line" TitleLabels="@monthLabels" ChartOptions="@chartOptions" Items="@chartDatasets" @key="@chartRenderKey" />
-    }
-    else
-    {
-        <EmptyDataView Padding="60px 0" Message="无数据" />
-    }
+    <div class="trend-panel-body">
+        @if (isLoading)
+        {
+            <LoadingView Height="260px" />
+        }
+        else if (isShowChart)
+        {
+            <FollowUp.Components.Shared.Charts.BiooChartsLegacy Width="100%" Height="260px" ChartType="BChartType.Line" TitleLabels="@monthLabels" ChartOptions="@chartOptions" Items="@chartDatasets" @key="@chartRenderKey" />
+        }
+        else
+        {
+            <EmptyDataView Padding="80px 0" Message="无数据" ImageSize="100px" />
+        }
+    </div>
 </MudPaper>
 
 @code {
@@ -35,33 +38,27 @@
     [Parameter] public Guid? ProjectId { get; set; }
     [Parameter] public IReadOnlyCollection<Guid>? ProjectIds { get; set; }
 
-    private List<SelectedItem> modeSelectList = new();
+    private readonly List<SelectedItem> modeSelectList = new()
+    {
+        new() { Text = "随访率", Value = "随访率" },
+        new() { Text = "宣教阅读率", Value = "宣教阅读率" }
+    };
+
+    private readonly List<string> monthLabels = new() { "1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月" };
+
     private string selectedMode = "随访率";
     private DateTime yearValue = DateTime.Now;
     private bool isLoading = false;
-
-    private List<string> monthLabels = new List<string> { "1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月" };
-
-    private BChartOptions chartOptions = new();
-    private List<ChartDataset> chartDatasets = new List<ChartDataset>();
     private bool isShowChart = false;
     private int chartRenderKey = 0;
 
-    protected override async Task OnInitializedAsync()
-    {
-        modeSelectList = new List<SelectedItem>
-        {
-            new SelectedItem { Text = "随访率", Value = "随访率" },
-            new SelectedItem { Text = "宣教阅读率", Value = "宣教阅读率" }
-        };
+    private readonly BChartOptions chartOptions = new() { LegendPosition = ChartLegendPosition.Bottom, ShowLegend = false };
+    private List<ChartDataset> chartDatasets = new();
 
-        await base.OnInitializedAsync();
-    }
+    private CancellationTokenSource? _loadCts;
+    private int _requestSequence = 0;
 
-    protected override async Task OnParametersSetAsync()
-    {
-        await LoadDataAsync();
-    }
+    protected override async Task OnParametersSetAsync() => await LoadDataAsync();
 
     private async Task OnModeChanged(IEnumerable<SelectedItem> values, string value)
     {
@@ -77,84 +74,99 @@
 
     private async Task LoadDataAsync()
     {
+        _loadCts?.Cancel();
+        _loadCts?.Dispose();
+        _loadCts = new CancellationTokenSource();
+
+        var currentSequence = ++_requestSequence;
+        var cancellationToken = _loadCts.Token;
+
         try
         {
             isLoading = true;
             StateHasChanged();
 
-            List<double> monthlyRates;
+            var monthlyRates = selectedMode == "随访率"
+                ? await LoadFollowupRatesAsync(cancellationToken)
+                : await LoadEducationRatesAsync(cancellationToken);
 
-            // 优先级：ProjectId > DepartmentId > HospitalId（全院）
-            if (selectedMode == "随访率")
+            if (currentSequence == _requestSequence && !cancellationToken.IsCancellationRequested)
             {
-                // 随访率：使用 ProjectIds 集合
-                IReadOnlyCollection<Guid>? effectiveProjectIds = null;
-                if (ProjectId.HasValue)
-                {
-                    effectiveProjectIds = new[] { ProjectId.Value };
-                }
-                else if (ProjectIds != null && ProjectIds.Any())
-                {
-                    effectiveProjectIds = ProjectIds;
-                }
-
-                var trend = await inj_followupStatisticsService.GetFollowupTrendAsync(HospitalId, yearValue.Year, effectiveProjectIds);
-                monthlyRates = trend.MonthlyRates.ToList();
+                UpdateChartData(monthlyRates);
             }
-            else
-            {
-                // 宣教阅读率：优先级 ProjectId > DepartmentId > HospitalId
-                IReadOnlyCollection<Guid>? effectiveProjectIds = null;
-                Guid? effectiveDepartmentId = null;
-
-                if (ProjectId.HasValue)
-                {
-                    effectiveProjectIds = new[] { ProjectId.Value };
-                }
-                else if (DepartmentId.HasValue)
-                {
-                    effectiveDepartmentId = DepartmentId.Value;
-                }
-
-                var trend = await inj_educationStatisticsService.GetEducationTrendAsync(
-                    HospitalId,
-                    yearValue.Year,
-                    effectiveDepartmentId,
-                    effectiveProjectIds);
-
-                monthlyRates = trend.MonthlyRates.ToList();
-            }
-
-            UpdateChartData(monthlyRates);
         }
+        catch (OperationCanceledException) { }
         catch (Exception ex)
         {
-            inj_logger.LogError(ex, "加载趋势数据失败");
-            UpdateChartData(new List<double>());
+            if (currentSequence == _requestSequence)
+            {
+                inj_logger.LogError(ex, "加载趋势数据失败");
+                UpdateChartData(new List<double>());
+            }
         }
         finally
         {
-            isLoading = false;
-            StateHasChanged();
+            if (currentSequence == _requestSequence)
+            {
+                isLoading = false;
+                StateHasChanged();
+            }
         }
+    }
+
+    private async Task<List<double>> LoadFollowupRatesAsync(CancellationToken cancellationToken)
+    {
+        IReadOnlyCollection<Guid>? effectiveProjectIds = ProjectId.HasValue
+            ? new[] { ProjectId.Value }
+            : (ProjectIds != null && ProjectIds.Any() ? ProjectIds : null);
+
+        var trend = await inj_followupStatisticsService.GetFollowupTrendAsync(
+            HospitalId, yearValue.Year, effectiveProjectIds, cancellationToken);
+
+        return trend.MonthlyRates.ToList();
+    }
+
+    private async Task<List<double>> LoadEducationRatesAsync(CancellationToken cancellationToken)
+    {
+        IReadOnlyCollection<Guid>? effectiveProjectIds = null;
+        Guid? effectiveDepartmentId = null;
+
+        if (ProjectId.HasValue)
+        {
+            effectiveProjectIds = new[] { ProjectId.Value };
+        }
+        else if (DepartmentId.HasValue)
+        {
+            effectiveDepartmentId = DepartmentId.Value;
+        }
+
+        var trend = await inj_educationStatisticsService.GetEducationTrendAsync(
+            HospitalId, yearValue.Year, effectiveDepartmentId, effectiveProjectIds, cancellationToken);
+
+        return trend.MonthlyRates.ToList();
+    }
+
+    public void Dispose()
+    {
+        _loadCts?.Cancel();
+        _loadCts?.Dispose();
     }
 
     private void UpdateChartData(List<double> monthlyRates)
     {
-        chartOptions.LegendPosition = ChartLegendPosition.Bottom;
-        chartOptions.ShowLegend = false;
-        chartDatasets = new List<ChartDataset>();
-
-        isShowChart = !monthlyRates.All(a => a == 0);
+        isShowChart = monthlyRates.Any(r => r > 0);
 
         if (isShowChart)
         {
-            string label = selectedMode == "随访率" ? "随访率(%)" : "阅读率(%)";
-            chartDatasets.Add(new ChartDataset
+            var label = selectedMode == "随访率" ? "随访率(%)" : "阅读率(%)";
+            chartDatasets = new List<ChartDataset>
             {
-                Label = label,
-                Data = monthlyRates.Cast<object>().ToArray(),
-            });
+                new() { Label = label, Data = monthlyRates.Cast<object>().ToArray() }
+            };
+        }
+        else
+        {
+            chartDatasets.Clear();
         }
 
         chartRenderKey++;

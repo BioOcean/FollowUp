@@ -1,23 +1,111 @@
 @namespace FollowUp.Components.Shared
 
-@* 加载状态组件 - 统一的加载UI *@
-<div class="loading-view" style="@GetContainerStyle()">
-    @if (ShowSpinner)
+@* 加载状态组件 - 统一的加载UI（支持骨架屏和多种模式） *@
+<div class="loading-view fade-in" style="@GetContainerStyle()">
+    @if (Mode == LoadingMode.Spinner)
     {
-        <MudProgressCircular Color="@SpinnerColor" 
-                             Indeterminate="true" 
-                             Size="@SpinnerSize" />
+        <div class="spinner-container">
+            @if (ShowSpinner)
+            {
+                <MudProgressCircular Color="@SpinnerColor"
+                                     Indeterminate="true"
+                                     Size="@SpinnerSize" />
+            }
+
+            @if (!string.IsNullOrEmpty(Message))
+            {
+                <MudText Class="loading-message"
+                         Typo="@MessageTypo"
+                         Color="@MessageColor">
+                    @Message
+                </MudText>
+            }
+        </div>
     }
-    
-    @if (!string.IsNullOrEmpty(Message))
+    else if (Mode == LoadingMode.Skeleton)
     {
-        <MudText Class="@(ShowSpinner ? "ml-3" : "")" 
-                 Typo="@MessageTypo" 
-                 Color="@MessageColor">
-            @Message
-        </MudText>
+        <div class="skeleton-container" style="width:100%; padding:var(--spacing-lg);">
+            @if (SkeletonType == SkeletonLayout.Card)
+            {
+                <div class="skeleton-card-layout">
+                    <div class="skeleton skeleton-title" style="width:40%; height:24px; margin-bottom:16px;"></div>
+                    <div class="skeleton-row">
+                        <div class="skeleton skeleton-card" style="flex:1; height:120px;"></div>
+                        <div class="skeleton skeleton-card" style="flex:1; height:120px;"></div>
+                        <div class="skeleton skeleton-card" style="flex:1; height:120px;"></div>
+                    </div>
+                </div>
+            }
+            else if (SkeletonType == SkeletonLayout.List)
+            {
+                <div class="skeleton-list-layout">
+                    @for (int i = 0; i < SkeletonCount; i++)
+                    {
+                        <div class="skeleton-list-item" style="animation-delay:@(i * 100)ms;">
+                            <div class="skeleton skeleton-avatar"></div>
+                            <div class="skeleton-content">
+                                <div class="skeleton skeleton-text" style="width:60%;"></div>
+                                <div class="skeleton skeleton-text" style="width:80%;"></div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else if (SkeletonType == SkeletonLayout.Chart)
+            {
+                <div class="skeleton-chart-layout">
+                    <div class="skeleton skeleton-title" style="width:30%; height:20px; margin-bottom:20px;"></div>
+                    <div class="skeleton" style="width:100%; height:200px; border-radius:var(--radius-md);"></div>
+                </div>
+            }
+            else
+            {
+                <div class="skeleton-text-layout">
+                    <div class="skeleton skeleton-text" style="width:90%;"></div>
+                    <div class="skeleton skeleton-text" style="width:75%;"></div>
+                    <div class="skeleton skeleton-text" style="width:85%;"></div>
+                    <div class="skeleton skeleton-text" style="width:60%;"></div>
+                </div>
+            }
+        </div>
     }
-    
+    else if (Mode == LoadingMode.Dots)
+    {
+        <div class="dots-container">
+            <div class="loading-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            @if (!string.IsNullOrEmpty(Message))
+            {
+                <MudText Class="loading-message"
+                         Typo="@MessageTypo"
+                         Color="@MessageColor">
+                    @Message
+                </MudText>
+            }
+        </div>
+    }
+    else if (Mode == LoadingMode.Pulse)
+    {
+        <div class="pulse-container">
+            <div class="pulse-ring"></div>
+            <MudIcon Icon="@Icons.Material.Filled.HealthAndSafety"
+                     Color="@SpinnerColor"
+                     Size="Size.Large"
+                     Class="pulse-icon" />
+            @if (!string.IsNullOrEmpty(Message))
+            {
+                <MudText Class="loading-message"
+                         Typo="@MessageTypo"
+                         Color="@MessageColor">
+                    @Message
+                </MudText>
+            }
+        </div>
+    }
+
     @if (ChildContent != null)
     {
         <div class="mt-3">
@@ -27,6 +115,12 @@
 </div>
 
 @code {
+    /// <summary>
+    /// 加载模式
+    /// </summary>
+    [Parameter]
+    public LoadingMode Mode { get; set; } = LoadingMode.Spinner;
+
     /// <summary>
     /// 加载提示消息
     /// </summary>
@@ -70,6 +164,18 @@
     public Color MessageColor { get; set; } = Color.Default;
 
     /// <summary>
+    /// 骨架屏布局类型
+    /// </summary>
+    [Parameter]
+    public SkeletonLayout SkeletonType { get; set; } = SkeletonLayout.Text;
+
+    /// <summary>
+    /// 骨架屏列表项数量
+    /// </summary>
+    [Parameter]
+    public int SkeletonCount { get; set; } = 3;
+
+    /// <summary>
     /// 自定义内容
     /// </summary>
     [Parameter]
@@ -77,7 +183,27 @@
 
     private string GetContainerStyle()
     {
-        return $"display:flex; justify-content:center; align-items:center; height:{Height};";
+        if (Mode == LoadingMode.Skeleton)
+        {
+            return $"min-height:{Height};";
+        }
+        return $"display:flex; justify-content:center; align-items:center; flex-direction:column; height:{Height};";
+    }
+
+    public enum LoadingMode
+    {
+        Spinner,    // 传统旋转加载
+        Skeleton,   // 骨架屏
+        Dots,       // 点状加载
+        Pulse       // 脉冲医疗图标
+    }
+
+    public enum SkeletonLayout
+    {
+        Text,       // 文本骨架
+        Card,       // 卡片骨架
+        List,       // 列表骨架
+        Chart       // 图表骨架
     }
 }
 

@@ -1,0 +1,512 @@
+/* ========================================
+   FollowUp 高级动画工具类库
+   现代化医疗系统交互动画集合
+   ======================================== */
+
+/* ========================================
+   一、涟漪点击效果
+   ======================================== */
+
+.ripple-effect {
+    position: relative;
+    overflow: hidden;
+}
+
+.ripple-effect::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.4);
+    width: 100px;
+    height: 100px;
+    margin-top: -50px;
+    margin-left: -50px;
+    top: 50%;
+    left: 50%;
+    opacity: 0;
+    transform: scale(0);
+    pointer-events: none;
+}
+
+.ripple-effect:active::after {
+    animation: ripple 0.6s ease-out;
+}
+
+/* 深色涟漪（用于浅色背景） */
+.ripple-dark::after {
+    background: rgba(24, 183, 151, 0.3);
+}
+
+/* ========================================
+   二、玻璃拟态效果
+   ======================================== */
+
+.glass {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
+}
+
+.glass-strong {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+}
+
+.glass-dark {
+    background: rgba(45, 55, 72, 0.75);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glass-primary {
+    background: rgba(24, 183, 151, 0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(24, 183, 151, 0.2);
+}
+
+/* ========================================
+   三、悬浮交互效果
+   ======================================== */
+
+/* 标准悬浮提升 */
+.hover-lift {
+    transition: all var(--transition-base) var(--ease-out);
+}
+
+.hover-lift:hover {
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-xl);
+}
+
+/* 发光悬浮 */
+.hover-glow {
+    transition: all var(--transition-base) var(--ease-out);
+}
+
+.hover-glow:hover {
+    box-shadow: 0 0 20px rgba(24, 183, 151, 0.3);
+}
+
+/* 边框高亮 */
+.hover-border {
+    transition: all var(--transition-base) var(--ease-out);
+    border: 2px solid transparent;
+}
+
+.hover-border:hover {
+    border-color: var(--primary-color);
+}
+
+/* 背景渐变 */
+.hover-gradient {
+    transition: all var(--transition-base) var(--ease-out);
+    background-size: 200% 200%;
+    background-position: 0% 50%;
+}
+
+.hover-gradient:hover {
+    background-position: 100% 50%;
+}
+
+/* ========================================
+   四、加载状态增强
+   ======================================== */
+
+/* 骨架屏波纹 */
+.skeleton {
+    background: linear-gradient(
+        90deg,
+        var(--bg-tertiary) 0%,
+        var(--bg-hover) 20%,
+        var(--bg-tertiary) 40%,
+        var(--bg-tertiary) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s linear infinite;
+    border-radius: var(--radius-sm);
+}
+
+.skeleton-text {
+    height: 1em;
+    margin-bottom: 0.5em;
+}
+
+.skeleton-title {
+    height: 1.5em;
+    width: 60%;
+    margin-bottom: 1em;
+}
+
+.skeleton-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+}
+
+.skeleton-card {
+    height: 120px;
+    border-radius: var(--radius-md);
+}
+
+/* 点状加载 */
+.loading-dots {
+    display: inline-flex;
+    gap: 4px;
+}
+
+.loading-dots span {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    animation: loadingDot 1.4s ease-in-out infinite both;
+}
+
+.loading-dots span:nth-child(1) { animation-delay: -0.32s; }
+.loading-dots span:nth-child(2) { animation-delay: -0.16s; }
+.loading-dots span:nth-child(3) { animation-delay: 0; }
+
+@keyframes loadingDot {
+    0%, 80%, 100% {
+        transform: scale(0);
+    }
+    40% {
+        transform: scale(1);
+    }
+}
+
+/* ========================================
+   五、数据状态指示
+   ======================================== */
+
+/* 在线状态点 */
+.status-indicator {
+    position: relative;
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.status-indicator::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    animation: statusPing 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+.status-indicator.online {
+    background: var(--success-color);
+}
+
+.status-indicator.online::after {
+    background: var(--success-color);
+}
+
+.status-indicator.warning {
+    background: var(--warning-color);
+}
+
+.status-indicator.warning::after {
+    background: var(--warning-color);
+}
+
+.status-indicator.error {
+    background: var(--error-color);
+}
+
+.status-indicator.error::after {
+    background: var(--error-color);
+}
+
+@keyframes statusPing {
+    75%, 100% {
+        transform: scale(2);
+        opacity: 0;
+    }
+}
+
+/* 数值变化高亮 */
+.value-change {
+    transition: color var(--transition-base);
+}
+
+.value-change.increased {
+    color: var(--success-color);
+    animation: valueIncrease 0.6s var(--ease-out);
+}
+
+.value-change.decreased {
+    color: var(--error-color);
+    animation: valueDecrease 0.6s var(--ease-out);
+}
+
+@keyframes valueIncrease {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+@keyframes valueDecrease {
+    0% { transform: scale(1); }
+    50% { transform: scale(0.9); }
+    100% { transform: scale(1); }
+}
+
+/* ========================================
+   六、表单交互
+   ======================================== */
+
+/* 输入框焦点动画 */
+.input-animated {
+    position: relative;
+    overflow: hidden;
+}
+
+.input-animated::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background: var(--primary-color);
+    transition: all var(--transition-base) var(--ease-out);
+    transform: translateX(-50%);
+}
+
+.input-animated:focus-within::after {
+    width: 100%;
+}
+
+/* 标签浮动 */
+.label-float {
+    position: relative;
+}
+
+.label-float label {
+    position: absolute;
+    top: 50%;
+    left: 12px;
+    transform: translateY(-50%);
+    transition: all var(--transition-base) var(--ease-out);
+    color: var(--text-tertiary);
+    pointer-events: none;
+}
+
+.label-float input:focus + label,
+.label-float input:not(:placeholder-shown) + label {
+    top: 0;
+    font-size: var(--font-size-xs);
+    color: var(--primary-color);
+    background: white;
+    padding: 0 4px;
+}
+
+/* ========================================
+   七、通知与提示
+   ======================================== */
+
+/* 滑入通知 */
+.notification-slide {
+    animation: notificationSlide var(--transition-slow) var(--ease-out);
+}
+
+@keyframes notificationSlide {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* 淡出通知 */
+.notification-fade-out {
+    animation: notificationFadeOut var(--transition-slow) var(--ease-out) forwards;
+}
+
+@keyframes notificationFadeOut {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
+
+/* 徽章弹跳 */
+.badge-bounce {
+    animation: badgeBounce 0.5s var(--ease-bounce);
+}
+
+@keyframes badgeBounce {
+    0% { transform: scale(0); }
+    50% { transform: scale(1.3); }
+    100% { transform: scale(1); }
+}
+
+/* ========================================
+   八、图表专用动画
+   ======================================== */
+
+/* 饼图扇形展开 */
+.pie-slice {
+    transform-origin: center;
+    animation: pieExpand 1s var(--ease-out) forwards;
+}
+
+@keyframes pieExpand {
+    from {
+        transform: scale(0) rotate(-90deg);
+    }
+    to {
+        transform: scale(1) rotate(0);
+    }
+}
+
+/* 柱状图生长 */
+.bar-grow {
+    transform-origin: bottom;
+    animation: barGrow 0.8s var(--ease-out) forwards;
+}
+
+@keyframes barGrow {
+    from {
+        transform: scaleY(0);
+    }
+    to {
+        transform: scaleY(1);
+    }
+}
+
+/* 折线图路径绘制 */
+.line-draw {
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 1000;
+    animation: lineDraw 2s var(--ease-out) forwards;
+}
+
+@keyframes lineDraw {
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
+/* 数据点弹入 */
+.data-point {
+    animation: dataPointPop 0.4s var(--ease-bounce) forwards;
+    opacity: 0;
+}
+
+@keyframes dataPointPop {
+    from {
+        transform: scale(0);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* ========================================
+   九、医疗系统专用
+   ======================================== */
+
+/* 健康指标环 */
+.health-ring {
+    stroke-dasharray: 283;
+    stroke-dashoffset: 283;
+    transform-origin: center;
+    transform: rotate(-90deg);
+    animation: healthRingFill 1.5s var(--ease-out) forwards;
+}
+
+@keyframes healthRingFill {
+    to {
+        stroke-dashoffset: var(--ring-offset, 0);
+    }
+}
+
+/* 心率波动 */
+.heartrate-line {
+    stroke-dasharray: 500;
+    stroke-dashoffset: 500;
+    animation: heartrateDraw 2s linear infinite;
+}
+
+@keyframes heartrateDraw {
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
+/* 预警闪烁 */
+.alert-blink {
+    animation: alertBlink 1s ease-in-out infinite;
+}
+
+@keyframes alertBlink {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.3;
+    }
+}
+
+/* 紧急状态 */
+.urgent-pulse {
+    animation: urgentPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes urgentPulse {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(245, 101, 101, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(245, 101, 101, 0);
+    }
+}
+
+/* ========================================
+   十、性能优化提示
+   ======================================== */
+
+/* GPU 加速 */
+.gpu-accelerated {
+    transform: translateZ(0);
+    will-change: transform;
+}
+
+/* 减少重绘 */
+.contain-paint {
+    contain: paint;
+}
+
+/* 减少布局计算 */
+.contain-layout {
+    contain: layout;
+}
+
+/* 完全隔离 */
+.contain-strict {
+    contain: strict;
+}
+

@@ -4,63 +4,73 @@
    ======================================== */
 
 :root {
-    /* ========== 色彩系统 ========== */
-    
-    /* 主题色 - 医疗绿 */
-    --primary-color: #18B797;
-    --primary-hover: #0D9B7E;
-    --primary-active: #0A7D66;
-    --primary-light: rgba(24, 183, 151, 0.1);
-    --primary-lighter: rgba(24, 183, 151, 0.05);
-    --primary-gradient: linear-gradient(135deg, #18B797 0%, #0D9B7E 100%);
-    
-    /* 辅助色 - 系统蓝 */
-    --secondary-color: #4299E1;
-    --secondary-hover: #3182CE;
-    --secondary-active: #2C5282;
-    --secondary-light: rgba(66, 153, 225, 0.1);
-    --secondary-lighter: rgba(66, 153, 225, 0.05);
-    --secondary-gradient: linear-gradient(135deg, #4299E1 0%, #3182CE 100%);
-    
-    /* 中性色 */
+    /* ========== 色彩系统 - 深色医疗风 ========== */
+
+    /* 主题色 - 深沉医疗绿（专业严肃感） */
+    --primary-color: #0A6B58;
+    --primary-hover: #085A4A;
+    --primary-active: #064D3F;
+    --primary-dark: #043D32;
+    --primary-light: #E8F5F1;
+    --primary-lighter: #F0FAF7;
+    --primary-gradient: linear-gradient(135deg, #0A6B58 0%, #064D3F 100%);
+    --primary-gradient-dark: linear-gradient(180deg, #0A6B58 0%, #043D32 100%);
+
+    /* 辅助色 - 深蓝专业色 */
+    --secondary-color: #1E4A6C;
+    --secondary-hover: #15374F;
+    --secondary-active: #0F2A3D;
+    --secondary-light: #E6EEF4;
+    --secondary-lighter: #F0F5F9;
+    --secondary-gradient: linear-gradient(135deg, #1E4A6C 0%, #15374F 100%);
+
+    /* 中性色 - 高对比度 */
     --bg-primary: #F7F9FC;      /* 页面背景 */
     --bg-secondary: #FFFFFF;    /* 卡片背景 */
     --bg-tertiary: #EDF2F7;     /* 次要背景 */
-    --bg-hover: #F7FAFC;        /* 悬浮背景 */
-    
-    --text-primary: #2D3748;    /* 主要文字 */
-    --text-secondary: #718096;  /* 次要文字 */
-    --text-tertiary: #A0AEC0;   /* 辅助文字 */
-    --text-disabled: #CBD5E0;   /* 禁用文字 */
-    
-    --border-color: #E2E8F0;    /* 边框颜色 */
-    --divider-color: #EDF2F7;   /* 分割线颜色 */
-    
-    /* 功能色 */
-    --success-color: #48BB78;
-    --success-light: rgba(72, 187, 120, 0.1);
-    --warning-color: #ED8936;
-    --warning-light: rgba(237, 137, 54, 0.1);
-    --error-color: #F56565;
-    --error-light: rgba(245, 101, 101, 0.1);
-    --info-color: #4299E1;
-    --info-light: rgba(66, 153, 225, 0.1);
-    
-    /* ========== 间距系统 ========== */
+    --bg-hover: #F0F4F8;        /* 悬浮背景 */
+    --bg-active: #E2E8F0;       /* 激活背景 */
+
+    --text-primary: #1A202C;    /* 主要文字（加深，高对比度） */
+    --text-secondary: #4A5568;  /* 次要文字（加深） */
+    --text-tertiary: #718096;   /* 辅助文字（加深） */
+    --text-disabled: #A0AEC0;   /* 禁用文字 */
+    --text-inverse: #FFFFFF;    /* 深色背景上的文字 */
+
+    --border-color: #CBD5E0;    /* 边框颜色（加深） */
+    --border-light: #E2E8F0;    /* 浅色边框 */
+    --divider-color: #E2E8F0;   /* 分割线颜色 */
+
+    /* 功能色 - 更沉稳专业 */
+    --success-color: #2F855A;
+    --success-light: #E6F4ED;
+    --success-dark: #22543D;
+    --warning-color: #C05621;
+    --warning-light: #FEF3E6;
+    --warning-dark: #9C4221;
+    --error-color: #C53030;
+    --error-light: #FEE6E6;
+    --error-dark: #9B2C2C;
+    --info-color: #2B6CB0;
+    --info-light: #E6F0FA;
+    --info-dark: #1E4E8C;
+
+    /* ========== 间距系统 - 舒适易读 ========== */
     --spacing-xs: 4px;
     --spacing-sm: 8px;
-    --spacing-md: 16px;
-    --spacing-lg: 24px;
-    --spacing-xl: 32px;
-    --spacing-2xl: 48px;
-    --spacing-3xl: 64px;
-    
-    /* ========== 圆角系统 ========== */
-    --radius-sm: 6px;
-    --radius-md: 8px;
-    --radius-lg: 12px;
-    --radius-xl: 16px;
-    --radius-2xl: 20px;
+    --spacing-md: 20px;     /* 增加呼吸感 (原16px) */
+    --spacing-lg: 28px;     /* 增加呼吸感 (原24px) */
+    --spacing-xl: 40px;     /* 增加呼吸感 (原32px) */
+    --spacing-2xl: 56px;    /* 原48px */
+    --spacing-3xl: 72px;    /* 原64px */
+
+    /* ========== 圆角系统 - 小圆角专业风 ========== */
+    --radius-xs: 2px;
+    --radius-sm: 4px;       /* 按钮/输入框 (原6px) */
+    --radius-md: 6px;       /* 卡片 (原8px) */
+    --radius-lg: 8px;       /* 大型面板 (原12px) */
+    --radius-xl: 10px;      /* 原16px */
+    --radius-2xl: 12px;     /* 原20px */
     --radius-full: 9999px;
     
     /* ========== 阴影系统 ========== */
@@ -84,18 +94,27 @@
     --ease-in: cubic-bezier(0.4, 0, 1, 1);
     --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
     
-    /* ========== 字体系统 ========== */
+    /* ========== 字体系统 - 舒适易读 ========== */
     --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
     --font-mono: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, monospace;
-    
+
+    /* 字号系统 - 15px基准 */
     --font-size-xs: 12px;
-    --font-size-sm: 14px;
-    --font-size-base: 16px;
+    --font-size-sm: 13px;
+    --font-size-base: 15px;     /* 基准字号，舒适阅读 */
+    --font-size-md: 16px;
     --font-size-lg: 18px;
     --font-size-xl: 20px;
     --font-size-2xl: 24px;
     --font-size-3xl: 30px;
-    
+    --font-size-4xl: 36px;
+
+    /* 行高系统 */
+    --line-height-tight: 1.4;
+    --line-height-base: 1.6;    /* 舒适阅读行高 */
+    --line-height-loose: 1.8;
+
+    /* 字重系统 */
     --font-weight-normal: 400;
     --font-weight-medium: 500;
     --font-weight-semibold: 600;
@@ -292,6 +311,274 @@
         transform: scale(4);
         opacity: 0;
     }
+}
+
+/* 从左滑入 */
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.slide-in-left {
+    animation: slideInLeft var(--transition-base) var(--ease-out);
+}
+
+/* 从右滑入 */
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.slide-in-right {
+    animation: slideInRight var(--transition-base) var(--ease-out);
+}
+
+/* 弹性缩放 */
+@keyframes bounceIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.3);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    70% {
+        transform: scale(0.95);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.bounce-in {
+    animation: bounceIn var(--transition-slower) var(--ease-bounce);
+}
+
+/* 波纹扫描（骨架屏增强） */
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+.shimmer {
+    background: linear-gradient(
+        90deg,
+        var(--bg-tertiary) 25%,
+        var(--bg-hover) 50%,
+        var(--bg-tertiary) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
+/* 心跳脉动（重要数据提示） */
+@keyframes heartbeat {
+    0%, 100% {
+        transform: scale(1);
+    }
+    25% {
+        transform: scale(1.1);
+    }
+    50% {
+        transform: scale(1);
+    }
+    75% {
+        transform: scale(1.05);
+    }
+}
+
+.heartbeat {
+    animation: heartbeat 1.5s ease-in-out;
+}
+
+/* 浮动动画（悬浮图标） */
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-6px);
+    }
+}
+
+.float {
+    animation: float 3s ease-in-out infinite;
+}
+
+/* 闪烁高亮（数据更新提示） */
+@keyframes highlight {
+    0%, 100% {
+        background-color: transparent;
+    }
+    50% {
+        background-color: var(--primary-light);
+    }
+}
+
+.highlight {
+    animation: highlight 1s ease-in-out;
+}
+
+/* 渐变色流动 */
+@keyframes gradientFlow {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+.gradient-flow {
+    background-size: 200% 200%;
+    animation: gradientFlow 3s ease infinite;
+}
+
+/* 旋转弹入（图标动画） */
+@keyframes rotateIn {
+    from {
+        opacity: 0;
+        transform: rotate(-200deg) scale(0);
+    }
+    to {
+        opacity: 1;
+        transform: rotate(0) scale(1);
+    }
+}
+
+.rotate-in {
+    animation: rotateIn var(--transition-slow) var(--ease-out);
+}
+
+/* 数字增长动画（用于计数器） */
+@keyframes numberGrow {
+    from {
+        opacity: 0;
+        transform: scale(0.5) translateY(20px);
+    }
+    60% {
+        transform: scale(1.2) translateY(-5px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.number-grow {
+    animation: numberGrow var(--transition-slow) var(--ease-bounce);
+}
+
+/* 趋势箭头动画 */
+@keyframes arrowUp {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-4px);
+    }
+}
+
+@keyframes arrowDown {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(4px);
+    }
+}
+
+.arrow-up-anim {
+    animation: arrowUp 1s ease-in-out infinite;
+}
+
+.arrow-down-anim {
+    animation: arrowDown 1s ease-in-out infinite;
+}
+
+/* 依次出现延迟类（用于列表项） */
+.stagger-1 { animation-delay: 50ms; }
+.stagger-2 { animation-delay: 100ms; }
+.stagger-3 { animation-delay: 150ms; }
+.stagger-4 { animation-delay: 200ms; }
+.stagger-5 { animation-delay: 250ms; }
+.stagger-6 { animation-delay: 300ms; }
+.stagger-7 { animation-delay: 350ms; }
+.stagger-8 { animation-delay: 400ms; }
+
+/* 页面切换过渡 */
+@keyframes pageEnter {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.page-enter {
+    animation: pageEnter var(--transition-slow) var(--ease-out);
+}
+
+/* 卡片3D悬浮效果基础类 */
+.card-3d {
+    transition: all var(--transition-base) var(--ease-out);
+    transform-style: preserve-3d;
+    perspective: 1000px;
+}
+
+.card-3d:hover {
+    transform: translateY(-8px) rotateX(2deg) rotateY(-2deg);
+    box-shadow: var(--shadow-2xl);
+}
+
+/* 图标悬浮弹跳 */
+.icon-bounce:hover {
+    animation: bounceIn 0.6s var(--ease-bounce);
+}
+
+/* 进度条动画 */
+@keyframes progressBar {
+    from {
+        width: 0;
+    }
+}
+
+.progress-animate {
+    animation: progressBar 1s var(--ease-out) forwards;
+}
+
+/* 环形进度动画 */
+@keyframes circleProgress {
+    from {
+        stroke-dashoffset: 283;
+    }
+}
+
+.circle-progress-animate {
+    animation: circleProgress 1.5s var(--ease-out) forwards;
 }
 
 /* ========================================

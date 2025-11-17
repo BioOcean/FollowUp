@@ -1,39 +1,152 @@
-/* AppBar - 白色专业风格 */
+/* ========================================
+   MainLayout 现代化样式
+   玻璃态效果 + 动画增强
+   ======================================== */
+
+/* AppBar - 主题绿色背景 */
 .app-bar-custom {
-    background-color: #FFFFFF !important;
-    color: #2D3748 !important;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06) !important;
+    background: var(--primary-color) !important;
+    color: #FFFFFF !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+    border-bottom: 1px solid var(--primary-dark) !important;
+    transition: all var(--transition-base) var(--ease-out) !important;
+}
+
+.app-bar-custom:hover {
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.1) !important;
 }
 
 .system-name {
-    color: #2D3748 !important;
+    color: #FFFFFF !important;
     font-weight: 600;
     font-size: 20px;
+    position: relative;
+    display: inline-block;
+}
+
+.system-name::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: #FFFFFF;
+    transition: width var(--transition-base) var(--ease-out);
+}
+
+.system-name:hover::after {
+    width: 100%;
 }
 
 .user-info {
-    color: #718096;
+    color: rgba(255, 255, 255, 0.9);
     font-size: 14px;
-    transition: color 0.2s ease;
+    transition: all var(--transition-base) var(--ease-out);
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
 }
 
 .user-info:hover {
-    color: #2D3748;
+    color: #FFFFFF;
+    background: rgba(255, 255, 255, 0.15);
 }
 
-/* 侧边导航 - 深色渐变 */
+/* 侧边导航 - 深色医疗绿实心背景（高对比度） */
 .main-drawer ::deep .mud-drawer {
-    background: linear-gradient(180deg, #0A7A63 0%, #085A4A 100%) !important;
+    background: linear-gradient(180deg, #0A6B58 0%, #043D32 100%) !important;
+    color: #FFFFFF !important;
+    border-right: 1px solid #064D3F !important;
+    box-shadow: 4px 0 16px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* 侧边栏展开/收起动画 */
+.main-drawer ::deep .mud-drawer-content {
+    transition: all var(--transition-slow) var(--ease-out) !important;
 }
 
 .menu-btn {
     background-color: transparent;
+    transition: all var(--transition-base) var(--ease-bounce) !important;
+    border-radius: var(--radius-md) !important;
 }
 
 .menu-btn:hover {
     background-color: rgba(255, 255, 255, 0.15);
+    transform: scale(1.05);
+}
+
+.menu-btn:active {
+    transform: scale(0.95);
 }
 
 .main-drawer ::deep .menu-btn {
     color: #fff;
+}
+
+/* 页面内容区域动画 */
+.main-content {
+    animation: pageEnter var(--transition-slow) var(--ease-out);
+}
+
+/* 顶栏按钮悬浮效果 - 白色图标 */
+.app-bar-custom ::deep .mud-icon-button {
+    transition: all var(--transition-base) var(--ease-out) !important;
+    border-radius: var(--radius-md) !important;
+    color: #FFFFFF !important;
+}
+
+.app-bar-custom ::deep .mud-icon-button:hover {
+    background-color: rgba(255, 255, 255, 0.2) !important;
+    color: #FFFFFF !important;
+    transform: translateY(-2px);
+}
+
+.app-bar-custom ::deep .mud-icon-button:active {
+    transform: translateY(0);
+    background-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+/* Logo/Brand 区域 */
+.brand-area {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.brand-logo {
+    width: 32px;
+    height: 32px;
+    transition: transform var(--transition-base) var(--ease-bounce);
+}
+
+.brand-logo:hover {
+    transform: rotate(10deg) scale(1.1);
+}
+
+/* 通知徽章动画 */
+.notification-badge {
+    animation: badgeBounce 0.5s var(--ease-bounce);
+}
+
+/* 用户头像悬浮 */
+.user-avatar {
+    transition: all var(--transition-base) var(--ease-out);
+    border: 2px solid transparent;
+}
+
+.user-avatar:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 12px rgba(24, 183, 151, 0.3);
+}
+
+/* 响应式调整 */
+@media (max-width: 600px) {
+    .system-name {
+        font-size: 16px;
+    }
+
+    .user-info {
+        display: none;
+    }
 }

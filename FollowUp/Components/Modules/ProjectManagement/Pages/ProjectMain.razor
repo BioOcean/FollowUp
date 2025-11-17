@@ -9,7 +9,7 @@
 
 <PageTitle>课题概览</PageTitle>
 
-<div style="background-color:#f1fbf9;min-height:calc(100vh - 64px);" class="p-3">
+<div class="project-main-page" style="min-height:calc(100vh - 64px);">
     @if (isLoading)
     {
         <div class="project-main-container">
@@ -69,11 +69,17 @@
                                 }
                             </div>
                         </div>
-                        <div class="d-flex align-items-center justify-content-between">
-                            <MudText Typo="Typo.button" Class="ml-3">累计扫码上平台数量 <span style="color:#18b797;" class="fs-5 ml-2">@patientCount</span></MudText>
-                            <div class="mr-3">
-                                <MudText Typo="Typo.button">随访次数 <span style="color:#18b797;" class="fs-6 ml-2">@followupTaskCount</span></MudText>
-                                <MudText Typo="Typo.button" Class="ml-4">随访人数 <span style="color:#18b797;" class="fs-6 ml-2">@followupPatientCount</span></MudText>
+                        <div class="d-flex align-items-center justify-content-between px-3 py-2">
+                            <MudText Typo="Typo.button">累计扫码上平台数量
+                                <MudText Typo="Typo.h6" Color="Color.Primary" Class="d-inline fw-bold ml-2">@patientCount</MudText>
+                            </MudText>
+                            <div>
+                                <MudText Typo="Typo.button">随访次数
+                                    <MudText Typo="Typo.body1" Color="Color.Primary" Class="d-inline fw-bold ml-2">@followupTaskCount</MudText>
+                                </MudText>
+                                <MudText Typo="Typo.button" Class="ml-4">随访人数
+                                    <MudText Typo="Typo.body1" Color="Color.Primary" Class="d-inline fw-bold ml-2">@followupPatientCount</MudText>
+                                </MudText>
                             </div>
                         </div>
 
@@ -83,9 +89,8 @@
                         }
                         else
                         {
-                            <div style="text-align:center" class="mt-10">
-                                <MudImage Src="images/nodata.jpg"></MudImage>
-                                <MudText Class="mt-2">无数据</MudText>
+                            <div class="chart-empty-container" style="min-height:360px;">
+                                <EmptyDataView Message="无数据" Padding="120px 0" ImageSize="120px" />
                             </div>
                         }
                     </MudPaper>
@@ -94,20 +99,38 @@
                 @* 右侧 col-8 *@
                 <div class="col-8">
                     @* 随访数据统计 *@
-                    <MudPaper Class="p-2" Elevation="1" Height="100px">
-                        <MudText Class="fw-bold" Typo="Typo.h6">随访数据</MudText>
-                        <div class="d-flex mt-2 mb-2">
-                            @foreach (var (key, index) in projectTotalData.Keys.Select((k, i) => (k, i)))
-                            {
-                                <div class="div-block width11">
-                                    <MudText>@key</MudText>
-                                    <MudText Class="fw-bold" Color="Color.Primary">@(projectTotalData[key])个</MudText>
-                                </div>
-                                @if (index == 3)
-                                {
-                                    <MudDivider Vertical="true" FlexItem="true" Light="true" />
+                    <MudPaper Class="followup-data-panel" Elevation="1">
+                        <div class="d-flex align-items-center pa-2">
+                            <MudText Class="fw-bold" Typo="Typo.h6">随访数据</MudText>
+                        </div>
+                        <div class="data-container">
+                            @* 第一组：关键统计（今日新增、年度随访人数、年度随访任务数量） *@
+                            <div class="data-group data-group-primary">
+                                @{
+                                    var firstGroup = projectTotalData.Take(3);
                                 }
-                            }
+                                @foreach (var item in firstGroup)
+                                {
+                                    <div class="data-item">
+                                        <div class="data-label">@item.Key</div>
+                                        <div class="data-value">@item.Value</div>
+                                    </div>
+                                }
+                            </div>
+
+                            @* 第二组：详细统计（总随访任务数量、已随访、待审核、患者未提交、已超时、未到推送时间） *@
+                            <div class="data-group data-group-secondary">
+                                @{
+                                    var secondGroup = projectTotalData.Skip(3);
+                                }
+                                @foreach (var item in secondGroup)
+                                {
+                                    <div class="data-item">
+                                        <div class="data-label">@item.Key</div>
+                                        <div class="data-value">@item.Value</div>
+                                    </div>
+                                }
+                            </div>
                         </div>
                     </MudPaper>
 

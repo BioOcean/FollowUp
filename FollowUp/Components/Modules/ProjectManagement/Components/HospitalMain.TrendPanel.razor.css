@@ -5,12 +5,15 @@
 
 .trend-panel {
     background: var(--bg-secondary);
-    border-radius: var(--radius-lg);
-    padding: var(--spacing-lg);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border-radius: var(--radius-md);
+    padding: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
     transition: all var(--transition-base) var(--ease-in-out);
     position: relative;
-    overflow: hidden;
+    border: 1px solid var(--border-light);
+    min-height: 350px;
+    display: flex;
+    flex-direction: column;
 }
 
 .trend-panel::before {
@@ -32,5 +35,38 @@
 
 .trend-panel:hover::before {
     opacity: 1;
+}
+
+/* 趋势面板头部 - 固定高度 */
+.trend-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    margin-bottom: 0;
+    min-height: 40px;
+    flex-shrink: 0;
+}
+
+/* 趋势面板主体 - 自适应高度 */
+.trend-panel-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 260px;
+    overflow: hidden;
+}
+
+/* 图表容器 - 防止溢出 */
+::deep .trend-panel-body canvas {
+    max-width: 100% !important;
+    max-height: 100% !important;
+}
+
+::deep .trend-panel-body .bioo-chart-container {
+    overflow: hidden !important;
+    background: transparent !important;
+    padding: 0 !important;
+    height: 100% !important;
 }
 

@@ -1,0 +1,64 @@
+/* ========================================
+   BiooChartsLegacy 图表组件样式
+   现代化图表动画效果
+   ======================================== */
+
+/* 图表容器入场动画 */
+:host {
+    display: block;
+    animation: fadeIn var(--transition-slow) var(--ease-out);
+}
+
+/* 图表外层包装 */
+div {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-md);
+    box-shadow: var(--shadow-sm);
+    transition: all var(--transition-base) var(--ease-out);
+    position: relative;
+    overflow: hidden;
+}
+
+div:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+}
+
+/* 图表标题样式 */
+p {
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-md);
+    padding-left: var(--spacing-sm);
+    border-left: 3px solid var(--primary-color);
+    animation: slideInLeft var(--transition-base) var(--ease-out);
+}
+
+/* Canvas 入场动画 */
+::deep canvas {
+    animation: scaleIn var(--transition-slow) var(--ease-out);
+    animation-delay: 200ms;
+    animation-fill-mode: both;
+}
+
+/* 图表容器渐变背景 */
+div::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(24, 183, 151, 0.02), rgba(66, 153, 225, 0.02));
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* 确保图表在渐变层之上 */
+::deep .chart-container {
+    position: relative;
+    z-index: 1;
+}
+

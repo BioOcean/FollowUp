@@ -1,5 +1,6 @@
 using Bio.Models;
 using FollowUp.Components.Modules.ProjectManagement.Models;
+using FollowUp.Services.Extension;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -82,8 +83,10 @@ public sealed class OverviewStatisticsService : IOverviewStatisticsService
         var todayLabels = departmentLabels;
         var todayValues = CalculateTodayPatientCounts(patients, effectiveDepartments);
 
-        var totalFollowupTasks = events.Count;
-        var totalFollowupPatients = events.Select(e => e.PatientId).Distinct().Count();
+        // 排除已停止的随访任务
+        var validEvents = events.Where(e => !FollowupEventStatusExtensions.IsStopped(e.Status)).ToList();
+        var totalFollowupTasks = validEvents.Count;
+        var totalFollowupPatients = validEvents.Select(e => e.PatientId).Distinct().Count();
         var today = DateTime.Today;
         var todayNewPatients = patients.Count(p => p.CreateTime.HasValue && p.CreateTime.Value.Date == today);
          
@@ -144,15 +147,20 @@ public sealed class OverviewStatisticsService : IOverviewStatisticsService
                 .Where(e => projectSet.Contains(e.project_id))
                 .ToList();
 
-            var followupTaskCount = departmentEvents.Count;
+            // 总随访任务数量排除已停止
+            var followupTaskCount = departmentEvents.Count(e => !FollowupEventStatusExtensions.IsStopped(e.event_status));
             var statusCounts = CreateStatusDictionary(
-                departmentEvents.Count(e => e.event_status == "已随访"),
-                departmentEvents.Count(e => e.event_status == "待审核"),
-                departmentEvents.Count(e => e.event_status == "患者未提交"),
-                departmentEvents.Count(e => e.event_status == "已超时"));
+                departmentEvents.Count(e => FollowupEventStatusExtensions.IsCompleted(e.event_status)),
+                departmentEvents.Count(e => FollowupEventStatusExtensions.IsPendingAudit(e.event_status)),
+                departmentEvents.Count(e => FollowupEventStatusExtensions.IsPatientNotSubmitted(e.event_status)),
+                departmentEvents.Count(e => FollowupEventStatusExtensions.IsTimeout(e.event_status)));
 
+            // 本月随访率计算排除已停止
             var currentMonthEvents = departmentEvents
-                .Where(e => e.push_time.HasValue && e.push_time.Value.Year == now.Year && e.push_time.Value.Month == now.Month)
+                .Where(e => !FollowupEventStatusExtensions.IsStopped(e.event_status) &&
+                           e.push_time.HasValue &&
+                           e.push_time.Value.Year == now.Year &&
+                           e.push_time.Value.Month == now.Month)
                 .ToList();
 
             double followupRate = 0;
@@ -287,18 +295,22 @@ public sealed class OverviewStatisticsService : IOverviewStatisticsService
             var projectEvents = events.Where(e => e.project_id == projectId).ToList();
 
             var patientCount = projectPatients.Count;
-            var followupTaskCount = projectEvents.Count;
+            // 总随访任务数量排除已停止
+            var followupTaskCount = projectEvents.Count(e => !FollowupEventStatusExtensions.IsStopped(e.event_status));
 
             // 状态统计
             var statusCounts = CreateStatusDictionary(
-                projectEvents.Count(e => e.event_status == "已随访"),
-                projectEvents.Count(e => e.event_status == "待审核"),
-                projectEvents.Count(e => e.event_status == "患者未提交"),
-                projectEvents.Count(e => e.event_status == "已超时"));
+                projectEvents.Count(e => FollowupEventStatusExtensions.IsCompleted(e.event_status)),
+                projectEvents.Count(e => FollowupEventStatusExtensions.IsPendingAudit(e.event_status)),
+                projectEvents.Count(e => FollowupEventStatusExtensions.IsPatientNotSubmitted(e.event_status)),
+                projectEvents.Count(e => FollowupEventStatusExtensions.IsTimeout(e.event_status)));
 
-            // 本月随访率
+            // 本月随访率（排除已停止）
             var currentMonthEvents = projectEvents
-                .Where(e => e.push_time.HasValue && e.push_time.Value.Year == now.Year && e.push_time.Value.Month == now.Month)
+                .Where(e => !FollowupEventStatusExtensions.IsStopped(e.event_status) &&
+                           e.push_time.HasValue &&
+                           e.push_time.Value.Year == now.Year &&
+                           e.push_time.Value.Month == now.Month)
                 .ToList();
 
             double followupRate = 0;
@@ -311,13 +323,18 @@ public sealed class OverviewStatisticsService : IOverviewStatisticsService
             // 今日新增（患者）
             var todayNewCount = projectPatients.Count(p => p.create_time.HasValue && p.create_time.Value.Date == today);
 
-            // 年度统计
-            var yearlyEvents = projectEvents.Where(e => e.push_time.HasValue && e.push_time.Value >= yearStart && e.push_time.Value <= yearEnd).ToList();
+            // 年度统计（排除已停止）
+            var yearlyEvents = projectEvents
+                .Where(e => !FollowupEventStatusExtensions.IsStopped(e.event_status) &&
+                           e.push_time.HasValue &&
+                           e.push_time.Value >= yearStart &&
+                           e.push_time.Value <= yearEnd)
+                .ToList();
             var yearlyTaskCount = yearlyEvents.Count;
             var yearlyPatientCount = yearlyEvents.Select(e => e.patient_id).Distinct().Count();
 
-            // 未到推送时间
-            var notPushedCount = projectEvents.Count(e => !e.push_time.HasValue || e.push_time.Value > now);
+            // 未到推送时间（直接统计状态为"未到推送时间"的记录）
+            var notPushedCount = projectEvents.Count(e => FollowupEventStatusExtensions.IsNotPushed(e.event_status));
 
             result[projectId] = new ProjectSummaryDto(
                 projectId,

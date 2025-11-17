@@ -13,21 +13,21 @@
     {
         <div class="loading-wrapper">
             <MudProgressCircular Color="Color.Success" Size="Size.Large" Indeterminate="true" />
-            <MudText Typo="Typo.h6" Class="mt-3" Style="color: #18B797;">正在加载数据...</MudText>
+            <MudText Typo="Typo.h6" Color="Color.Primary" Class="mt-3">正在加载数据...</MudText>
         </div>
     }
     else if (!hasPermission)
     {
         <div class="empty-wrapper">
-            <MudIcon Icon="@Icons.Material.Filled.Lock" Size="Size.Large" Style="color: #999; font-size: 64px;" />
-            <MudText Typo="Typo.h6" Class="mt-3" Style="color: #666;">您没有访问此页面的权限</MudText>
+            <MudIcon Icon="@Icons.Material.Filled.Lock" Size="Size.Large" Color="Color.Secondary" Style="font-size: 64px;" />
+            <MudText Typo="Typo.h6" Color="Color.Secondary" Class="mt-3">您没有访问此页面的权限</MudText>
         </div>
     }
     else if (hospitalProjects == null || !hospitalProjects.Any())
     {
         <div class="empty-wrapper">
-            <MudIcon Icon="@Icons.Material.Filled.FolderOpen" Size="Size.Large" Style="color: #999; font-size: 64px;" />
-            <MudText Typo="Typo.h6" Class="mt-3" Style="color: #666;">暂无数据可显示</MudText>
+            <MudIcon Icon="@Icons.Material.Filled.FolderOpen" Size="Size.Large" Color="Color.Secondary" Style="font-size: 64px;" />
+            <MudText Typo="Typo.h6" Color="Color.Secondary" Class="mt-3">暂无数据可显示</MudText>
         </div>
     }
     else
@@ -242,15 +242,15 @@
 
             if (!hospitalIds.Any()) return;
 
-            // 并行执行两个查询，提高性能
-            var patientCountsTask = _context.patient!
+            // 顺序执行查询（DbContext 不支持并发操作）
+            var patientCounts = await _context.patient!
                 .Where(p => hospitalIds.Contains(p.hospital_id) && p.source_type == "followup" && p.is_valid == true)
                 .GroupBy(p => p.hospital_id)
                 .Select(g => new { HospitalId = g.Key, Count = g.Count() })
                 .ToDictionaryAsync(x => x.HospitalId, x => x.Count);
 
             var followupEventTypes = FollowupEventTypeExtensions.GetFollowupEventTypes();
-            var followupCountsTask = _context.patient_event
+            var followupCounts = await _context.patient_event
                 .Join(_context.patient,
                     pe => pe.patient_id,
                     p => p.id,
@@ -259,12 +259,6 @@
                 .GroupBy(x => x.hospital_id)
                 .Select(g => new { HospitalId = g.Key, Count = g.Count() })
                 .ToDictionaryAsync(x => x.HospitalId, x => x.Count);
-
-            // 等待两个查询完成
-            await Task.WhenAll(patientCountsTask, followupCountsTask);
-
-            var patientCounts = await patientCountsTask;
-            var followupCounts = await followupCountsTask;
 
             // 更新统计数据（使用字典查找，O(1) 复杂度）
             foreach (var hospital in hospitalProjects.Where(h => h.hospitalId != Guid.Empty))

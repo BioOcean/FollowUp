@@ -239,10 +239,33 @@
     {
         PaletteLight = new PaletteLight()
         {
-            Primary = "#18b797",
-            Secondary = "#01A63E",
-            Error = "#ED5565",
-            Success = "#23C6C8"
+            Primary = "#0A6B58",           // 深色医疗绿（与设计系统同步）
+            Secondary = "#1E4A6C",          // 深蓝专业色
+            Error = "#C53030",              // 深红
+            Success = "#2F855A",            // 深绿
+            Warning = "#C05621",            // 深橙
+            Info = "#2B6CB0",               // 深蓝
+            Background = "#F7F9FC",         // 页面背景
+            Surface = "#FFFFFF",            // 卡片背景
+            TextPrimary = "#1A202C",        // 主文字（高对比度）
+            TextSecondary = "#4A5568",      // 次文字
+            DrawerBackground = "#0A6B58",   // 侧边栏背景
+            DrawerText = "#FFFFFF",         // 侧边栏文字
+            AppbarBackground = "#0A6B58",   // 顶栏背景 - 主题绿色
+            AppbarText = "#FFFFFF"          // 顶栏文字 - 白色
+        },
+        Typography = new Typography()
+        {
+            Default = new DefaultTypography()
+            {
+                FontFamily = new[] { "-apple-system", "BlinkMacSystemFont", "Segoe UI", "PingFang SC", "Microsoft YaHei", "sans-serif" },
+                FontSize = "15px",
+                LineHeight = "1.6"
+            }
+        },
+        LayoutProperties = new LayoutProperties()
+        {
+            DefaultBorderRadius = "6px"     // 统一小圆角
         }
     };
 }

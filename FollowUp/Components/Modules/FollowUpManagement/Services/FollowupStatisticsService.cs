@@ -1,5 +1,6 @@
 using Bio.Models;
 using FollowUp.Components.Modules.ProjectManagement.Models;
+using FollowUp.Services.Extension;
 using Microsoft.EntityFrameworkCore;
 
 namespace FollowUp.Components.Modules.FollowUpManagement.Services;
@@ -31,7 +32,11 @@ public sealed class FollowupStatisticsService : IFollowupStatisticsService
         await using var context = await _contextFactory.CreateDbContextAsync(cancellationToken);
 
         var eventsQuery = context.patient_event.AsNoTracking()
-            .Where(pe => pe.patient.hospital_id == hospitalId && pe.is_valid == true && pe.push_time.HasValue && pe.push_time.Value.Year == year);
+            .Where(pe => pe.patient.hospital_id == hospitalId &&
+                        pe.is_valid == true &&
+                        pe.event_status != "已停止" &&
+                        pe.push_time.HasValue &&
+                        pe.push_time.Value.Year == year);
 
         if (projectIds != null && projectIds.Count > 0)
         {

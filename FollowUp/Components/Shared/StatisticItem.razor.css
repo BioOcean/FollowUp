@@ -1,0 +1,106 @@
+/* ========================================
+   StatisticItem 组件样式
+   数字滚动动画和趋势指示样式
+   ======================================== */
+
+.statistic-item {
+    padding: var(--spacing-md);
+    border-radius: var(--radius-md);
+    transition: all var(--transition-base) var(--ease-out);
+    position: relative;
+    overflow: hidden;
+}
+
+.statistic-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--primary-gradient);
+    opacity: 0;
+    transition: opacity var(--transition-base);
+    z-index: 0;
+}
+
+.statistic-item:hover::before {
+    opacity: 0.03;
+}
+
+.statistic-label {
+    margin-bottom: var(--spacing-xs);
+    position: relative;
+    z-index: 1;
+}
+
+.statistic-value-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    position: relative;
+    z-index: 1;
+}
+
+.statistic-number {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 2px;
+}
+
+.count-value {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+}
+
+.statistic-unit {
+    font-size: 0.7em;
+    opacity: 0.8;
+    margin-left: 2px;
+}
+
+/* 趋势指示器 */
+.trend-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
+    padding: 2px 6px;
+    border-radius: var(--radius-full);
+}
+
+.trend-up {
+    color: var(--success-color);
+    background: var(--success-light);
+}
+
+.trend-down {
+    color: var(--error-color);
+    background: var(--error-light);
+}
+
+.trend-value {
+    font-size: var(--font-size-xs);
+}
+
+/* 悬浮提升效果增强 */
+.statistic-item.hover-lift {
+    cursor: pointer;
+}
+
+.statistic-item.hover-lift:hover {
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-lg);
+}
+
+.statistic-item.hover-lift:active {
+    transform: translateY(-3px);
+}
+
+/* 数字增长动画覆盖 */
+.statistic-item.number-grow {
+    animation-fill-mode: both;
+}
+

@@ -1,5 +1,6 @@
 @namespace FollowUp.Components.Modules.ProjectManagement.Components
 @inherits BasePage
+@implements IDisposable
 @inject ILogger<HospitalMain_UserStatsPanel> inj_logger
 @inject IOverviewStatisticsService inj_overviewStatisticsService
 
@@ -116,6 +117,9 @@
 
     private int chartRenderKey = 0;
 
+    private CancellationTokenSource? _loadCts;
+    private int _requestSequence = 0;
+
     protected override async Task OnInitializedAsync()
     {
         filterSelectList = new List<SelectedItem>
@@ -159,6 +163,14 @@
             return;
         }
 
+        // 取消之前的请求
+        _loadCts?.Cancel();
+        _loadCts?.Dispose();
+        _loadCts = new CancellationTokenSource();
+
+        var currentSequence = ++_requestSequence;
+        var cancellationToken = _loadCts.Token;
+
         try
         {
             isLoading = true;
@@ -168,21 +180,44 @@
             currentStats = await inj_overviewStatisticsService.GetUserStatsAsync(
                 HospitalId,
                 DepartmentProjects,
-                year);
+                year,
+                cancellationToken);
 
-            UpdateChartData();
+            // 只有当前请求是最新的才更新UI
+            if (currentSequence == _requestSequence && !cancellationToken.IsCancellationRequested)
+            {
+                UpdateChartData();
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // 请求被取消，忽略
         }
         catch (Exception ex)
         {
-            inj_logger.LogError(ex, "加载用户统计数据失败");
-            currentStats = null;
-            UpdateChartData();
+            // 只有当前请求是最新的才处理错误
+            if (currentSequence == _requestSequence)
+            {
+                inj_logger.LogError(ex, "加载用户统计数据失败");
+                currentStats = null;
+                UpdateChartData();
+            }
         }
         finally
         {
-            isLoading = false;
-            StateHasChanged();
+            // 只有当前请求是最新的才更新加载状态
+            if (currentSequence == _requestSequence)
+            {
+                isLoading = false;
+                StateHasChanged();
+            }
         }
+    }
+
+    public void Dispose()
+    {
+        _loadCts?.Cancel();
+        _loadCts?.Dispose();
     }
 
     private void UpdateChartData()
