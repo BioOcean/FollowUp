@@ -29,15 +29,14 @@
                 return;
             }
 
-            // 获取用户角色
+            // 获取用户角色列表
             var roles = user.FindAll("roleName")
                 .Select(c => System.Text.RegularExpressions.Regex.Unescape(c.Value))
                 .ToList();
-            var roleNames = string.Join(",", roles);
 
-            inj_logger.LogInformation("用户角色: {RoleNames}", roleNames);
+            inj_logger.LogInformation("用户角色: {Roles}", string.Join(", ", roles));
 
-            if (string.IsNullOrEmpty(roleNames))
+            if (roles.Count == 0)
             {
                 inj_logger.LogWarning("用户无角色信息，跳转到登录页");
                 inj_navigationManager.NavigateTo("/login", true);
@@ -45,7 +44,8 @@
             }
 
             // 角色路由优先级：医院管理员 > 科室管理员 > 课题管理员 > 随访角色 > 系统管理员
-            if (roleNames.Contains("医院管理员"))
+            // 医院、科室、课题管理员使用精确匹配
+            if (roles.Contains("医院管理员"))
             {
                 var hospitalId = await inj_userContextService.GetHospitalIdAsync();
                 if (hospitalId.HasValue)
@@ -60,7 +60,7 @@
                     inj_navigationManager.NavigateTo("/error?message=您暂无医院权限，请联系系统管理员分配权限", true);
                 }
             }
-            else if (roleNames.Contains("科室管理员"))
+            else if (roles.Contains("科室管理员"))
             {
                 var department = await inj_userContextService.GetDepartmentAsync();
                 if (department != null)
@@ -75,7 +75,7 @@
                     inj_navigationManager.NavigateTo("/error?message=您暂无科室权限，请联系系统管理员分配权限", true);
                 }
             }
-            else if (roleNames.Contains("课题管理员"))
+            else if (roles.Contains("课题管理员"))
             {
                 var project = await inj_userContextService.GetProjectAsync();
                 if (project != null)
@@ -90,13 +90,14 @@
                     inj_navigationManager.NavigateTo("/error?message=您暂无课题权限，请联系系统管理员分配权限", true);
                 }
             }
-            else if (roleNames.Contains("随访"))
+            // 随访和系统角色使用 Contains 模糊匹配（因为可能有多个随访角色）
+            else if (roles.Any(r => r.Contains("随访")))
             {
                 inj_logger.LogInformation("随访角色跳转到 /followupTaskManager/PendingReview");
                 // TODO: [任务管理页面] - 实现任务管理页面后启用
                 inj_navigationManager.NavigateTo("/followupTaskManager/PendingReview", true);
             }
-            else if (roleNames.Contains("系统"))
+            else if (roles.Any(r => r.Contains("系统")))
             {
                 inj_logger.LogInformation("系统管理员跳转到 /adminMain");
                 inj_navigationManager.NavigateTo("/adminMain", true);

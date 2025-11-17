@@ -1,7 +1,7 @@
 @namespace FollowUp.Components.Modules.ProjectManagement.Components
 @inherits BasePage
 @inject ILogger<HospitalMain_UserStatsPanel> inj_logger
-@inject IHospitalStatisticsService inj_statisticsService
+@inject IOverviewStatisticsService inj_overviewStatisticsService
 
 <MudPaper Elevation="1" Class="user-stats-card">
     <div class="d-flex align-items-center pa-2 justify-content-between">
@@ -174,7 +174,7 @@
             StateHasChanged();
 
             int? year = selectedFilter == "年度数据" ? yearValue.Year : null;
-            currentStats = await inj_statisticsService.GetHospitalUserStatsAsync(
+            currentStats = await inj_overviewStatisticsService.GetUserStatsAsync(
                 HospitalId,
                 DepartmentProjects,
                 year);
@@ -197,7 +197,8 @@
     private void UpdateChartData()
     {
         // 年龄分布图表
-        ageChartOptions.ShowLegend = false;
+        ageChartOptions.ShowLegend = true;
+        ageChartOptions.LegendPosition = ChartLegendPosition.Bottom;
         ageChartLabels = currentStats?.AgeLabels.ToList() ?? new List<string>();
         ageChartData = new List<ChartDataset>();
         isShowAgeChart = currentStats?.AgeValues.Any(v => v > 0) ?? false;
@@ -212,7 +213,8 @@
         }
 
         // 科室分布图表
-        departmentChartOptions.ShowLegend = false;
+        departmentChartOptions.ShowLegend = true;
+        departmentChartOptions.LegendPosition = ChartLegendPosition.Bottom;
         departmentChartLabels = currentStats?.DepartmentLabels.ToList() ?? new List<string>();
         departmentChartData = new List<ChartDataset>();
         isShowDepartmentChart = currentStats?.DepartmentPatientValues.Any(v => v > 0) ?? false;
@@ -227,7 +229,8 @@
         }
 
         // 今日新增图表
-        todayChartOptions.ShowLegend = false;
+        todayChartOptions.ShowLegend = true;
+        todayChartOptions.LegendPosition = ChartLegendPosition.Bottom;
         todayChartLabels = currentStats?.TodayLabels.ToList() ?? new List<string>();
         todayChartData = new List<ChartDataset>();
         isShowTodayChart = currentStats?.TodayPatientValues.Any(v => v > 0) ?? false;

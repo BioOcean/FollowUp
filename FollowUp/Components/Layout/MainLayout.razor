@@ -1,4 +1,6 @@
 ﻿@inherits LayoutComponentBase
+@using FollowUp.Services
+@implements IDisposable
 
 <MudThemeProvider IsDarkMode="false" Theme="BiooTheme"/>
 <MudPopoverProvider />
@@ -7,6 +9,15 @@
 
 <MudLayout>
     <MudAppBar Elevation="1" Class="app-bar-custom">
+        @* 首页按钮：不在首页时显示 *@
+        @if (showHomeButton)
+        {
+            <MudIconButton Icon="@Icons.Material.Filled.Home"
+                           Style="color:white"
+                           OnClick="@OnHomeClick"
+                           Title="返回首页" />
+        }
+
         <MudText Typo="Typo.h5" Class="system-name">@systemName</MudText>
         <MudSpacer />
         <MudText Class="user-info" Style="cursor:pointer" @onclick="OnLogoutClick">
@@ -53,12 +64,15 @@
 
 @code {
     [Inject] private IDialogService inj_dialogService { get; set; } = default!;
-    
+    [Inject] private INavigationService inj_navigationService { get; set; } = default!;
+
     private bool drawerOpen = true;
     private string userName = "";
     private string systemName = "";
     private MudMessageBox? logoutMsgBox;
-    
+    private bool showHomeButton = false;
+    private string homePage = "";
+
     protected override async Task OnInitializedAsync()
     {
         // 极简实现：从配置文件读取系统名称
@@ -76,9 +90,35 @@
                 ?? user.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value
                 ?? user.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value
                 ?? string.Empty;
+
+            // 获取用户首页路径并存储
+            homePage = await inj_navigationService.GetHomePageAsync();
+
+            // 更新首页按钮显示状态
+            await UpdateHomeButtonVisibility();
+
+            // 监听 URL 变化，动态更新首页按钮
+            inj_navigationManager.LocationChanged += OnLocationChanged;
         }
-        
+
         await base.OnInitializedAsync();
+    }
+
+    private async void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+    {
+        await UpdateHomeButtonVisibility();
+        StateHasChanged();
+    }
+
+    private async Task UpdateHomeButtonVisibility()
+    {
+        var isHomePage = await inj_navigationService.IsHomePageAsync(inj_navigationManager.Uri);
+        showHomeButton = !isHomePage;
+    }
+
+    public void Dispose()
+    {
+        inj_navigationManager.LocationChanged -= OnLocationChanged;
     }
     
     private void ToggleDrawer()
@@ -87,16 +127,27 @@
     }
 
     /// <summary>
+    /// 首页按钮点击事件：跳转到用户首页
+    /// </summary>
+    private void OnHomeClick()
+    {
+        if (!string.IsNullOrEmpty(homePage))
+        {
+            inj_navigationManager.NavigateTo(homePage, false);
+        }
+    }
+
+    /// <summary>
     /// 判断是否显示菜单
     /// AdminMain、HospitalMain、DepartmentMain 三个主页面不显示菜单
+    /// ProjectMain 显示菜单（与 NTCare 一致）
     /// </summary>
     private bool IsShowMenu()
     {
         string url = inj_navigationManager.Uri;
-        return !url.Contains("/adminMain") && 
-               !url.Contains("/hospitalMain") && 
-               !url.Contains("/departmentMain") &&
-               !url.Contains("/projectMain");
+        return !url.Contains("/adminMain") &&
+               !url.Contains("/hospitalMain") &&
+               !url.Contains("/departmentMain");
     }
     
     private async Task OnLogoutClick()

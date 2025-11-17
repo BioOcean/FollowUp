@@ -2,66 +2,83 @@
 @using Microsoft.EntityFrameworkCore
 @inherits BasePage
 @inject ILogger<DepartmentMain> inj_logger
+@inject IDialogService inj_dialogService
+@inject IWechatService inj_wechatService
+@inject IOverviewStatisticsService inj_overviewStatisticsService
 
-<PageTitle>科室管理 - 健康管家</PageTitle>
+<PageTitle>科室概览</PageTitle>
 
-<div style="background-color:#f1fbf9;min-height:calc(100vh - 64px);" class="p-3">
-    @if (isLoading)
-    {
-        <div class="d-flex justify-center align-center" style="height: 200px;">
-            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+@if (isLoading)
+{
+    <div class="department-main-container">
+        <MudSkeleton Width="300px" Height="30px" Animation="Animation.Wave" Class="mb-4" />
+        <div class="row mt-5">
+            <div class="col-8">
+                <MudSkeleton Height="400px" Animation="Animation.Wave" Class="mb-3" />
+                <MudSkeleton Height="350px" Animation="Animation.Wave" Class="mb-3" />
+                <MudSkeleton Height="450px" Animation="Animation.Wave" />
+            </div>
+            <div class="col-4">
+                <MudSkeleton Height="200px" Animation="Animation.Wave" Class="mb-3" />
+                <MudSkeleton Height="200px" Animation="Animation.Wave" />
+            </div>
         </div>
-    }
-    else if (currentDepartment != null)
-    {
-        <div class="d-flex align-items-center justify-content-between mb-4">
-            <div class="ml-3 span-text">
+    </div>
+}
+else if (hospital != null && currentDepartment != null)
+{
+    <div class="department-main-container">
+        <div class="department-main-header">
+            <div class="department-main-title">
                 <span style="font-weight:700">数据范围：</span>
-                @if (hospital != null)
+                <span>@hospital.name</span>
+                <span class="ml-2">@(currentDepartment.display_name ?? currentDepartment.name)</span>
+            </div>
+            <div class="department-main-actions">
+                <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@EditScanMsg" Class="button-press">编辑扫码信息</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@DownloadQrCode" Class="button-press">下载二维码</MudButton>
+            </div>
+        </div>
+
+        <div class="row mt-5">
+            <div class="col-8">
+                @* 用户数据统计面板 - 复用医院主页组件 *@
+                <HospitalMain_UserStatsPanel HospitalId="@hospital.id"
+                                             DepartmentList="@departmentList"
+                                             DepartmentProjects="@departmentProjectMaps" />
+
+                @* 随访/宣教趋势 *@
+                <HospitalMain_TrendPanel HospitalId="@hospital.id"
+                                         DepartmentId="@currentDepartment.id"
+                                         ProjectIds="@CurrentProjectIds" />
+
+                @* 活跃度图表 *@
+                <HospitalMain_ActivityPanel HospitalId="@hospital.id" ProjectIds="@CurrentProjectIds" />
+            </div>
+
+            <div class="col-4">
+                @if (projectList.Any())
                 {
-                    <span>@hospital.name</span>
-                    <span class="ml-2">@(currentDepartment.display_name ?? currentDepartment.name)</span>
+                    @foreach (var project in projectList)
+                    {
+                        var summary = GetProjectSummary(project.id);
+                        <DepartmentMain_ProjectCard Project="@project" Summary="@summary" />
+                    }
+                }
+                else
+                {
+                    <MudAlert Severity="Severity.Info">该科室暂无课题信息</MudAlert>
                 }
             </div>
-            @* TODO: [二维码功能] - 编辑扫码信息和下载二维码功能 *@
         </div>
-
-        @if (projectList.Any())
-        {
-            <MudPaper Class="pa-4" Elevation="2">
-                <MudText Typo="Typo.h6" Class="mb-3">课题列表</MudText>
-                <MudGrid>
-                    @foreach (var proj in projectList)
-                    {
-                        <MudItem xs="12" sm="6" md="4" lg="3">
-                            <MudPaper Class="pa-3" Elevation="1" Style="cursor:pointer" @onclick="@(() => NavigateToProject(proj.id))">
-                                <div class="d-flex align-items-center">
-                                    <MudIcon Icon="@Icons.Material.Filled.Book" Color="Color.Primary" Class="mr-2" />
-                                    <div>
-                                        <MudText Typo="Typo.body1">@(proj.display_name ?? proj.name)</MudText>
-                                        <MudText Typo="Typo.caption" Color="Color.Secondary">点击查看详情</MudText>
-                                    </div>
-                                </div>
-                            </MudPaper>
-                        </MudItem>
-                    }
-                </MudGrid>
-            </MudPaper>
-
-            @* TODO: [统计功能] - 添加科室维度的数据统计面板（DimensionStatsView 组件） *@
-        }
-        else
-        {
-            <MudAlert Severity="Severity.Info">该科室暂无课题信息</MudAlert>
-        }
-    }
-    else
-    {
-        <div class="d-flex justify-center align-center" style="height: 200px;">
-            <MudText>未找到科室数据</MudText>
-        </div>
-    }
-</div>
+    </div>
+}
+else
+{
+    <div class="d-flex justify-center align-center" style="height: 300px;">
+        <MudText>未找到科室数据</MudText>
+    </div>
+}
 
 @code {
     [Parameter]
@@ -70,15 +87,19 @@
 
     private sys_hospital? hospital;
     private sys_department? currentDepartment;
+    private List<sys_department> departmentList = new();
     private List<form_project> projectList = new();
+    private List<DepartmentProjectMap> departmentProjectMaps = new();
+    private Dictionary<Guid, ProjectSummaryDto> projectSummaries = new();
     private bool isLoading = true;
+
+    private IReadOnlyCollection<Guid> CurrentProjectIds =>
+        departmentProjectMaps.FirstOrDefault()?.ProjectIds ?? Array.Empty<Guid>();
 
     protected override async Task OnPageInitializedAsync()
     {
         try
         {
-            // TODO: [用户上下文服务] - 实现 IUserContextService 后从服务获取 departmentId
-            // 临时方案：从 URL 参数或用户 Claims 获取
             if (string.IsNullOrEmpty(departmentId))
             {
                 var user = inj_httpContextAccessor.HttpContext?.User;
@@ -90,7 +111,7 @@
 
             if (!string.IsNullOrEmpty(departmentId) && Guid.TryParse(departmentId, out var departmentGuid))
             {
-                await LoadData(departmentGuid);
+                await LoadDataAsync(departmentGuid);
             }
         }
         catch (Exception ex)
@@ -103,11 +124,16 @@
         }
     }
 
-    private async Task LoadData(Guid departmentGuid)
+    private async Task LoadDataAsync(Guid departmentGuid)
     {
+        if (_context == null)
+        {
+            inj_logger.LogWarning("_context 未初始化，无法加载科室数据");
+            return;
+        }
+
         try
         {
-            // 加载科室基本信息
             currentDepartment = await _context.sys_department!
                 .AsNoTracking()
                 .Include(d => d.hospital)
@@ -119,17 +145,37 @@
                 return;
             }
 
-            hospital = currentDepartment.hospital ?? null;
+            hospital = currentDepartment.hospital;
+            departmentList = new List<sys_department> { currentDepartment };
 
-            // 加载该科室下的所有随访课题
             projectList = await _context.form_project
                 .AsNoTracking()
                 .Where(p => p.department_id == departmentGuid)
                 .OrderBy(p => p.display_name ?? p.name)
                 .ToListAsync();
 
-            inj_logger.LogInformation("成功加载科室信息，科室: {DeptName}, 课题数量: {ProjCount}", 
-                currentDepartment.display_name ?? currentDepartment.name, projectList.Count);
+            var projectIds = projectList
+                .Select(p => p.id)
+                .Where(id => id != Guid.Empty)
+                .ToList();
+
+            departmentProjectMaps = new List<DepartmentProjectMap>
+            {
+                new DepartmentProjectMap(
+                    currentDepartment.id,
+                    currentDepartment.display_name ?? currentDepartment.name ?? string.Empty,
+                    projectIds)
+            };
+
+            if (hospital != null && projectIds.Any())
+            {
+                await LoadProjectSummariesAsync(hospital.id, projectIds);
+            }
+
+            inj_logger.LogInformation(
+                "成功加载科室信息，科室: {DeptName}, 课题数量: {ProjCount}",
+                currentDepartment.display_name ?? currentDepartment.name,
+                projectList.Count);
         }
         catch (Exception ex)
         {
@@ -137,9 +183,124 @@
         }
     }
 
-    private void NavigateToProject(Guid projectId)
+    private async Task LoadProjectSummariesAsync(Guid hospitalId, IReadOnlyCollection<Guid> projectIds)
     {
-        inj_navigationManager.NavigateTo($"/projectMain?projectId={projectId}");
+        try
+        {
+            var maps = projectList
+                .Where(p => projectIds.Contains(p.id))
+                .Select(p =>
+                {
+                    var name = p.display_name ?? p.name ?? string.Empty;
+                    return new DepartmentProjectMap(p.id, name, new List<Guid> { p.id });
+                })
+                .ToList();
+
+            if (!maps.Any())
+            {
+                projectSummaries = new Dictionary<Guid, ProjectSummaryDto>();
+                return;
+            }
+
+            var summaries = await inj_overviewStatisticsService.GetDepartmentSummariesAsync(
+                hospitalId,
+                maps,
+                CancellationToken.None);
+
+            projectSummaries = summaries.Values.ToDictionary(
+                s => s.DepartmentId,
+                s => new ProjectSummaryDto(
+                    s.DepartmentId,
+                    s.DepartmentName,
+                    s.PatientCount,
+                    s.FollowupTaskCount,
+                    s.FollowupRate,
+                    s.StatusCounts));
+        }
+        catch (Exception ex)
+        {
+            inj_logger.LogError(ex, "加载课题统计数据失败");
+            projectSummaries = new Dictionary<Guid, ProjectSummaryDto>();
+        }
+    }
+
+    private ProjectSummaryDto? GetProjectSummary(Guid projectId)
+    {
+        return projectSummaries.TryGetValue(projectId, out var summary) ? summary : null;
+    }
+
+    private async Task EditScanMsg()
+    {
+        if (string.IsNullOrWhiteSpace(departmentId))
+        {
+            return;
+        }
+
+        if (!Guid.TryParse(departmentId, out var departmentGuid))
+        {
+            return;
+        }
+
+        var parameters = new DialogParameters
+        {
+            ["DepartmentId"] = departmentGuid
+        };
+
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.ExtraExtraLarge,
+            FullScreen = false
+        };
+
+        await inj_dialogService.ShowAsync<EditScanDialog>("扫码信息", parameters, options);
+
+        await LoadDataAsync(departmentGuid);
+    }
+
+    private async Task DownloadQrCode()
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(departmentId) || currentDepartment == null)
+            {
+                inj_snackbar.Add("科室信息未加载完成，请稍后重试", Severity.Warning);
+                return;
+            }
+
+            var isXuanWuProject = false;
+            var qrCodeResponse = await inj_wechatService.CreateQrCodeAsync("f", departmentId, isXuanWuProject);
+
+            if (qrCodeResponse?.Ticket != null)
+            {
+                var deptName = currentDepartment.display_name ?? currentDepartment.name ?? "科室";
+                var fileName = $"科室二维码_{deptName}.png";
+                var fileUrl = await inj_wechatService.GetQrCodeAndSaveAsync(qrCodeResponse.Ticket, fileName);
+                var fullUrl = inj_navigationManager.BaseUri + fileUrl;
+
+                await inj_jsRuntime.InvokeVoidAsync("eval", $@"
+(function() {{
+    const link = document.createElement('a');
+    link.href = '{fullUrl}';
+    link.download = '{fileName}';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}})();
+");
+
+                inj_snackbar.Add("二维码下载成功", Severity.Success);
+            }
+            else
+            {
+                inj_snackbar.Add("生成二维码失败，请稍后重试", Severity.Error);
+                inj_logger.LogWarning("生成科室二维码失败: Ticket 为空");
+            }
+        }
+        catch (Exception ex)
+        {
+            inj_logger.LogError(ex, "生成科室二维码时出错");
+            inj_snackbar.Add($"生成二维码时出错: {ex.Message}", Severity.Error);
+        }
     }
 }
 

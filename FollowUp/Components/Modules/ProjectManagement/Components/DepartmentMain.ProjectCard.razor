@@ -1,0 +1,121 @@
+@namespace FollowUp.Components.Modules.ProjectManagement.Components
+@inherits BasePage
+@inject ILogger<DepartmentMain_ProjectCard> inj_logger
+@inject IWechatService inj_wechatService
+
+@* 科室内课题信息卡片 - 完全参照 NTCare DepProInfoView 实现 *@
+<MudPaper Class="pa-2 mb-4">
+    <div class="d-flex justify-content-between">
+        <MudButton Variant="Variant.Text"
+                   Color="Color.Primary"
+                   OnClick="@PageToProject"
+                   Class="pa-0"
+                   Style="min-width:unset;">
+            <MudText Color="Color.Primary" Typo="Typo.h6">@(Project.display_name ?? Project.name)</MudText>
+        </MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="@DownloadQrCode">下载二维码</MudButton>
+    </div>
+    <div class="d-flex mt-4 mb-8">
+        <div class="div-block width33">
+            <MudText Typo="Typo.button" Color="Color.Primary">患者数量</MudText>
+            <MudText Class="fw-bold">@PatientCount 个</MudText>
+        </div>
+        <div class="div-block width33">
+            <MudText Typo="Typo.button" Color="Color.Primary">随访任务</MudText>
+            <MudText Class="fw-bold">@FollowupTaskCount 个</MudText>
+        </div>
+        <div class="div-block width33">
+            <MudText Typo="Typo.button" Color="Color.Primary">本月随访率</MudText>
+            <MudText Class="fw-bold">@FollowupRate.ToString("0")%</MudText>
+        </div>
+    </div>
+    <div class="d-flex">
+        <div class="div-block w-25 gap-2">
+            <MudText Class="fw-bold">已随访</MudText>
+            <MudText>@GetStatusCount("已随访")</MudText>
+        </div>
+        <div class="div-block w-25 gap-2">
+            <MudText Class="fw-bold">待审核</MudText>
+            <MudText>@GetStatusCount("待审核")</MudText>
+        </div>
+        <div class="div-block w-25 gap-2">
+            <MudText Class="fw-bold">患者未提交</MudText>
+            <MudText>@GetStatusCount("患者未提交")</MudText>
+        </div>
+        <div class="div-block w-25 gap-2">
+            <MudText Class="fw-bold">已超时</MudText>
+            <MudText>@GetStatusCount("已超时")</MudText>
+        </div>
+    </div>
+</MudPaper>
+
+@code {
+    [Parameter] public form_project Project { get; set; } = default!;
+    [Parameter] public ProjectSummaryDto? Summary { get; set; }
+
+    private int PatientCount => Summary?.PatientCount ?? 0;
+    private int FollowupTaskCount => Summary?.FollowupTaskCount ?? 0;
+    private double FollowupRate => Summary?.FollowupRate ?? 0;
+
+    private int GetStatusCount(string status)
+    {
+        if (Summary?.StatusCounts == null)
+        {
+            return 0;
+        }
+        return Summary.StatusCounts.TryGetValue(status, out var count) ? count : 0;
+    }
+
+    private void PageToProject()
+    {
+        inj_navigationManager.NavigateTo($"/projectMain?projectId={Project.id}");
+    }
+
+    private async Task DownloadQrCode()
+    {
+        try
+        {
+            if (Project == null)
+            {
+                inj_snackbar.Add("课题信息未加载完成，请稍后重试", Severity.Warning);
+                return;
+            }
+
+            var projectId = Project.id.ToString();
+            var isXuanWuProject = projectId == inj_wechatService.GetWeChatAppKeys(EnumsWeChatAppKeys.WXWechatProjectId);
+
+            var qrCodeResponse = await inj_wechatService.CreateQrCodeAsync("projectId", projectId, isXuanWuProject);
+
+            if (qrCodeResponse?.Ticket != null)
+            {
+                var fileName = $"课题二维码_{Project.display_name ?? Project.name}.png";
+                var fileUrl = await inj_wechatService.GetQrCodeAndSaveAsync(qrCodeResponse.Ticket, fileName);
+                var fullUrl = inj_navigationManager.BaseUri + fileUrl;
+
+                await inj_jsRuntime.InvokeVoidAsync("eval", $@"
+(function() {{
+    const link = document.createElement('a');
+    link.href = '{fullUrl}';
+    link.download = '{fileName}';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}})();
+");
+
+                inj_snackbar.Add("二维码下载成功", Severity.Success);
+            }
+            else
+            {
+                inj_snackbar.Add("生成二维码失败，请稍后重试", Severity.Error);
+                inj_logger.LogWarning("生成课题二维码失败: Ticket 为空");
+            }
+        }
+        catch (Exception ex)
+        {
+            inj_logger.LogError(ex, "生成课题二维码时出错");
+            inj_snackbar.Add($"生成二维码时出错: {ex.Message}", Severity.Error);
+        }
+    }
+}
+

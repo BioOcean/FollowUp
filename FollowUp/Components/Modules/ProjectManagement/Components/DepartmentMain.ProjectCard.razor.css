@@ -1,0 +1,23 @@
+/* ========================================
+   课题卡片样式 - 完全参照 NTCare DepProInfoView
+   ======================================== */
+
+.div-block {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.width33 {
+    width: 33%;
+}
+
+.w-25 {
+    width: 25%;
+}
+
+.gap-2 {
+    gap: 0.5rem;
+}
+

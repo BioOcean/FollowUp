@@ -7,7 +7,7 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddProjectManagementServices(this IServiceCollection services)
     {
         services.AddMemoryCache();
-        services.AddScoped<IHospitalStatisticsService, HospitalStatisticsService>();
+        services.AddScoped<IOverviewStatisticsService, OverviewStatisticsService>();
         return services;
     }
 }

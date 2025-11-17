@@ -1,7 +1,7 @@
 @namespace FollowUp.Components.Modules.ProjectManagement.Components
 @inherits BasePage
 @inject ILogger<HospitalMain_ActivityPanel> inj_logger
-@inject IHospitalStatisticsService inj_statisticsService
+@inject IPatientStatisticsService inj_patientStatisticsService
 @using FollowUp.Components.Shared.Charts
 
 @* 活跃度情况 *@
@@ -45,6 +45,7 @@
 
 @code {
     [Parameter] public Guid HospitalId { get; set; }
+    [Parameter] public IReadOnlyCollection<Guid>? ProjectIds { get; set; }
 
     private List<SelectedItem> dimensionSelectList = new();
     private string selectedDimensionStr = "日活";
@@ -109,11 +110,11 @@
             isLoading = true;
             StateHasChanged();
 
-            var stats = await inj_statisticsService.GetActivityStatsAsync(
+            var stats = await inj_patientStatisticsService.GetActivityStatsAsync(
                 HospitalId,
                 selectedDimension,
                 selectedDateValue,
-                null
+                ProjectIds
             );
 
             activeCounts = stats.ActiveCounts.ToList();

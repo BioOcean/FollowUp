@@ -1,7 +1,8 @@
 @namespace FollowUp.Components.Modules.ProjectManagement.Components
 @inherits BasePage
 @inject ILogger<HospitalMain_TrendPanel> inj_logger
-@inject IHospitalStatisticsService inj_statisticsService
+@inject IFollowupStatisticsService inj_followupStatisticsService
+@inject IEducationStatisticsService inj_educationStatisticsService
 
 @* 随访率/宣教阅读率趋势 *@
 <MudPaper Elevation="1" Class="mt-3 p-2 trend-panel" Height="350px">
@@ -36,6 +37,9 @@
 
 @code {
     [Parameter] public Guid HospitalId { get; set; }
+    [Parameter] public Guid? DepartmentId { get; set; }
+    [Parameter] public Guid? ProjectId { get; set; }
+    [Parameter] public IReadOnlyCollection<Guid>? ProjectIds { get; set; }
 
     private List<SelectedItem> modeSelectList = new();
     private string selectedMode = "随访率";
@@ -85,14 +89,45 @@
             StateHasChanged();
 
             List<double> monthlyRates;
+
+            // 优先级：ProjectId > DepartmentId > HospitalId（全院）
             if (selectedMode == "随访率")
             {
-                var trend = await inj_statisticsService.GetFollowupTrendAsync(HospitalId, yearValue.Year);
+                // 随访率：使用 ProjectIds 集合
+                IReadOnlyCollection<Guid>? effectiveProjectIds = null;
+                if (ProjectId.HasValue)
+                {
+                    effectiveProjectIds = new[] { ProjectId.Value };
+                }
+                else if (ProjectIds != null && ProjectIds.Any())
+                {
+                    effectiveProjectIds = ProjectIds;
+                }
+
+                var trend = await inj_followupStatisticsService.GetFollowupTrendAsync(HospitalId, yearValue.Year, effectiveProjectIds);
                 monthlyRates = trend.MonthlyRates.ToList();
             }
             else
             {
-                var trend = await inj_statisticsService.GetEducationTrendAsync(HospitalId, yearValue.Year);
+                // 宣教阅读率：优先级 ProjectId > DepartmentId > HospitalId
+                IReadOnlyCollection<Guid>? effectiveProjectIds = null;
+                Guid? effectiveDepartmentId = null;
+
+                if (ProjectId.HasValue)
+                {
+                    effectiveProjectIds = new[] { ProjectId.Value };
+                }
+                else if (DepartmentId.HasValue)
+                {
+                    effectiveDepartmentId = DepartmentId.Value;
+                }
+
+                var trend = await inj_educationStatisticsService.GetEducationTrendAsync(
+                    HospitalId,
+                    yearValue.Year,
+                    effectiveDepartmentId,
+                    effectiveProjectIds);
+
                 monthlyRates = trend.MonthlyRates.ToList();
             }
 

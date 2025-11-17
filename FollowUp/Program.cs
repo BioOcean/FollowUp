@@ -2,6 +2,9 @@ using Bio.Shared.Services;
 using Bio.Models;
 using FollowUp.Components;
 using FollowUp.Components.Modules.ProjectManagement.Services;
+using FollowUp.Components.Modules.PatientManagement.Services;
+using FollowUp.Components.Modules.FollowUpManagement.Services;
+using FollowUp.Components.Modules.EducationManagement.Services;
 using Microsoft.EntityFrameworkCore;
 using MudBlazor.Services;
 using NLog.Web;
@@ -30,9 +33,17 @@ builder.Services.Configure<Microsoft.AspNetCore.Components.Server.CircuitOptions
 
 // 注册用户上下文服务
 builder.Services.AddScoped<IUserContextService, UserContextService>();
+// 注册导航服务
+builder.Services.AddScoped<INavigationService, NavigationService>(); 
+
 
 // 注册项目管理模块服务
 builder.Services.AddProjectManagementServices();
+// 注册领域统计服务
+builder.Services.AddScoped<IPatientStatisticsService, PatientStatisticsService>();
+builder.Services.AddScoped<IFollowupStatisticsService, FollowupStatisticsService>();
+builder.Services.AddScoped<IEducationStatisticsService, EducationStatisticsService>();
+
 
 // 清除现有的日志提供程序
 builder.Logging.ClearProviders();
@@ -61,9 +72,6 @@ builder.Services.AddMudServices();
 
 // 添加BootstrapBlazor服务
 builder.Services.AddBootstrapBlazor();
-
-// 项目管理模块服务
-builder.Services.AddProjectManagementServices();
 
 // 添加HttpContextAccessor上下文
 builder.Services.AddHttpContextAccessor();

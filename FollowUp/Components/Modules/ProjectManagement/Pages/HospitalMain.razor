@@ -6,7 +6,7 @@
 @inject ISnackbar inj_snackbar
 @inject IWechatService inj_wechatService
 @inject IJSRuntime inj_jsRuntime
-@inject IHospitalStatisticsService inj_statisticsService
+@inject IOverviewStatisticsService inj_overviewStatisticsService
 @using FollowUp.Components.Modules.ProjectManagement.Dialogs
 
 <PageTitle>医院概览</PageTitle>
@@ -52,10 +52,10 @@ else if (hospital != null)
                                              DepartmentProjects="@departmentProjectMaps" />
 
                 @* 随访/宣教趋势 *@
-                <HospitalMain_TrendPanel HospitalId="@Guid.Parse(hospitalId!)" />
+                <HospitalMain_TrendPanel HospitalId="@Guid.Parse(hospitalId!)" ProjectIds="@AllProjectIds" />
 
                 @* 活跃度图表 *@
-                <HospitalMain_ActivityPanel HospitalId="@Guid.Parse(hospitalId!)" />
+                <HospitalMain_ActivityPanel HospitalId="@Guid.Parse(hospitalId!)" ProjectIds="@AllProjectIds" />
             </div>
 
             @* 右侧 col-4 *@
@@ -92,6 +92,10 @@ else
     private sys_hospital? hospital;
     private List<sys_department> departmentList = new();
     private List<DepartmentProjectMap> departmentProjectMaps = new();
+    private IReadOnlyCollection<Guid> AllProjectIds => departmentProjectMaps
+        .SelectMany(dp => dp.ProjectIds)
+        .Distinct()
+        .ToList();
     private Dictionary<Guid, DepartmentSummaryDto> departmentSummaries = new();
     private bool isInitialLoading = true;
     private bool isDepartmentSummaryLoading = false;
@@ -101,13 +105,19 @@ else
     {
         try
         {
+            inj_logger.LogInformation("HospitalMain OnPageInitializedAsync 开始");
+
             await ResolveHospitalIdAsync();
+            inj_logger.LogInformation("ResolveHospitalIdAsync 完成，hospitalId={HospitalId}", hospitalId);
+
             if (string.IsNullOrWhiteSpace(hospitalId))
             {
+                inj_logger.LogWarning("hospitalId 为空，无法加载数据");
                 return;
             }
 
             await LoadHospitalDataAsync();
+            inj_logger.LogInformation("LoadHospitalDataAsync 完成，hospital={Hospital}", hospital?.name ?? "null");
         }
         catch (Exception ex)
         {
@@ -116,6 +126,8 @@ else
         finally
         {
             isInitialLoading = false;
+            inj_logger.LogInformation("HospitalMain OnPageInitializedAsync 结束，isInitialLoading={IsLoading}, hospital={Hospital}",
+                isInitialLoading, hospital?.name ?? "null");
         }
     }
 
@@ -285,7 +297,7 @@ else
             isDepartmentSummaryLoading = true;
             StateHasChanged();
 
-            var summaries = await inj_statisticsService.GetDepartmentSummariesAsync(
+            var summaries = await inj_overviewStatisticsService.GetDepartmentSummariesAsync(
                 Guid.Parse(hospitalId!),
                 departmentProjectMaps,
                 _cts.Token);

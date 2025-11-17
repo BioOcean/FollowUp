@@ -1,9 +1,32 @@
+/* ========================================
+   ProjectMain 页面样式 - 参照 NTCare
+   ======================================== */
+
+.project-main-container {
+    background-color: #f1fbf9;
+    min-height: calc(100vh - 64px);
+}
+
 .span-text {
     font-size: 16px;
     cursor: pointer;
 }
 
+.div-block {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
 
+.width11 {
+    width: 11%;
+}
 
-
+.icon-ques {
+    border: 2px solid #7a706b;
+    border-radius: 50%;
+    width: 15px;
+    height: 15px;
+}
 

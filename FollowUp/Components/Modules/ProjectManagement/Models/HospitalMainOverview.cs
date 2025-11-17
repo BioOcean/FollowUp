@@ -54,7 +54,11 @@ public sealed record ProjectSummaryDto(
     int PatientCount,
     int FollowupTaskCount,
     double FollowupRate,
-    IReadOnlyDictionary<string, int> StatusCounts);
+    IReadOnlyDictionary<string, int> StatusCounts,
+    int TodayNewCount = 0,
+    int YearlyTaskCount = 0,
+    int YearlyPatientCount = 0,
+    int NotPushedCount = 0);
 
 /// <summary>
 /// 医院用户统计数据

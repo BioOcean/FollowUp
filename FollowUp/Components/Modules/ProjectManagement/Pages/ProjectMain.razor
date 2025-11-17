@@ -2,62 +2,122 @@
 @using Microsoft.EntityFrameworkCore
 @inherits BasePage
 @inject ILogger<ProjectMain> inj_logger
+@inject IDialogService inj_dialogService
+@inject IWechatService inj_wechatService
+@inject IUserContextService inj_userContextService
+@inject IOverviewStatisticsService inj_overviewStatisticsService
 
-<PageTitle>课题管理 - 健康管家</PageTitle>
+<PageTitle>课题概览</PageTitle>
 
 <div style="background-color:#f1fbf9;min-height:calc(100vh - 64px);" class="p-3">
     @if (isLoading)
     {
-        <div class="d-flex justify-center align-center" style="height: 200px;">
-            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+        <div class="project-main-container">
+            <MudSkeleton Width="300px" Height="30px" Animation="Animation.Wave" Class="mb-4" />
+            <div class="row">
+                <div class="col-4">
+                    <MudSkeleton Height="462px" Animation="Animation.Wave" />
+                </div>
+                <div class="col-8">
+                    <MudSkeleton Height="100px" Animation="Animation.Wave" Class="mb-3" />
+                    <MudSkeleton Height="350px" Animation="Animation.Wave" />
+                </div>
+            </div>
         </div>
     }
     else if (project != null)
     {
-        <div class="d-flex align-items-center justify-content-between mb-4">
-            <div class="ml-3 span-text">
-                <span style="font-weight:700">数据范围：</span>
-                <span>@project.hospital.name</span>
-                <span class="ml-2">@(project.department.display_name ?? project.department.name)</span>
-                <span class="ml-2">@(project.display_name ?? project.name)</span>
+        <div class="project-main-container">
+            @* 页面头部 *@
+            <div class="d-flex align-items-center justify-content-between mb-4">
+                <div class="ml-3 span-text">
+                    <span style="font-weight:700">数据范围：</span>
+                    <span>@project.hospital.name</span>
+                    <span class="ml-2">@(project.department.display_name ?? project.department.name)</span>
+                    <span class="ml-2">@(project.display_name ?? project.name)</span>
+                </div>
+                <div>
+                    <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@EditScanMsg">编辑扫码信息</MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@DownloadQrCode">下载二维码</MudButton>
+                </div>
             </div>
-            @* TODO: [二维码功能] - 编辑扫码信息和下载二维码功能 *@
+
+            <div class="row">
+                @* 左侧 col-4：平台用户数据 *@
+                <div class="col-4">
+                    <MudPaper Elevation="1" Height="462px">
+                        @* 筛选项 *@
+                        <div class="d-flex align-items-center pa-2 justify-content-between">
+                            <div class="d-flex align-items-center">
+                                <MudText Class="fw-bold" Typo="Typo.h6">平台用户数据</MudText>
+                                <MudTooltip Placement="Placement.Right" Arrow="true">
+                                    <ChildContent>
+                                        <MudIcon Icon="@Icons.Material.Filled.QuestionMark" Color="Color.Default" Class="icon-ques ml-1"></MudIcon>
+                                    </ChildContent>
+                                    <TooltipContent>
+                                        <p>累计扫码上平台数量：注册博远健康管理平台患者数量</p>
+                                        <p>随访次数：推送随访任务次数</p>
+                                        <p>随访人数：推送随访任务的患者数量</p>
+                                    </TooltipContent>
+                                </MudTooltip>
+                            </div>
+                            <div class="d-flex">
+                                <RadioList IsButton="true" TValue="string" Items="@filterSelectList" @bind-Value="selectedFilter" Color="BColor.Success" class="mr-3" OnSelectedChanged="@OnFilterChanged"></RadioList>
+                                @if (selectedFilter == "年度数据")
+                                {
+                                    <DateTimePicker @bind-Value="yearValue" ViewMode="DatePickerViewMode.Year" DateFormat="yyyy" style="width:100px" OnValueChanged="@OnYearValueChanged" />
+                                }
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center justify-content-between">
+                            <MudText Typo="Typo.button" Class="ml-3">累计扫码上平台数量 <span style="color:#18b797;" class="fs-5 ml-2">@patientCount</span></MudText>
+                            <div class="mr-3">
+                                <MudText Typo="Typo.button">随访次数 <span style="color:#18b797;" class="fs-6 ml-2">@followupTaskCount</span></MudText>
+                                <MudText Typo="Typo.button" Class="ml-4">随访人数 <span style="color:#18b797;" class="fs-6 ml-2">@followupPatientCount</span></MudText>
+                            </div>
+                        </div>
+
+                        @if (isShowAgeChart)
+                        {
+                            <FollowUp.Components.Shared.Charts.BiooChartsLegacy Width="100%" Height="360px" ChartType="BChartType.Pie" TitleLabels="@ageChartLabels" ChartOptions="@ageChartOptions" Items="@ageChartData" @key="@($"age-{chartRenderKey}")" />
+                        }
+                        else
+                        {
+                            <div style="text-align:center" class="mt-10">
+                                <MudImage Src="images/nodata.jpg"></MudImage>
+                                <MudText Class="mt-2">无数据</MudText>
+                            </div>
+                        }
+                    </MudPaper>
+                </div>
+
+                @* 右侧 col-8 *@
+                <div class="col-8">
+                    @* 随访数据统计 *@
+                    <MudPaper Class="p-2" Elevation="1" Height="100px">
+                        <MudText Class="fw-bold" Typo="Typo.h6">随访数据</MudText>
+                        <div class="d-flex mt-2 mb-2">
+                            @foreach (var (key, index) in projectTotalData.Keys.Select((k, i) => (k, i)))
+                            {
+                                <div class="div-block width11">
+                                    <MudText>@key</MudText>
+                                    <MudText Class="fw-bold" Color="Color.Primary">@(projectTotalData[key])个</MudText>
+                                </div>
+                                @if (index == 3)
+                                {
+                                    <MudDivider Vertical="true" FlexItem="true" Light="true" />
+                                }
+                            }
+                        </div>
+                    </MudPaper>
+
+                    @* 随访率/宣教阅读率趋势 *@
+                    <HospitalMain_TrendPanel HospitalId="@project.hospital_id"
+                                             DepartmentId="@project.department_id"
+                                             ProjectId="@project.id" />
+                </div>
+            </div>
         </div>
-
-        <MudPaper Class="pa-4" Elevation="2">
-            <MudText Typo="Typo.h6" Class="mb-3">课题信息</MudText>
-            <MudGrid>
-                <MudItem xs="12" sm="6">
-                    <MudText><strong>课题名称：</strong>@(project.display_name ?? project.name)</MudText>
-                </MudItem>
-                <MudItem xs="12" sm="6">
-                    <MudText><strong>所属医院：</strong>@project.hospital.name</MudText>
-                </MudItem>
-                <MudItem xs="12" sm="6">
-                    <MudText><strong>所属科室：</strong>@(project.department.display_name ?? project.department.name)</MudText>
-                </MudItem>
-                <MudItem xs="12" sm="6">
-                    <MudText><strong>创建时间：</strong>@project.created_at.ToString("yyyy-MM-dd")</MudText>
-                </MudItem>
-            </MudGrid>
-        </MudPaper>
-
-        @* TODO: [统计功能] - 添加课题维度的数据统计 *@
-        @* 包括：
-            1. 平台用户数据（累计扫码数、随访次数、随访人数）
-            2. 随访数据统计（9项统计指标）
-            3. 年龄分布饼图
-            4. 任务与宣教视图（TaskOrNewsView 组件）
-        *@
-        
-        <MudPaper Class="pa-4 mt-3" Elevation="2">
-            <MudAlert Severity="Severity.Info">
-                <MudText>课题统计功能开发中...</MudText>
-                <MudText Typo="Typo.caption" Class="mt-2">
-                    将包含：平台用户数据、随访数据统计、年龄分布图表、任务与宣教视图等功能
-                </MudText>
-            </MudAlert>
-        </MudPaper>
     }
     else
     {
@@ -73,27 +133,69 @@
     public string? projectId { get; set; }
 
     private form_project? project;
+    private List<patient> patientList = new();
     private bool isLoading = true;
+
+    // 筛选项
+    private List<SelectedItem> filterSelectList = new();
+    private string selectedFilter = "全部";
+    private DateTime yearValue = DateTime.Now;
+
+    // 平台用户数据统计
+    private int patientCount = 0;
+    private int followupTaskCount = 0;
+    private int followupPatientCount = 0;
+
+    // 随访数据统计（9项指标）
+    private Dictionary<string, int> projectTotalData = new Dictionary<string, int>
+    {
+        {"今日新增", 0},
+        {"年度随访人数", 0},
+        {"年度随访任务数量", 0},
+        {"总随访任务数量", 0},
+        {"已随访", 0},
+        {"待审核", 0},
+        {"患者未提交", 0},
+        {"已超时", 0},
+        {"未到推送时间", 0},
+    };
+
+    // 年龄分布图表
+    private BChartOptions ageChartOptions = new();
+    private List<string> ageChartLabels = new();
+    private List<ChartDataset> ageChartData = new();
+    private bool isShowAgeChart = false;
+    private int chartRenderKey = 0;
 
     protected override async Task OnPageInitializedAsync()
     {
         try
         {
-            // TODO: [用户上下文服务] - 实现 IUserContextService 后从服务获取 projectId
-            // 临时方案：从 URL 参数或用户 Claims 获取
-            if (string.IsNullOrEmpty(projectId))
+            filterSelectList = new List<SelectedItem>
             {
-                var user = inj_httpContextAccessor.HttpContext?.User;
-                if (user?.Identity?.IsAuthenticated == true)
+                new SelectedItem { Text = "全部", Value = "全部" },
+                new SelectedItem { Text = "年度数据", Value = "年度数据" }
+            };
+
+            // 从 URL 参数或 UserContextService 获取 projectId
+            if (string.IsNullOrWhiteSpace(projectId))
+            {
+                var projectFromContext = await inj_userContextService.GetProjectAsync();
+                if (projectFromContext != null)
                 {
-                    projectId = user.FindFirst("projectId")?.Value;
+                    projectId = projectFromContext.id.ToString();
                 }
             }
 
-            if (!string.IsNullOrEmpty(projectId) && Guid.TryParse(projectId, out var projectGuid))
+            if (!Guid.TryParse(projectId, out var projectGuid))
             {
-                await LoadData(projectGuid);
+                inj_logger.LogWarning("ProjectMain 初始化失败，projectId 无效：{ProjectId}", projectId);
+                return;
             }
+
+            await LoadProjectBasicInfoAsync(projectGuid);
+            await LoadPatientListAsync(projectGuid);
+            await LoadStatisticsAsync();
         }
         catch (Exception ex)
         {
@@ -105,11 +207,10 @@
         }
     }
 
-    private async Task LoadData(Guid projectGuid)
+    private async Task LoadProjectBasicInfoAsync(Guid projectGuid)
     {
         try
         {
-            // 加载课题基本信息
             project = await _context.form_project!
                 .AsNoTracking()
                 .Include(p => p.hospital)
@@ -122,12 +223,218 @@
                 return;
             }
 
-            inj_logger.LogInformation("成功加载课题信息，课题: {ProjectName}", 
-                project.display_name ?? project.name);
+            inj_logger.LogInformation("成功加载课题信息，课题: {ProjectName}", project.display_name ?? project.name);
         }
         catch (Exception ex)
         {
-            inj_logger.LogError(ex, "加载课题数据失败，projectId: {ProjectId}", projectGuid);
+            inj_logger.LogError(ex, "加载课题基本信息失败");
+            throw;
+        }
+    }
+
+    private async Task LoadPatientListAsync(Guid projectGuid)
+    {
+        try
+        {
+            patientList = await _context.patient
+                .AsNoTracking()
+                .Where(p => p.source_type == "followup" && p.project_id == projectGuid && p.is_valid == true)
+                .Select(p => new patient
+                {
+                    id = p.id,
+                    project_id = p.project_id,
+                    birthday = p.birthday,
+                    create_time = p.create_time
+                })
+                .ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            inj_logger.LogError(ex, "加载患者列表失败");
+            patientList = new List<patient>();
+        }
+    }
+
+    private async Task LoadStatisticsAsync()
+    {
+        if (project == null)
+        {
+            return;
+        }
+
+        try
+        {
+            // 调用统计服务获取数据
+            int? year = selectedFilter == "年度数据" ? yearValue.Year : null;
+            var summaries = await inj_overviewStatisticsService.GetProjectSummariesAsync(
+                project.hospital_id,
+                new[] { project.id },
+                year);
+
+            if (summaries.TryGetValue(project.id, out var stats))
+            {
+                // 平台用户数据统计
+                patientCount = stats.PatientCount;
+                followupTaskCount = stats.YearlyTaskCount;
+                followupPatientCount = stats.YearlyPatientCount;
+
+                // 随访数据统计（9项指标）
+                projectTotalData["今日新增"] = stats.TodayNewCount;
+                projectTotalData["年度随访人数"] = stats.YearlyPatientCount;
+                projectTotalData["年度随访任务数量"] = stats.YearlyTaskCount;
+                projectTotalData["总随访任务数量"] = stats.FollowupTaskCount;
+                projectTotalData["已随访"] = stats.StatusCounts.TryGetValue("已随访", out var completed) ? completed : 0;
+                projectTotalData["待审核"] = stats.StatusCounts.TryGetValue("待审核", out var pending) ? pending : 0;
+                projectTotalData["患者未提交"] = stats.StatusCounts.TryGetValue("患者未提交", out var notSubmitted) ? notSubmitted : 0;
+                projectTotalData["已超时"] = stats.StatusCounts.TryGetValue("已超时", out var overdue) ? overdue : 0;
+                projectTotalData["未到推送时间"] = stats.NotPushedCount;
+            }
+
+            // 计算年龄分布
+            CalculateAgeDistribution();
+        }
+        catch (Exception ex)
+        {
+            inj_logger.LogError(ex, "加载统计数据失败");
+        }
+    }
+
+    private void CalculateAgeDistribution()
+    {
+        var ageDistribution = new Dictionary<string, int>
+        {
+            { "小于40岁", 0 },
+            { "40-49岁", 0 },
+            { "50-59岁", 0 },
+            { "60-69岁", 0 },
+            { "70及以上", 0 }
+        };
+
+        if (patientList?.Any() == true)
+        {
+            var currentYear = DateTime.Now.Year;
+            var filteredPatients = patientList;
+
+            if (selectedFilter == "年度数据")
+            {
+                var yearStart = new DateTime(yearValue.Year, 1, 1);
+                var yearEnd = new DateTime(yearValue.Year, 12, 31);
+                filteredPatients = patientList.Where(p => p.create_time >= yearStart && p.create_time <= yearEnd).ToList();
+            }
+
+            foreach (var patient in filteredPatients)
+            {
+                if (patient.birthday is not DateOnly birthday)
+                {
+                    continue;
+                }
+
+                var age = currentYear - birthday.Year;
+                if (age < 40)
+                    ageDistribution["小于40岁"]++;
+                else if (age < 50)
+                    ageDistribution["40-49岁"]++;
+                else if (age < 60)
+                    ageDistribution["50-59岁"]++;
+                else if (age < 70)
+                    ageDistribution["60-69岁"]++;
+                else
+                    ageDistribution["70及以上"]++;
+            }
+        }
+
+        // 更新图表数据
+        ageChartOptions.ShowLegend = true;
+        ageChartOptions.LegendPosition = ChartLegendPosition.Bottom;
+        ageChartLabels = ageDistribution.Keys.ToList();
+        ageChartData = new List<ChartDataset>();
+        isShowAgeChart = ageDistribution.Values.Any(v => v > 0);
+
+        if (isShowAgeChart)
+        {
+            ageChartData.Add(new ChartDataset
+            {
+                Label = "年龄分布",
+                Data = ageDistribution.Values.Select(v => (object)v).ToArray()
+            });
+        }
+
+        chartRenderKey++;
+    }
+
+    private async Task OnFilterChanged(IEnumerable<SelectedItem> values, string value)
+    {
+        selectedFilter = value;
+        await LoadStatisticsAsync();
+    }
+
+    private async Task OnYearValueChanged(DateTime dateTime)
+    {
+        yearValue = dateTime;
+        if (selectedFilter == "年度数据")
+        {
+            await LoadStatisticsAsync();
+        }
+    }
+
+    private async Task EditScanMsg()
+    {
+        var parameters = new DialogParameters<EditScanDialog>
+        {
+            { x => x.Project, project },
+        };
+
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.ExtraExtraLarge,
+            FullScreen = false
+        };
+
+        await inj_dialogService.ShowAsync<EditScanDialog>("扫码信息", parameters, options);
+    }
+
+    private async Task DownloadQrCode()
+    {
+        try
+        {
+            if (project == null || string.IsNullOrWhiteSpace(projectId))
+            {
+                inj_snackbar.Add("课题信息未加载完成，请稍后重试", Severity.Warning);
+                return;
+            }
+
+            var isXuanWuProject = projectId == inj_wechatService.GetWeChatAppKeys(EnumsWeChatAppKeys.WXWechatProjectId);
+            var qrCodeResponse = await inj_wechatService.CreateQrCodeAsync("projectId", projectId, isXuanWuProject);
+
+            if (qrCodeResponse?.Ticket != null)
+            {
+                var fileName = $"课题二维码_{project.display_name ?? project.name}.png";
+                var fileUrl = await inj_wechatService.GetQrCodeAndSaveAsync(qrCodeResponse.Ticket, fileName);
+                var fullUrl = inj_navigationManager.BaseUri + fileUrl;
+
+                await inj_jsRuntime.InvokeVoidAsync("eval", $@"
+(function() {{
+    const link = document.createElement('a');
+    link.href = '{fullUrl}';
+    link.download = '{fileName}';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}})();
+");
+
+                inj_snackbar.Add("二维码下载成功", Severity.Success);
+            }
+            else
+            {
+                inj_snackbar.Add("生成二维码失败，请稍后重试", Severity.Error);
+                inj_logger.LogWarning("生成课题二维码失败: Ticket 为空");
+            }
+        }
+        catch (Exception ex)
+        {
+            inj_logger.LogError(ex, "生成课题二维码时出错");
+            inj_snackbar.Add($"生成二维码时出错: {ex.Message}", Severity.Error);
         }
     }
 }
