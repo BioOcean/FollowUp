@@ -1,7 +1,5 @@
 @namespace FollowUp.Components.Modules.ProjectManagement.Components
 @inherits BasePage
-@inject ILogger<HospitalMain_ActivityPanel> inj_logger
-@inject IPatientStatisticsService inj_patientStatisticsService
 @using FollowUp.Components.Shared.Charts
 
 @* 活跃度情况 *@
@@ -40,6 +38,8 @@
 @code {
     [Parameter] public Guid HospitalId { get; set; }
     [Parameter] public IReadOnlyCollection<Guid>? ProjectIds { get; set; }
+
+    private ILogger<HospitalMain_ActivityPanel> inj_logger => inj_loggerFactory.CreateLogger<HospitalMain_ActivityPanel>();
 
     private List<SelectedItem> dimensionSelectList = new();
     private string selectedDimensionStr = "日活";
@@ -129,5 +129,3 @@
         }
     }
 }
-
-

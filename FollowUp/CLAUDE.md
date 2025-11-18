@@ -173,9 +173,29 @@ protected override async Task OnPageInitializedAsync()
 
 ```razor
 @inject IDbContextFactory<DbContext> inj_dbContextFactory
-@inject ILogger<CurrentComponent> inj_logger
 @inject NavigationManager inj_navigationManager
 ```
+
+#### 模块内 Logger 推荐写法（ILoggerFactory）
+
+- **模块级 `_Imports.razor`：** 统一注入一次 `ILoggerFactory`（每个模块只写在自己的 `_Imports.razor` 里）：
+
+```razor
+@inject ILoggerFactory inj_loggerFactory
+```
+
+- **模块内页面 / 组件：** 不再在顶部写 `@inject ILogger<...> inj_logger`，改为在 `@code` 中通过属性获取：
+
+```razor
+@code {
+    private ILogger<CurrentComponent> inj_logger
+        => inj_loggerFactory.CreateLogger<CurrentComponent>();
+}
+```
+
+> 说明：布局组件、`Components/Shared` 等全局组件如需 Logger，可以继续使用
+> `@inject ILogger<CurrentComponent> inj_logger` 传统写法；`Components/Modules/*`
+> 下的模块页面和组件优先采用以上 `ILoggerFactory` 模式，保持风格统一。
 
 ### 7. 样式文件规范
 

@@ -1,8 +1,6 @@
 @namespace FollowUp.Components.Modules.ProjectManagement.Components
 @inherits BasePage
 @implements IDisposable
-@inject ILogger<HospitalMain_UserStatsPanel> inj_logger
-@inject IOverviewStatisticsService inj_overviewStatisticsService
 
 <MudPaper Elevation="1" Class="user-stats-card">
     <div class="d-flex align-items-center pa-2 justify-content-between">
@@ -88,6 +86,7 @@
 </MudPaper>
 
 @code {
+    private ILogger<HospitalMain_UserStatsPanel> inj_logger => inj_loggerFactory.CreateLogger<HospitalMain_UserStatsPanel>();
     [Parameter] public Guid HospitalId { get; set; }
     [Parameter] public List<sys_department> DepartmentList { get; set; } = new();
     [Parameter] public IReadOnlyList<DepartmentProjectMap> DepartmentProjects { get; set; } = Array.Empty<DepartmentProjectMap>();
@@ -321,4 +320,3 @@
         }
     }
 }
-

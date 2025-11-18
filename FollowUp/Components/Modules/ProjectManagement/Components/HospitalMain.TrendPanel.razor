@@ -1,9 +1,6 @@
 @namespace FollowUp.Components.Modules.ProjectManagement.Components
 @inherits BasePage
 @implements IDisposable
-@inject ILogger<HospitalMain_TrendPanel> inj_logger
-@inject IFollowupStatisticsService inj_followupStatisticsService
-@inject IEducationStatisticsService inj_educationStatisticsService
 
 @* 随访率/宣教阅读率趋势 *@
 <MudPaper Elevation="1" Class="mt-3 trend-panel">
@@ -37,6 +34,8 @@
     [Parameter] public Guid? DepartmentId { get; set; }
     [Parameter] public Guid? ProjectId { get; set; }
     [Parameter] public IReadOnlyCollection<Guid>? ProjectIds { get; set; }
+
+    private ILogger<HospitalMain_TrendPanel> inj_logger => inj_loggerFactory.CreateLogger<HospitalMain_TrendPanel>();
 
     private readonly List<SelectedItem> modeSelectList = new()
     {
@@ -172,4 +171,3 @@
         chartRenderKey++;
     }
 }
-

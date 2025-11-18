@@ -3,8 +3,6 @@
 @using FollowUp.Services.Extension
 @using FollowUp.Constants
 @inherits BasePage
-@inject ILogger<AdminMain> inj_logger
-@inject FollowUp.Services.IAuthorizationService inj_authService
 
 <PageTitle>管理员主页</PageTitle>
 
@@ -130,6 +128,7 @@
 
 
 @code {
+    private ILogger<AdminMain> inj_logger => inj_loggerFactory.CreateLogger<AdminMain>();
     private List<HospitalProject> hospitalProjects = new();
     private bool isLoading = true;
     private bool hasPermission = false;
@@ -311,4 +310,3 @@
         public bool isStatisticsLoaded { get; set; } = false; // 统计数据加载状态
     }
 }
-

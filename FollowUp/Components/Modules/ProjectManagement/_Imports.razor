@@ -9,3 +9,14 @@
 @using FollowUp.Components.Modules.ProjectManagement.Dialogs
 @using FollowUp.Components.Shared.Charts
 @using FollowUp.Services
+@using FollowUp.Services.Extension
+
+@inject FollowUp.Services.IAuthorizationService inj_authService
+@inject IDialogService inj_dialogService
+@inject IWechatService inj_wechatService
+@inject IOverviewStatisticsService inj_overviewStatisticsService
+@inject IUserContextService inj_userContextService
+@inject IPatientStatisticsService inj_patientStatisticsService
+@inject IFollowupStatisticsService inj_followupStatisticsService
+@inject IEducationStatisticsService inj_educationStatisticsService
+@inject ILoggerFactory inj_loggerFactory

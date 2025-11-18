@@ -1,12 +1,6 @@
 @page "/hospitalMain"
 @inherits BasePage
 @implements IDisposable
-@inject ILogger<HospitalMain> inj_logger
-@inject IDialogService inj_dialogService
-@inject ISnackbar inj_snackbar
-@inject IWechatService inj_wechatService
-@inject IJSRuntime inj_jsRuntime
-@inject IOverviewStatisticsService inj_overviewStatisticsService
 @using FollowUp.Components.Modules.ProjectManagement.Dialogs
 
 <PageTitle>医院概览</PageTitle>
@@ -85,6 +79,7 @@ else
 }
 
 @code {
+    private ILogger<HospitalMain> inj_logger => inj_loggerFactory.CreateLogger<HospitalMain>();
     [Parameter]
     [SupplyParameterFromQuery]
     public string? hospitalId { get; set; }
@@ -235,32 +230,18 @@ else
                 return;
             }
 
-            bool isXuanWuProject = false;
-            var qrCodeResponse = await inj_wechatService.CreateQrCodeAsync("hospitalId", hospitalId, isXuanWuProject);
+            var fileName = $"医院二维码_{hospital.name}.png";
+            var success = await QrCodeDownloadHelper.DownloadAsync(
+                inj_wechatService,
+                inj_jsRuntime,
+                inj_navigationManager,
+                "hospitalId",
+                hospitalId,
+                fileName,
+                false,
+                inj_logger);
 
-            if (qrCodeResponse?.Ticket != null)
-            {
-                var fileName = $"医院二维码_{hospital.name}.png";
-                var fileUrl = await inj_wechatService.GetQrCodeAndSaveAsync(qrCodeResponse.Ticket, fileName);
-                var fullUrl = inj_navigationManager.BaseUri + fileUrl;
-
-                await inj_jsRuntime.InvokeVoidAsync("eval", $@"
-(function() {{
-    const link = document.createElement('a');
-    link.href = '{fullUrl}';
-    link.download = '{fileName}';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-}})();
-");
-                inj_snackbar.Add("二维码下载成功", Severity.Success);
-            }
-            else
-            {
-                inj_snackbar.Add("生成二维码失败，请稍后重试", Severity.Error);
-                inj_logger.LogWarning("生成二维码失败: Ticket为空");
-            }
+            inj_snackbar.Add(success ? "二维码下载成功" : "生成二维码失败，请稍后重试", success ? Severity.Success : Severity.Error);
         }
         catch (Exception ex)
         {

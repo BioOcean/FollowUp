@@ -1,7 +1,5 @@
 @namespace FollowUp.Components.Modules.ProjectManagement.Components
 @inherits BasePage
-@inject ILogger<DepartmentMain_ProjectCard> inj_logger
-@inject IWechatService inj_wechatService
 
 @* 科室内课题信息卡片 - 完全参照 NTCare DepProInfoView 实现 *@
 <MudPaper Class="pa-2 mb-4">
@@ -53,6 +51,8 @@
     [Parameter] public form_project Project { get; set; } = default!;
     [Parameter] public ProjectSummaryDto? Summary { get; set; }
 
+    private ILogger<DepartmentMain_ProjectCard> inj_logger => inj_loggerFactory.CreateLogger<DepartmentMain_ProjectCard>();
+
     private int PatientCount => Summary?.PatientCount ?? 0;
     private int FollowupTaskCount => Summary?.FollowupTaskCount ?? 0;
     private double FollowupRate => Summary?.FollowupRate ?? 0;
@@ -84,32 +84,18 @@
             var projectId = Project.id.ToString();
             var isXuanWuProject = projectId == inj_wechatService.GetWeChatAppKeys(EnumsWeChatAppKeys.WXWechatProjectId);
 
-            var qrCodeResponse = await inj_wechatService.CreateQrCodeAsync("projectId", projectId, isXuanWuProject);
+            var fileName = $"课题二维码_{Project.display_name ?? Project.name}.png";
+            var success = await QrCodeDownloadHelper.DownloadAsync(
+                inj_wechatService,
+                inj_jsRuntime,
+                inj_navigationManager,
+                "projectId",
+                projectId,
+                fileName,
+                isXuanWuProject,
+                inj_logger);
 
-            if (qrCodeResponse?.Ticket != null)
-            {
-                var fileName = $"课题二维码_{Project.display_name ?? Project.name}.png";
-                var fileUrl = await inj_wechatService.GetQrCodeAndSaveAsync(qrCodeResponse.Ticket, fileName);
-                var fullUrl = inj_navigationManager.BaseUri + fileUrl;
-
-                await inj_jsRuntime.InvokeVoidAsync("eval", $@"
-(function() {{
-    const link = document.createElement('a');
-    link.href = '{fullUrl}';
-    link.download = '{fileName}';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-}})();
-");
-
-                inj_snackbar.Add("二维码下载成功", Severity.Success);
-            }
-            else
-            {
-                inj_snackbar.Add("生成二维码失败，请稍后重试", Severity.Error);
-                inj_logger.LogWarning("生成课题二维码失败: Ticket 为空");
-            }
+            inj_snackbar.Add(success ? "二维码下载成功" : "生成二维码失败，请稍后重试", success ? Severity.Success : Severity.Error);
         }
         catch (Exception ex)
         {
