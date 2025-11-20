@@ -1,0 +1,89 @@
+@namespace FollowUp.Components.Shared
+@inject ILogger<ImagePreviewDialog> inj_logger
+
+<style>
+    .image-preview-dialog{
+        max-width: 800px;
+        height: 90%;
+        width: 80%;
+    }
+    @@media (max-width: 768px) {
+        .image-preview-dialog{
+            height: 56vh;
+        }
+    }
+</style>
+<MudDialog class="image-preview-dialog">
+    <TitleContent>
+        <MudText Typo="Typo.h6">图片预览 (@(_currentImageIndex + 1)/@Images.Count)</MudText>
+    </TitleContent>
+    <DialogContent>
+        <div class="d-flex align-items-center justify-space-between" style="height:90%">
+            <MudIconButton Icon="@Icons.Material.Filled.ChevronLeft"
+                         OnClick="PreviousImage"
+                         Disabled="@(_currentImageIndex <= 0)" />
+
+                <MudImage Src="@($"/uploads/{Images[_currentImageIndex]}")" ObjectFit="ObjectFit.Cover" style="width: calc(100% - 96px);max-width: 500px;"></MudImage>
+
+            <div style="pointer-events: auto;">
+
+            <MudIconButton Icon="@Icons.Material.Filled.ChevronRight"
+                         OnClick="NextImage"
+                         Disabled="@(_currentImageIndex >= Images.Count - 1)"/>
+            </div>
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="CloseDialog">关闭</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance? MudDialog { get; set; }
+
+    [Parameter]
+    public required List<string> Images { get; set; }
+
+    [Parameter]
+    public required int InitialIndex { get; set; }
+
+    private int _currentImageIndex;
+
+    protected override void OnParametersSet()
+    {
+        if (Images == null || !Images.Any())
+        {
+            inj_logger.LogWarning("No images provided for preview");
+            return;
+        }
+
+        _currentImageIndex = InitialIndex;
+        if (_currentImageIndex < 0 || _currentImageIndex >= Images.Count)
+        {
+            inj_logger.LogWarning($"Initial index {InitialIndex} is out of range. Setting to 0.");
+            _currentImageIndex = 0;
+        }
+    }
+
+    private void NextImage()
+    {
+        if (_currentImageIndex < Images.Count - 1)
+        {
+            _currentImageIndex++;
+        }
+    }
+
+    private void PreviousImage()
+    {
+        if (_currentImageIndex > 0)
+        {
+            _currentImageIndex--;
+        }
+    }
+
+
+    private void CloseDialog()
+    {
+        MudDialog?.Cancel();
+    }
+}

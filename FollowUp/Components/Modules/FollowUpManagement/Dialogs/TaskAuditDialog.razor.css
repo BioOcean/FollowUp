@@ -1,0 +1,62 @@
+﻿.task-audit-dialog .mud-dialog-content {
+    background-color: var(--bg-primary);
+}
+
+.task-audit-dialog .dialog-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+}
+
+@media (min-width: 992px) {
+    .task-audit-dialog .dialog-grid {
+        grid-template-columns: 380px 1fr;
+    }
+}
+
+.task-audit-dialog .info-card,
+.task-audit-dialog .form-card {
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-secondary);
+}
+
+.task-audit-dialog .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.task-audit-dialog .info-row {
+    display: grid;
+    grid-template-columns: 110px 1fr 110px 1fr;
+    gap: 4px 6px;
+    padding: 4px 0;
+    align-items: center;
+    color: var(--text-secondary);
+}
+
+.task-audit-dialog .info-row .wide {
+    grid-column: span 3;
+}
+
+.task-audit-dialog .info-label {
+    color: var(--text-tertiary);
+    font-weight: 600;
+}
+
+.task-audit-dialog .action-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.task-audit-dialog .form-card {
+    padding: 8px 10px;
+}
+
+.task-audit-dialog .mud-dialog-actions {
+    border-top: 1px solid var(--border-color);
+}

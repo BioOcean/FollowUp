@@ -1,0 +1,6 @@
+﻿.formset-editor-dialog .editor-container {
+    max-width: 100%;
+    height: 70vh;
+    overflow: auto;
+    padding: 8px;
+}

@@ -1,0 +1,124 @@
+@namespace FollowUp.Components.Modules.FollowUpManagement.Dialogs
+@using FollowUp.Components.Modules.FollowUpManagement.Models
+@inherits BasePage
+
+@* 更换审核人对话框 *@
+<MudDialog>
+    <DialogContent>
+        @if (_loading)
+        {
+            <LoadingView Height="200px" Message="正在加载医生列表..." />
+        }
+        else
+        {
+            <div class="change-auditor-dialog-content">
+                <MudText Class="mb-3">请选择新的审核医生：</MudText>
+                <MudSelect @bind-Value="_selectedAuditorId"
+                           Label="审核医生"
+                           Variant="Variant.Outlined"
+                           Required="true"
+                           RequiredError="请选择审核医生">
+                    @foreach (var doctor in _doctors)
+                    {
+                        <MudSelectItem Value="@doctor.Id">@doctor.ToString()</MudSelectItem>
+                    }
+                </MudSelect>
+            </div>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" Variant="Variant.Text">取消</MudButton>
+        <MudButton OnClick="Submit"
+                   Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   Disabled="@(_loading || _selectedAuditorId == Guid.Empty)">
+            确定
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter]
+    public Guid TaskId { get; set; }
+
+    [Parameter]
+    public List<Guid>? TaskIds { get; set; }
+
+    [Inject] private Services.TaskAuditService _auditService { get; set; } = default!;
+    [Inject] private Services.TaskCreationService _creationService { get; set; } = default!;
+
+    private List<AuditorDto> _doctors = new();
+    private Guid _selectedAuditorId = Guid.Empty;
+    private bool _loading = true;
+    private Guid _projectId = Guid.Empty;
+
+    protected override async Task OnPageInitializedAsync()
+    {
+        await LoadDoctorsAsync();
+    }
+
+    private async Task LoadDoctorsAsync()
+    {
+        _loading = true;
+        try
+        {
+            var targetId = TaskIds != null && TaskIds.Any() ? TaskIds.First() : TaskId;
+            _projectId = await _context.patient_event
+                .Where(pe => pe.id == targetId)
+                .Select(pe => pe.project_id)
+                .FirstOrDefaultAsync();
+
+            _doctors = await _creationService.GetAvailableAuditorsAsync(_projectId);
+        }
+        catch (Exception ex)
+        {
+            await HandleExceptionAsync(ex, "加载医生列表失败", "查询医生列表");
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task Submit()
+    {
+        _loading = true;
+        try
+        {
+            var success = false;
+            if (TaskIds != null && TaskIds.Any())
+            {
+                success = await _auditService.BatchChangeAuditorAsync(TaskIds, _selectedAuditorId);
+            }
+            else
+            {
+                success = await _auditService.ChangeAuditorAsync(TaskId, _selectedAuditorId);
+            }
+            if (success)
+            {
+                await ShowSuccessAsync("更换审核人成功");
+                MudDialog.Close(MudBlazor.DialogResult.Ok(true));
+            }
+            else
+            {
+                await ShowErrorAsync("更换审核人失败");
+            }
+        }
+        catch (Exception ex)
+        {
+            await HandleExceptionAsync(ex, "更换审核人失败", "更换审核人");
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+}

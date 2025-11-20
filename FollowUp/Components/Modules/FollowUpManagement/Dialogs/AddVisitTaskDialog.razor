@@ -1,0 +1,252 @@
+﻿@namespace FollowUp.Components.Modules.FollowUpManagement.Dialogs
+@using FollowUp.Components.Modules.FollowUpManagement.Models
+@inherits BasePage
+
+<MudDialog Class="add-visit-task-dialog">
+    <TitleContent>
+        <MudText Typo="Typo.h6">添加随访任务（批量）</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="_form">
+            <MudStack Spacing="12">
+                <MudStack Direction="Row" AlignItems="AlignItems.Center" Spacing="8">
+                    <MudText Typo="Typo.subtitle2">已选患者（@_selectedPatients.Count）</MudText>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="OpenSelectPatients" Disabled="@(FixedPatientId.HasValue)">
+                        选择患者
+                    </MudButton>
+                </MudStack>
+                @if (_selectedPatients.Any())
+                {
+                    <MudChipSet T="PatientSearchDto" MultiSelection="true">
+                        @foreach (var patient in _selectedPatients)
+                        {
+                            <MudChip T="PatientSearchDto"
+                                     Variant="Variant.Outlined"
+                                     Color="Color.Primary"
+                                     OnClose="@(() => RemovePatient(patient))"
+                                     Closeable="@(!FixedPatientId.HasValue)">
+                                @patient.Name (@patient.MedicalRecordNumber)
+                            </MudChip>
+                        }
+                    </MudChipSet>
+                }
+
+                <MudGrid>
+                    <MudItem xs="12" sm="6">
+                        <MudDatePicker Label="访视期开始"
+                                       @bind-Date="_planStart"
+                                       Required="true"
+                                       RequiredError="请选择访视期开始" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudDatePicker Label="访视期结束"
+                                       @bind-Date="_planEnd"
+                                       Required="true"
+                                       RequiredError="请选择访视期结束"
+                                       MinDate="_planStart" />
+                    </MudItem>
+
+                    <MudItem xs="12">
+                        <MudSelect T="TaskTemplateDto"
+                                   Label="任务模板"
+                                   Value="_selectedTemplate"
+                                   ValueChanged="@(t => { _selectedTemplate = t; CalculatePushTime(); })"
+                                   ToStringFunc="@(t => t != null ? $"{t.Name} - {t.FormSetName}" : string.Empty)"
+                                   Required="true"
+                                   RequiredError="请选择任务模板">
+                            @foreach (var template in _templates)
+                            {
+                                <MudSelectItem Value="@template">
+                                    @template.Name - @template.FormSetName
+                                </MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+
+                    <MudItem xs="12">
+                        <MudSelect T="AuditorDto"
+                                   Label="审核医生"
+                                   @bind-Value="_selectedAuditor"
+                                   ToStringFunc="@(a => a?.ToString() ?? string.Empty)"
+                                   Required="true"
+                                   RequiredError="请选择审核医生">
+                            @foreach (var auditor in _auditors)
+                            {
+                                <MudSelectItem Value="@auditor">
+                                    @auditor.ToString()
+                                </MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+
+                    @if (_calculatedPushTime.HasValue)
+                    {
+                        <MudItem xs="12">
+                            <MudTextField Label="推送时间"
+                                          Value="@_calculatedPushTimeText"
+                                          ReadOnly="true"
+                                          Variant="Variant.Filled" />
+                        </MudItem>
+                    }
+                </MudGrid>
+            </MudStack>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" Variant="Variant.Text">取消</MudButton>
+        <MudButton OnClick="Submit" Variant="Variant.Filled" Color="Color.Primary" Disabled="@_submitting">
+            确定
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter] public Guid ProjectId { get; set; }
+    [Parameter] public List<Guid> SelectedPatientIds { get; set; } = new();
+    [Parameter] public Guid? FixedPatientId { get; set; }
+
+    [Inject] private Services.TaskCreationService _creationService { get; set; } = default!;
+    [Inject] private IDialogService _dialogService { get; set; } = default!;
+
+    private MudForm _form = default!;
+    private List<PatientSearchDto> _selectedPatients = new();
+    private List<TaskTemplateDto> _templates = new();
+    private List<AuditorDto> _auditors = new();
+    private TaskTemplateDto? _selectedTemplate;
+    private AuditorDto? _selectedAuditor;
+    private DateTime? _planStart;
+    private DateTime? _planEnd;
+    private DateTime? _calculatedPushTime;
+    private bool _submitting;
+    private string _calculatedPushTimeText => _calculatedPushTime?.ToString("yyyy-MM-dd HH:mm") ?? string.Empty;
+
+    protected override async Task OnPageInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        try
+        {
+            _templates = await _creationService.GetTaskTemplatesAsync(ProjectId);
+            _auditors = await _creationService.GetAvailableAuditorsAsync(ProjectId);
+
+            var initialIds = new List<Guid>();
+            if (FixedPatientId.HasValue && FixedPatientId != Guid.Empty)
+            {
+                initialIds.Add(FixedPatientId.Value);
+            }
+            else if (SelectedPatientIds.Any())
+            {
+                initialIds.AddRange(SelectedPatientIds);
+            }
+
+            if (initialIds.Any())
+            {
+                _selectedPatients = await _creationService.GetPatientsByIdsAsync(initialIds);
+            }
+        }
+        catch (Exception ex)
+        {
+            await HandleExceptionAsync(ex, "加载任务创建数据失败", "加载模板与审核医生");
+        }
+    }
+
+    private void CalculatePushTime()
+    {
+        if (_selectedTemplate == null || !_planStart.HasValue)
+        {
+            _calculatedPushTime = null;
+            return;
+        }
+
+        _calculatedPushTime = _creationService.CalculatePushTime(
+            _planStart.Value,
+            _selectedTemplate.OffsetDays,
+            _selectedTemplate.OffsetMonths,
+            _selectedTemplate.OffsetYears);
+    }
+
+    private async Task OpenSelectPatients()
+    {
+        var parameters = new DialogParameters<SelectPatientsDialog>
+        {
+            { x => x.ProjectId, ProjectId },
+            { x => x.InitialSelectedPatients, _selectedPatients }
+        };
+
+        var dialog = await _dialogService.ShowAsync<SelectPatientsDialog>("选择患者", parameters, new DialogOptions
+        {
+            MaxWidth = MaxWidth.Large,
+            FullWidth = true
+        });
+
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: List<PatientSearchDto> patients })
+        {
+            _selectedPatients = patients;
+        }
+    }
+
+    private void RemovePatient(PatientSearchDto patient)
+    {
+        if (FixedPatientId.HasValue)
+        {
+            return;
+        }
+        _selectedPatients.Remove(patient);
+    }
+
+    private async Task Submit()
+    {
+        await _form.Validate();
+        if (!_form.IsValid)
+        {
+            return;
+        }
+
+        if (!_selectedPatients.Any())
+        {
+            inj_snackbar.Add("请先选择患者", Severity.Warning);
+            return;
+        }
+
+        if (_selectedTemplate == null || _selectedAuditor == null || !_planStart.HasValue || !_planEnd.HasValue)
+        {
+            inj_snackbar.Add("请完整填写信息", Severity.Warning);
+            return;
+        }
+
+        _submitting = true;
+        try
+        {
+            var count = await _creationService.CreateBatchFollowupTasksAsync(
+                ProjectId,
+                _selectedTemplate.Id,
+                _selectedAuditor.Id,
+                _planStart.Value,
+                _planEnd.Value,
+                _selectedPatients.Select(p => p.Id).ToList());
+
+            inj_snackbar.Add($"创建成功，共 {count} 条", Severity.Success);
+            MudDialog.Close(MudDialogResult.Ok(true));
+        }
+        catch (Exception ex)
+        {
+            await HandleExceptionAsync(ex, "创建随访任务失败", "批量创建随访任务");
+        }
+        finally
+        {
+            _submitting = false;
+        }
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+}

@@ -1,0 +1,122 @@
+﻿@namespace FollowUp.Components.Modules.FollowUpManagement.Dialogs
+@inherits BasePage
+@using Microsoft.EntityFrameworkCore
+
+<MudDialog Class="task-result-dialog">
+    <TitleContent>
+        <MudText Typo="Typo.h6">随访结果</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudPaper Elevation="0" Class="result-body">
+            @if (_loading)
+            {
+                <div class="loader">
+                    <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+                </div>
+            }
+            else if (_hasEducationContent)
+            {
+                <div class="rich-text-container">
+                    @((MarkupString)_educationContent)
+                </div>
+            }
+            else
+            {
+                <div class="rich-text-container">
+                    @(string.IsNullOrEmpty(_auditResult) ? "-" : (MarkupString)ConvertTextToHtml(_auditResult))
+                </div>
+            }
+        </MudPaper>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="CloseDialog">关闭</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter]
+    public Guid PatientEventId { get; set; }
+
+    private bool _loading = true;
+    private bool _hasEducationContent;
+    private string _educationContent = string.Empty;
+    private string _auditResult = string.Empty;
+    private ILogger<TaskResultView> inj_logger => inj_loggerFactory.CreateLogger<TaskResultView>();
+
+    protected override async Task OnPageInitializedAsync()
+    {
+        await base.OnPageInitializedAsync();
+        await LoadResultAsync();
+    }
+
+    private async Task LoadResultAsync()
+    {
+        try
+        {
+            _loading = true;
+            await using var context = await ContextFactory.CreateDbContextAsync();
+
+            var patientEvent = await context.patient_event
+                .AsNoTracking()
+                .FirstOrDefaultAsync(pe => pe.id == PatientEventId);
+
+            if (patientEvent == null)
+            {
+                inj_logger.LogWarning("未找到患者事件：{PatientEventId}", PatientEventId);
+                inj_snackbar.Add("未找到随访记录", Severity.Warning);
+                _loading = false;
+                return;
+            }
+
+            _auditResult = patientEvent.audit_result ?? string.Empty;
+
+            if (patientEvent.followup_education_id.HasValue && patientEvent.followup_education_id != Guid.Empty)
+            {
+                var education = await context.followup_education
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(e => e.id == patientEvent.followup_education_id);
+
+                if (education != null && !string.IsNullOrWhiteSpace(education.content))
+                {
+                    _hasEducationContent = true;
+                    _educationContent = education.content;
+                    inj_logger.LogInformation("已加载宣教内容：{EducationId}", education.id);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            inj_logger.LogError(ex, "加载随访结果失败：{PatientEventId}", PatientEventId);
+            inj_snackbar.Add("加载随访结果失败", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private string ConvertTextToHtml(string text)
+    {
+        if (string.IsNullOrEmpty(text))
+        {
+            return string.Empty;
+        }
+
+        text = text.Replace("<BR><BR>", "\n\n")
+                   .Replace("<br><br>", "\n\n")
+                   .Replace("<BR/>", "\n")
+                   .Replace("<br/>", "\n")
+                   .Replace("<BR>", "\n")
+                   .Replace("<br>", "\n");
+
+        return text;
+    }
+
+    private void CloseDialog()
+    {
+        MudDialog.Close();
+    }
+}

@@ -1,0 +1,29 @@
+@namespace FollowUp.Components.Modules.FollowUpManagement.Dialogs
+
+@* 查看表单数据对话框 *@
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">查看表单数据</MudText>
+    </TitleContent>
+
+    <DialogContent>
+        <FormDataDisplay PatientEventId="@TaskId" Source="Followup" />
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton OnClick="Close" Variant="Variant.Filled" Color="Color.Primary">关闭</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter]
+    public Guid TaskId { get; set; }
+
+    private void Close()
+    {
+        MudDialog.Close();
+    }
+}

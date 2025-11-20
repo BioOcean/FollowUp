@@ -1,0 +1,128 @@
+﻿@namespace FollowUp.Components.Modules.FollowUpManagement.Dialogs
+@using FollowUp.Components.Modules.FollowUpManagement.Models
+@inherits BasePage
+
+<MudDialog Class="approve-confirmation-dialog">
+    <DialogContent>
+        <div class="dialog-header">
+            <MudText Typo="Typo.h6" Class="title">审核确认</MudText>
+            @if (TaskDetail != null)
+            {
+                <MudText Typo="Typo.body2" Class="subtitle">
+                    @($"{TaskDetail.PatientName} | {TaskDetail.TaskName}")
+                </MudText>
+            }
+        </div>
+
+        <div class="section">
+            <div class="section-header">
+                <MudText Typo="Typo.subtitle2" Class="section-title">审核意见</MudText>
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Primary"
+                           OnClick="GenerateAuditComment"
+                           Disabled="_generating || _skipMessage">
+                    @(_generating ? "生成中..." : "一键生成")
+                </MudButton>
+            </div>
+            <MudTextField @bind-Value="_auditComment"
+                          Lines="4"
+                          Variant="Variant.Filled"
+                          Disabled="_skipMessage || _generating"
+                          Placeholder="填写审核意见，或点击一键生成"
+                          Class="full-width" />
+            <MudCheckBox T="bool"
+                         @bind-Checked="_skipMessage"
+                         Label="确认不填写审核意见直接通过"
+                         Color="Color.Info"
+                         Class="mt-2" />
+        </div>
+
+        <div class="section">
+            <MudCheckBox T="bool"
+                         @bind-Checked="_needEducation"
+                         Label="需要宣教（选择后进入宣教选择）"
+                         Color="Color.Success" />
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text" OnClick="Cancel">取消</MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   Disabled="_generating"
+                   OnClick="Confirm">
+            确认
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter]
+    public TaskDetailDto? TaskDetail { get; set; }
+
+    private string _auditComment = string.Empty;
+    private bool _skipMessage;
+    private bool _needEducation;
+    private bool _generating;
+
+    private async Task GenerateAuditComment()
+    {
+        if (TaskDetail == null)
+        {
+            MudDialog?.Cancel();
+            return;
+        }
+
+        try
+        {
+            _generating = true;
+            var prompt = BuildPrompt(TaskDetail);
+            await inj_zhiPuQingYanService.AssistantStreamAsync(
+                prompt,
+                content =>
+                {
+                    _auditComment = content;
+                    InvokeAsync(StateHasChanged);
+                });
+        }
+        catch (Exception ex)
+        {
+            await HandleExceptionAsync(ex, "生成审核意见失败", "调用 AI 生成审核意见");
+        }
+        finally
+        {
+            _generating = false;
+        }
+    }
+
+    private static string BuildPrompt(TaskDetailDto task)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("你是医院质控审核医师，请根据随访信息生成简洁的审核意见。");
+        sb.AppendLine($"患者：{task.PatientName}");
+        sb.AppendLine($"任务：{task.TaskName}");
+        if (task.PushTime != null) sb.AppendLine($"推送时间：{task.PushTime:yyyy-MM-dd HH:mm}");
+        if (task.InputTime != null) sb.AppendLine($"填写时间：{task.InputTime:yyyy-MM-dd HH:mm}");
+        sb.AppendLine($"状态：{task.EventStatus}");
+        return sb.ToString();
+    }
+
+    private void Confirm()
+    {
+        var result = new AuditConfirmationResult
+        {
+            AuditComment = _auditComment?.Trim() ?? string.Empty,
+            SkipMessage = _skipMessage,
+            RequireEducation = _needEducation
+        };
+
+        MudDialog.Close(MudDialogResult.Ok(result));
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+}

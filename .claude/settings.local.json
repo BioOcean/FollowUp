@@ -1,4 +1,11 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(Select-Object -ExpandProperty FullName)"
+    ],
+    "deny": [],
+    "ask": []
+  },
   "enableAllProjectMcpServers": false,
   "outputStyle": "Explanatory"
 }

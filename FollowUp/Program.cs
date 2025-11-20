@@ -1,4 +1,5 @@
 using Bio.Shared.Services;
+using Bio.Shared.Interfaces;
 using Bio.Models;
 using FollowUp.Components;
 using FollowUp.Components.Modules.ProjectManagement.Services;
@@ -10,6 +11,8 @@ using MudBlazor.Services;
 using NLog.Web;
 using System.Globalization;
 using Bio.Core.Authentication;
+using Bio.Core.FormSetDC;
+using Bio.Core.Services;
 using FollowUp.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -35,7 +38,8 @@ builder.Services.Configure<Microsoft.AspNetCore.Components.Server.CircuitOptions
 builder.Services.AddScoped<IUserContextService, UserContextService>();
 builder.Services.AddScoped<INavigationService, NavigationService>();
 builder.Services.AddScoped<FollowUp.Services.IAuthorizationService, FollowUp.Services.AuthorizationService>();
-builder.Services.AddScoped<IErrorHandlingService, ErrorHandlingService>(); 
+builder.Services.AddScoped<IErrorHandlingService, ErrorHandlingService>(); 
+builder.Services.AddScoped<ICacheService, MemoryCacheService>();
 
 
 // 注册项目管理模块服务
@@ -44,6 +48,23 @@ builder.Services.AddProjectManagementServices();
 builder.Services.AddScoped<IPatientStatisticsService, PatientStatisticsService>();
 builder.Services.AddScoped<IFollowupStatisticsService, FollowupStatisticsService>();
 builder.Services.AddScoped<IEducationStatisticsService, EducationStatisticsService>();
+builder.Services.AddSingleton<ZhiPuQingYanService>();
+
+// 注册随访管理模块服务（任务管理器）
+builder.Services.AddScoped<TaskQueryService>();
+builder.Services.AddScoped<TaskStatisticsService>();
+builder.Services.AddScoped<TaskAuditService>();
+builder.Services.AddScoped<TaskCreationService>();
+builder.Services.AddScoped<TaskAttachmentService>();
+
+// 注册 Bio.Core 静态数据服务（表单集定义缓存）
+builder.Services.AddSingleton<IStaticDataService, StaticDataService>();
+builder.Services.AddSingleton<IFormsetStaticDataService, FormsetStaticDataService>();
+
+// 注册 Bio.Core 表单服务（FormSetServiceFactory 等）
+builder.Services.AddFormsetServices();
+builder.Services.AddSingleton<IFormsetDelegateService, FormsetDelegateService>();
+builder.Services.AddScoped<IEntityFactory, EntityFactory>();
 
 
 // 清除现有的日志提供程序
@@ -95,7 +116,7 @@ builder.Services.AddScoped<LocalStorageService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
+if (!app.Environment.IsDevelopment()) 
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
     app.UseHsts();
@@ -116,5 +137,16 @@ app.MapRazorComponents<App>()
 
 // 使用Bio.Core标准认证端点（登录、刷新、登出）
 app.MapBioAuthEndpoints();
+
+// 预加载静态数据（表单集定义等）
+var staticDataService = app.Services.GetRequiredService<IStaticDataService>();
+await staticDataService.PreloadAllDataAsync();
+
+var formsetStaticDataService = app.Services.GetRequiredService<IFormsetStaticDataService>();
+await formsetStaticDataService.PreloadAllDataAsync(staticDataService);
+
+// 预热 Formset 委托缓存，避免首访获取属性失败
+var formsetDelegateService = app.Services.GetRequiredService<IFormsetDelegateService>();
+await formsetDelegateService.InitializeAsync();
 
 app.Run();

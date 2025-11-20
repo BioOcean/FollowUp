@@ -1,0 +1,39 @@
+﻿.approve-confirmation-dialog .dialog-header {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 12px;
+}
+
+.approve-confirmation-dialog .title {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.approve-confirmation-dialog .subtitle {
+    color: var(--text-secondary);
+}
+
+.approve-confirmation-dialog .section {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 12px;
+}
+
+.approve-confirmation-dialog .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.approve-confirmation-dialog .section-title {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.approve-confirmation-dialog .full-width {
+    width: 100%;
+}

@@ -1,0 +1,12 @@
+﻿.add-visit-task-dialog .mud-dialog-content {
+    background-color: var(--bg-primary);
+}
+
+.add-visit-task-dialog .mud-dialog-actions {
+    border-top: 1px solid var(--border-color);
+}
+
+.add-visit-task-dialog .mud-chip {
+    margin-right: 6px;
+    margin-bottom: 6px;
+}

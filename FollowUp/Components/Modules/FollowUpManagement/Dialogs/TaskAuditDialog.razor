@@ -1,0 +1,293 @@
+@namespace FollowUp.Components.Modules.FollowUpManagement.Dialogs
+@using FollowUp.Components.Modules.FollowUpManagement.Models
+@inherits BasePage
+
+<MudDialog Class="task-audit-dialog">
+    <DialogContent>
+        @if (_loading)
+        {
+            <LoadingView Height="360px" Message="正在加载任务详情..." />
+        }
+        else if (_taskDetail != null)
+        {
+            <div class="dialog-grid">
+                <MudPaper Class="info-card" Elevation="1">
+                    <div class="card-header">
+                    <MudText Typo="Typo.subtitle1" Color="Color.Primary">任务概览</MudText>
+                    <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(_taskDetail.EventStatus)">
+                        @_taskDetail.EventStatus
+                    </MudChip>
+                </div>
+                    <div class="info-row">
+                        <span class="info-label">患者姓名</span>
+                        <span>@_taskDetail.PatientName</span>
+                        <span class="info-label">病案号</span>
+                        <span>@_taskDetail.CaseNumber</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">手机号</span>
+                        <span>@_taskDetail.PhoneNumber</span>
+                        <span class="info-label">身份证号</span>
+                        <span>@_taskDetail.IdNumber</span>
+                    </div>
+                    <div class="action-bar">
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Primary"
+                                   OnClick="ViewDischargeProof"
+                                   Disabled="@(!_taskDetail.FileNames.Any())">
+                            查看出院证明
+                        </MudButton>
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Secondary"
+                                   OnClick="EditForm">
+                            编辑表单
+                        </MudButton>
+                        @if (CanViewResult)
+                        {
+                            <MudButton Variant="Variant.Outlined"
+                                       Color="Color.Info"
+                                       OnClick="ViewResult">
+                                查看随访结果
+                            </MudButton>
+                        }
+                    </div>
+                </MudPaper>
+
+                <MudPaper Class="form-card" Elevation="1">
+                    <div class="card-header">
+                        <MudText Typo="Typo.subtitle1" Color="Color.Primary">随访表单</MudText>
+                    </div>
+                    <FormDataDisplay @key="_formReloadKey" PatientEventId="@TaskId" Source="Followup" />
+                </MudPaper>
+            </div>
+        }
+        else
+        {
+            <EmptyDataView Message="未找到任务详情" Height="360px" />
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" Variant="Variant.Text">取消</MudButton>
+        <MudButton OnClick="Submit"
+                   Variant="Variant.Filled"
+                   Color="Color.Success"
+                   Disabled="@(_loading || _submitting)">
+            通过审核
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter]
+    public Guid TaskId { get; set; }
+
+    [Inject] private TaskQueryService _queryService { get; set; } = default!;
+    [Inject] private TaskAuditService _auditService { get; set; } = default!;
+    [Inject] private TaskAttachmentService _attachmentService { get; set; } = default!;
+    [Inject] private IDialogService _dialogService { get; set; } = default!;
+
+    private ILogger<TaskAuditDialog> inj_logger => inj_loggerFactory.CreateLogger<TaskAuditDialog>();
+
+    private TaskDetailDto? _taskDetail;
+    private bool _loading = true;
+    private bool _submitting;
+    private Guid _formReloadKey = Guid.NewGuid();
+
+    private bool CanViewResult => _taskDetail?.InputTime != null || string.Equals(_taskDetail?.EventStatus, "已随访", StringComparison.OrdinalIgnoreCase);
+
+    protected override async Task OnPageInitializedAsync()
+    {
+        await LoadTaskDetailAsync();
+    }
+
+    private async Task LoadTaskDetailAsync()
+    {
+        _loading = true;
+        try
+        {
+            _taskDetail = await _queryService.GetTaskDetailAsync(TaskId);
+        }
+        catch (Exception ex)
+        {
+            await HandleExceptionAsync(ex, "加载任务详情失败", "查询任务详情");
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task ViewDischargeProof()
+    {
+        if (_taskDetail == null)
+        {
+            return;
+        }
+
+        var files = await _attachmentService.GetDischargeFilesAsync(_taskDetail.Id);
+        if (files.Count == 0)
+        {
+            inj_snackbar.Add("没有可预览的出院证明", Severity.Info);
+            return;
+        }
+
+        var parameters = new DialogParameters<ImagePreviewDialog>
+        {
+            { x => x.Images, files.ToList() },
+            { x => x.InitialIndex, 0 }
+        };
+        var options = new DialogOptions { MaxWidth = MaxWidth.ExtraExtraLarge, FullScreen = false };
+        await _dialogService.ShowAsync<ImagePreviewDialog>("出院证明", parameters, options);
+    }
+
+    private async Task EditForm()
+    {
+        if (_taskDetail == null)
+        {
+            return;
+        }
+
+        var parameters = new DialogParameters<FormSetEditor>
+        {
+            { x => x.PatientEventId, _taskDetail.Id },
+            { x => x.FormSetId, _taskDetail.FormSetId }
+        };
+        if (_taskDetail.FormSetId == Guid.Empty)
+        {
+            inj_snackbar.Add("未找到表单集，无法编辑", Severity.Warning);
+            return;
+        }
+
+        var dialog = await _dialogService.ShowAsync<FormSetEditor>("编辑表单", parameters, new DialogOptions
+        {
+            MaxWidth = MaxWidth.Large,
+            FullWidth = true
+        });
+
+        var result = await dialog.Result;
+        if (result is { Canceled: false })
+        {
+            _formReloadKey = Guid.NewGuid();
+            await LoadTaskDetailAsync();
+        }
+    }
+
+    private async Task ViewResult()
+    {
+        if (_taskDetail == null)
+        {
+            return;
+        }
+
+        var parameters = new DialogParameters<TaskResultView>
+        {
+            { x => x.PatientEventId, _taskDetail.Id }
+        };
+
+        await _dialogService.ShowAsync<TaskResultView>("随访结果", parameters, new DialogOptions
+        {
+            MaxWidth = MaxWidth.Large,
+            FullWidth = true
+        });
+    }
+
+    private async Task Submit()
+    {
+        if (_taskDetail == null || _submitting)
+        {
+            return;
+        }
+
+        _submitting = true;
+        try
+        {
+            var confirmParams = new DialogParameters<ApproveConfirmationDialog>
+            {
+                { x => x.TaskDetail, _taskDetail }
+            };
+
+            var confirmDialog = await _dialogService.ShowAsync<ApproveConfirmationDialog>("审核确认", confirmParams, new DialogOptions
+            {
+                CloseOnEscapeKey = true,
+                MaxWidth = MaxWidth.Medium,
+                FullWidth = true
+            });
+
+            var confirmResult = await confirmDialog.Result;
+            if (confirmResult == null || confirmResult.Canceled || confirmResult.Data is not AuditConfirmationResult auditData)
+            {
+                _submitting = false;
+                return;
+            }
+
+            Guid? educationId = _taskDetail.FollowupEducationId;
+            if (auditData.RequireEducation)
+            {
+                var eduDialog = await _dialogService.ShowAsync<EducationSelectionDialog>(
+                    "选择宣教",
+                    new DialogParameters<EducationSelectionDialog>
+                    {
+                        { x => x.ProjectId, _taskDetail.ProjectId },
+                        { x => x.InitialEducationId, _taskDetail.FollowupEducationId }
+                    },
+                    new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true });
+
+                var eduResult = await eduDialog.Result;
+                if (eduResult == null || eduResult.Canceled)
+                {
+                    _submitting = false;
+                    return;
+                }
+
+                educationId = eduResult.Data as Guid?;
+            }
+
+            var success = await _auditService.ApproveTaskAsync(
+                TaskId,
+                auditData.AuditComment,
+                educationId,
+                auditData.SkipMessage);
+
+            if (success)
+            {
+                inj_snackbar.Add("审核通过", Severity.Success);
+                MudDialog.Close(MudDialogResult.Ok(true));
+            }
+            else
+            {
+                inj_snackbar.Add("审核操作失败", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            inj_logger.LogError(ex, "审核操作失败：TaskId={TaskId}", TaskId);
+            inj_snackbar.Add("审核操作失败", Severity.Error);
+        }
+        finally
+        {
+            _submitting = false;
+        }
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+
+    private Color GetStatusColor(string status)
+    {
+        return status switch
+        {
+            "待审核" => Color.Warning,
+            "已超时" => Color.Error,
+            "患者未提交" => Color.Info,
+            "已审核" => Color.Success,
+            "已取消" => Color.Default,
+            "已随访" => Color.Success,
+            _ => Color.Default
+        };
+    }
+}

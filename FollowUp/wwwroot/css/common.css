@@ -217,3 +217,15 @@ p, h6, h5, h4, h3, h2, h1 {
     .copy-btn:hover {
         background: #e0a800;
     }
+
+/* 移除输入框焦点时的绿色 box-shadow */
+.mud-input-control .mud-input-root:focus-within {
+    box-shadow: none !important;
+}
+
+/* 移除所有输入控件的焦点 box-shadow */
+.mud-input-control:focus-within,
+.mud-select:focus-within,
+.mud-picker:focus-within {
+    box-shadow: none !important;
+}

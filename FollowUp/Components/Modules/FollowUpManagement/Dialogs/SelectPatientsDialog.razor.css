@@ -1,0 +1,7 @@
+﻿.select-patients-dialog .mud-dialog-content {
+    background-color: var(--bg-primary);
+}
+
+.select-patients-dialog .mud-dialog-actions {
+    border-top: 1px solid var(--border-color);
+}

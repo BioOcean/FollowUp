@@ -1,0 +1,178 @@
+@namespace FollowUp.Components.Modules.FollowUpManagement.Components
+
+@* 任务统计卡片组件 - 根据布局模式显示不同的统计卡片 *@
+<div class="statistics-cards-container">
+    <MudGrid Spacing="1">
+        @if (IsPendingReviewLayout)
+        {
+            @* PendingReview布局：显示患者总量 + 5个状态统计 *@
+            <MudItem xs="12" sm="6" md="3" lg="2">
+                <MudPaper Elevation="1" Class="pa-2 d-flex flex-column align-center stat-item stat-primary">
+                    <MudText Typo="Typo.subtitle2">患者总量</MudText>
+                    <MudText Typo="Typo.h6" Color="Color.Primary" Class="mt-1 mb-0">@Statistics.PatientTotalCount</MudText>
+                </MudPaper>
+            </MudItem>
+        }
+
+        @* 随访任务 *@
+        <MudItem xs="12" sm="6" md="3" lg="2">
+            @if (IsAllLayout)
+            {
+                <MudPaper Elevation="1"
+                         Class=@($"pa-2 d-flex flex-column align-center stat-item stat-primary clickable {(SelectedCard == "随访任务" ? "stat-selected" : "")}")
+                         @onclick="@(() => HandleCardClick("随访任务"))">
+                    <MudText Typo="Typo.subtitle2">随访任务</MudText>
+                    <MudText Typo="Typo.h6" Color="Color.Primary" Class="mt-1 mb-0">@Statistics.TotalCount</MudText>
+                </MudPaper>
+            }
+            else
+            {
+                <MudPaper Elevation="1" Class="pa-2 d-flex flex-column align-center stat-item stat-primary">
+                    <MudText Typo="Typo.subtitle2">随访任务</MudText>
+                    <MudText Typo="Typo.h6" Color="Color.Primary" Class="mt-1 mb-0">@Statistics.TotalCount</MudText>
+                </MudPaper>
+            }
+        </MudItem>
+
+        @* 已随访 *@
+        <MudItem xs="12" sm="6" md="3" lg="2">
+            @if (IsAllLayout)
+            {
+                <MudPaper Elevation="1"
+                         Class=@($"pa-2 d-flex flex-column align-center stat-item stat-group-1 clickable {(SelectedCard == "已随访" ? "stat-selected" : "")}")
+                         @onclick="@(() => HandleCardClick("已随访"))">
+                    <MudText Typo="Typo.subtitle2">已随访</MudText>
+                    <MudText Typo="Typo.h6" Color="Color.Success" Class="mt-1 mb-0">@Statistics.CompletedCount</MudText>
+                </MudPaper>
+            }
+            else
+            {
+                <MudPaper Elevation="1" Class="pa-2 d-flex flex-column align-center stat-item stat-group-1">
+                    <MudText Typo="Typo.subtitle2">已随访</MudText>
+                    <MudText Typo="Typo.h6" Color="Color.Success" Class="mt-1 mb-0">@Statistics.CompletedCount</MudText>
+                </MudPaper>
+            }
+        </MudItem>
+
+        @* 待审核 *@
+        <MudItem xs="12" sm="6" md="3" lg="2">
+            @if (IsAllLayout)
+            {
+                <MudPaper Elevation="1"
+                         Class=@($"pa-2 d-flex flex-column align-center stat-item stat-group-1 clickable {(SelectedCard == "待审核" ? "stat-selected" : "")}")
+                         @onclick="@(() => HandleCardClick("待审核"))">
+                    <MudText Typo="Typo.subtitle2">待审核</MudText>
+                    <MudText Typo="Typo.h6" Color="Color.Warning" Class="mt-1 mb-0">@Statistics.PendingReviewCount</MudText>
+                </MudPaper>
+            }
+            else
+            {
+                <MudPaper Elevation="1" Class="pa-2 d-flex flex-column align-center stat-item stat-group-1">
+                    <MudText Typo="Typo.subtitle2">待审核</MudText>
+                    <MudText Typo="Typo.h6" Color="Color.Warning" Class="mt-1 mb-0">@Statistics.PendingReviewCount</MudText>
+                </MudPaper>
+            }
+        </MudItem>
+
+        @* 患者未提交 *@
+        <MudItem xs="12" sm="6" md="3" lg="2">
+            @if (IsAllLayout)
+            {
+                <MudPaper Elevation="1"
+                         Class=@($"pa-2 d-flex flex-column align-center stat-item stat-group-1 clickable {(SelectedCard == "患者未提交" ? "stat-selected" : "")}")
+                         @onclick="@(() => HandleCardClick("患者未提交"))">
+                    <MudText Typo="Typo.subtitle2">患者未提交</MudText>
+                    <MudText Typo="Typo.h6" Color="Color.Error" Class="mt-1 mb-0">@Statistics.PatientNotSubmittedCount</MudText>
+                </MudPaper>
+            }
+            else
+            {
+                <MudPaper Elevation="1" Class="pa-2 d-flex flex-column align-center stat-item stat-group-1">
+                    <MudText Typo="Typo.subtitle2">患者未提交</MudText>
+                    <MudText Typo="Typo.h6" Color="Color.Error" Class="mt-1 mb-0">@Statistics.PatientNotSubmittedCount</MudText>
+                </MudPaper>
+            }
+        </MudItem>
+
+        @* 未到推送时间 *@
+        <MudItem xs="12" sm="6" md="3" lg="2">
+            @if (IsAllLayout)
+            {
+                <MudPaper Elevation="1"
+                         Class=@($"pa-2 d-flex flex-column align-center stat-item stat-group-1 clickable {(SelectedCard == "未到推送时间" ? "stat-selected" : "")}")
+                         @onclick="@(() => HandleCardClick("未到推送时间"))">
+                    <MudText Typo="Typo.subtitle2">未到推送时间</MudText>
+                    <MudText Typo="Typo.h6" Color="Color.Info" Class="mt-1 mb-0">@Statistics.NotYetPushedCount</MudText>
+                </MudPaper>
+            }
+            else
+            {
+                <MudPaper Elevation="1" Class="pa-2 d-flex flex-column align-center stat-item stat-group-1">
+                    <MudText Typo="Typo.subtitle2">未到推送时间</MudText>
+                    <MudText Typo="Typo.h6" Color="Color.Info" Class="mt-1 mb-0">@Statistics.NotYetPushedCount</MudText>
+                </MudPaper>
+            }
+        </MudItem>
+
+        @* ALL布局：显示近一周和近一月 *@
+        @if (IsAllLayout)
+        {
+            <MudItem xs="12" sm="6" md="3" lg="1">
+                <MudPaper Elevation="1"
+                         Class=@($"pa-2 d-flex flex-column align-center stat-item stat-group-2 clickable {(SelectedCard == "近一周" ? "stat-selected" : "")}")
+                         @onclick="@(() => HandleCardClick("近一周"))">
+                    <MudText Typo="Typo.subtitle2">近一周</MudText>
+                    <MudText Typo="Typo.h6" Color="Color.Dark" Class="mt-1 mb-0">@Statistics.CurrentWeekCount</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3" lg="1">
+                <MudPaper Elevation="1"
+                         Class=@($"pa-2 d-flex flex-column align-center stat-item stat-group-2 clickable {(SelectedCard == "近一月" ? "stat-selected" : "")}")
+                         @onclick="@(() => HandleCardClick("近一月"))">
+                    <MudText Typo="Typo.subtitle2">近一月</MudText>
+                    <MudText Typo="Typo.h6" Color="Color.Dark" Class="mt-1 mb-0">@Statistics.CurrentMonthCount</MudText>
+                </MudPaper>
+            </MudItem>
+        }
+    </MudGrid>
+</div>
+
+@code {
+    /// <summary>
+    /// 统计数据
+    /// </summary>
+    [Parameter]
+    public TaskStatisticsDto Statistics { get; set; } = new TaskStatisticsDto();
+
+    /// <summary>
+    /// 是否为PendingReview布局
+    /// </summary>
+    [Parameter]
+    public bool IsPendingReviewLayout { get; set; }
+
+    /// <summary>
+    /// 是否为ALL布局
+    /// </summary>
+    [Parameter]
+    public bool IsAllLayout { get; set; }
+
+    /// <summary>
+    /// 当前选中的卡片
+    /// </summary>
+    [Parameter]
+    public string SelectedCard { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 卡片点击事件
+    /// </summary>
+    [Parameter]
+    public EventCallback<string> OnCardClick { get; set; }
+
+    private async Task HandleCardClick(string cardType)
+    {
+        if (OnCardClick.HasDelegate)
+        {
+            await OnCardClick.InvokeAsync(cardType);
+        }
+    }
+}

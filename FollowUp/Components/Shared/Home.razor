@@ -1,6 +1,7 @@
 @page "/"
 @using FollowUp.Services
 @using FollowUp.Constants
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
 @inject INavigationService inj_navigationService
 @inject ILogger<Home> inj_logger
 @inject NavigationManager inj_navigationManager

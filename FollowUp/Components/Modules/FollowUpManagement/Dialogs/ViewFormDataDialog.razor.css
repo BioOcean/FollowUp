@@ -1,0 +1,49 @@
+/* 表单数据对话框样式 */
+
+.form-data-dialog-content {
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+/* 字段标签样式 */
+.field-label {
+    font-weight: 500;
+    color: #424242;
+    margin-bottom: 4px;
+}
+
+/* 字段值样式 */
+.field-value {
+    color: #212121;
+    word-break: break-word;
+}
+
+/* 空字段值样式 */
+.field-value-empty {
+    color: #9e9e9e;
+    font-style: italic;
+}
+
+/* 卡片标题样式 */
+.card-title {
+    border-bottom: 2px solid #1976d2;
+    padding-bottom: 8px;
+}
+
+/* 折叠面板样式优化 */
+::deep .mud-expansion-panel {
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+}
+
+/* 优化表单数据的可读性 */
+::deep .mud-expansion-panel-content {
+    padding: 16px;
+}
+
+/* 移动端优化 */
+@media (max-width: 600px) {
+    .form-data-dialog-content {
+        max-height: 500px;
+    }
+}

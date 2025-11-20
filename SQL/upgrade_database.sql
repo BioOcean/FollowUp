@@ -30,7 +30,11 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto;
 \i migration/030_migrate_scan_code_message.sql
 
 \echo ''
-\echo '步骤 5：数据校验'
+\echo '步骤 5：创建性能优化索引'
+\i index/001_task_manager_indexes.sql
+
+\echo ''
+\echo '步骤 6：数据校验'
 
 
 DO $$

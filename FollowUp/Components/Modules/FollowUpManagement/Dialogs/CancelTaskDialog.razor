@@ -1,0 +1,73 @@
+@namespace FollowUp.Components.Modules.FollowUpManagement.Dialogs
+@inherits BasePage
+
+@* 取消任务对话框 *@
+<MudDialog>
+    <DialogContent>
+        <div class="cancel-task-dialog-content">
+            <MudText Typo="Typo.body1" Class="mb-3">
+                确定要取消此任务吗？取消后将无法恢复。
+            </MudText>
+            <MudTextField @bind-Value="_reason"
+                          Label="取消原因"
+                          Variant="Variant.Outlined"
+                          Lines="3"
+                          Required="true"
+                          RequiredError="请输入取消原因"
+                          Placeholder="请输入取消任务的原因..." />
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" Variant="Variant.Text">取消</MudButton>
+        <MudButton OnClick="Submit"
+                   Variant="Variant.Filled"
+                   Color="Color.Error"
+                   Disabled="@(string.IsNullOrWhiteSpace(_reason))">
+            确定取消
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter]
+    public Guid TaskId { get; set; }
+
+    [Inject] private Services.TaskAuditService _auditService { get; set; } = default!;
+
+    private string _reason = string.Empty;
+    private bool _loading = false;
+
+    private async Task Submit()
+    {
+        _loading = true;
+        try
+        {
+            var success = await _auditService.CancelTaskAsync(TaskId, _reason.Trim());
+            if (success)
+            {
+                await ShowSuccessAsync("任务已取消");
+                MudDialog.Close(MudBlazor.DialogResult.Ok(true));
+            }
+            else
+            {
+                await ShowErrorAsync("取消任务失败");
+            }
+        }
+        catch (Exception ex)
+        {
+            await HandleExceptionAsync(ex, "取消任务失败", "取消任务");
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+}

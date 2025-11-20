@@ -1,0 +1,70 @@
+﻿.task-detail-dialog .mud-dialog-content {
+    background-color: var(--bg-primary);
+}
+
+.task-detail-dialog .dialog-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+}
+
+@media (min-width: 992px) {
+    .task-detail-dialog .dialog-grid {
+        grid-template-columns: 380px 1fr;
+    }
+}
+
+.task-detail-dialog .info-card,
+.task-detail-dialog .form-card {
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-secondary);
+}
+
+.task-detail-dialog .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.task-detail-dialog .info-row {
+    display: grid;
+    grid-template-columns: 110px 1fr 110px 1fr;
+    gap: 4px 6px;
+    padding: 4px 0;
+    align-items: center;
+    color: var(--text-secondary);
+}
+
+.task-detail-dialog .info-row .wide {
+    grid-column: span 3;
+}
+
+.task-detail-dialog .info-label {
+    color: var(--text-tertiary);
+    font-weight: 600;
+}
+
+.task-detail-dialog .action-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.task-detail-dialog .form-card {
+    padding: 8px 10px;
+}
+
+.task-detail-dialog .mud-dialog-actions {
+    border-top: 1px solid var(--border-color);
+}
+
+.task-manager-footer {
+    margin-top: 12px;
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    background-color: var(--bg-secondary);
+}

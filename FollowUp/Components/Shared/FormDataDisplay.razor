@@ -1,0 +1,830 @@
+@using Microsoft.AspNetCore.Components.Rendering
+@using System.Collections
+@using Bio.Core.FormSetDC
+@using Bio.Core.Services
+@namespace FollowUp.Components.Shared
+@inherits BasePage
+@inject ILoggerFactory inj_loggerFactory
+@inject FormSetServiceFactory _formSetServiceFactory
+@inject IDialogService inj_dialogService
+@inject IStaticDataService inj_staticDataService
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-2">
+    @if (_formSetDefinition != null && _formSetService != null && _formsetLoaded)
+    {
+        @foreach (var form in _sortedForms)
+        {
+            @if (HasFormValidAnswers(form))
+            {
+                @if(Source != "FollowupPhone"){
+                    <div class="custom-card">
+                        <div class="custom-card-header">
+                            <h6 class="custom-card-title">@form.name</h6>
+                        </div>
+                        <div class="custom-card-content">
+                            @{
+                                var rootCards = form.form_card.Where(c => c.parent_id == null).ToList();
+                                var sortedRootCards = SortCardsByLinkedList(rootCards);
+                            }
+                            @foreach (var card in sortedRootCards)
+                            {
+                                @RenderCard(card, null)
+                            }
+                        </div>
+                    </div>
+                }else{
+                    <div class="custom-card-phone">
+                        @{
+                            var rootCards = form.form_card.Where(c => c.parent_id == null).ToList();
+                            var sortedRootCards = SortCardsByLinkedList(rootCards);
+                        }
+                        @foreach (var card in sortedRootCards)
+                        {
+                            @RenderCard(card, null)
+                        }
+                    </div>
+                }
+
+            }
+            else
+            {
+                @if (Source == "Followup" || Source == "FollowupPhone")
+                {
+                    <MudAlert Severity="Severity.Warning">暂无数据</MudAlert>
+                }
+            }
+        }
+    }
+    else if (_isLoading)
+    {
+        <MudProgressCircular Color="MudBlazor.Color.Primary" Indeterminate="true" />
+        <MudText Typo="Typo.body1">正在加载表单数据...</MudText>
+    }
+    else
+    {
+        <MudAlert Severity="Severity.Warning">未找到对应的表单集定义或表单数据</MudAlert>
+    }
+</MudContainer>
+<style>
+
+</style>
+@code {
+    [Parameter]
+    public Guid PatientEventId { get; set; }
+    [Parameter]
+    public string Source { get; set; } = string.Empty;//随访PC段：Followup，随访手机端（患者端、医生端）：FollowupPhone，Care不用传
+
+    private form_form_set? _formSetDefinition;
+    private IFormsetService? _formSetService;
+    private List<form_form> _sortedForms = new List<form_form>();
+    private bool _isLoading = true;
+    private bool _formsetLoaded = false;
+    private static readonly string[] ImageExtensions = { ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp" };
+
+    // Logger
+    private ILogger<FormDataDisplay> inj_Logger => inj_loggerFactory.CreateLogger<FormDataDisplay>();
+
+    protected override async Task OnPageInitializedAsync()
+    {
+        await base.OnPageInitializedAsync();
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            _isLoading = true;
+
+            // 1. 加载患者事件信息以获取form_set_id
+            await using var dbContext = await ContextFactory.CreateDbContextAsync();
+            var patientEvent = await dbContext.patient_event
+                .FirstOrDefaultAsync(pe => pe.id == PatientEventId);
+
+            if (patientEvent == null)
+            {
+                inj_Logger.LogWarning($"未找到ID为 {PatientEventId} 的患者事件");
+                return;
+            }
+
+            // 2. 从StaticData获取表单集定义
+            _formSetDefinition = inj_staticDataService.FormSetList
+                .FirstOrDefault(fs => fs.id == patientEvent.form_set_id && fs.project_id == patientEvent.project_id);
+
+            if (_formSetDefinition == null)
+            {
+                inj_Logger.LogWarning($"未找到表单集定义 (FormSetId: {patientEvent.form_set_id}, ProjectId: {patientEvent.project_id})");
+                return;
+            }
+
+            // 3. 创建表单服务
+            _formSetService = await _formSetServiceFactory.CreateAsync(PatientEventId);
+
+            if (_formSetService == null)
+            {
+                inj_Logger.LogWarning($"创建FormSetService失败 (PatientEventId: {PatientEventId})");
+                return;
+            }
+
+            // 4. 对Form进行排序
+            _sortedForms = _formSetDefinition!.form_form.Where(f => !f.is_hidden)
+                .OrderBy(f => f.sort_index)
+                .ToList();
+
+            _formsetLoaded = true;
+        }
+        catch (Exception ex)
+        {
+            inj_Logger.LogError(ex, $"加载表单数据失败 (PatientEventId: {PatientEventId})");
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private List<form_card> SortCardsByLinkedList(List<form_card> cards)
+    {
+        var result = new List<form_card>();
+        if (!cards.Any()) return result;
+
+        // 创建卡片ID到卡片对象的映射
+        var cardDict = cards.ToDictionary(c => c.id);
+
+        // 找到第一个卡片（pre_uid为null）
+        var firstCard = cards.FirstOrDefault(c => c.pre_uid == null);
+        if (firstCard == null) return cards; // 如果没有起点，返回原列表
+
+        result.Add(firstCard);
+        var current = firstCard;
+
+        // 防止循环引用
+        var processedIds = new HashSet<Guid> { current.id };
+
+        // 顺着链表找到所有卡片
+        while (current.next_uid != null)
+        {
+            var nextCard = cards.FirstOrDefault(c => c.id == current.next_uid);
+            if (nextCard == null || processedIds.Contains(nextCard.id)) break;
+
+            result.Add(nextCard);
+            processedIds.Add(nextCard.id);
+            current = nextCard;
+        }
+
+        // 如果有卡片没有被加入结果，说明链表不完整，将它们添加到末尾
+        foreach (var card in cards)
+        {
+            if (!processedIds.Contains(card.id))
+            {
+                result.Add(card);
+            }
+        }
+
+        return result;
+    }
+
+    private List<object> SortCardItemsByLinkedList(IEnumerable<object> nodes)
+    {
+        if (nodes == null || !nodes.Any()) return new List<object>();
+
+        var nodeDict = nodes.ToDictionary(n =>
+            n is form_card c ? c.id :
+            n is form_question q ? q.id :
+            Guid.Empty);
+
+        var sorted = new List<object>();
+
+        // 找到第一个节点（pre_uid为null的节点）
+        var current = nodes.FirstOrDefault(n =>
+            (n is form_card c && c.pre_uid == null) ||
+            (n is form_question q && q.pre_uid == null));
+
+        if (current == null && nodes.Any())
+        {
+            // 如果没有找到起始节点但有元素，则返回原列表
+            sorted.AddRange(nodes);
+            return sorted;
+        }
+
+        // 用于防止循环引用
+        var processedIds = new HashSet<Guid>();
+
+        while (current != null)
+        {
+            // 获取当前节点的ID
+            Guid currentId = current is form_card c ? c.id : ((form_question)current).id;
+
+            // 如果已处理过此节点，退出循环避免死循环
+            if (processedIds.Contains(currentId)) break;
+
+            sorted.Add(current);
+            processedIds.Add(currentId);
+
+            // 获取下一个节点ID
+            Guid? nextId = current is form_card nextCard ? nextCard.next_uid : ((form_question)current).next_uid;
+
+            // 如果下一个节点存在，则获取该节点对象
+            current = nextId.HasValue && nodeDict.TryGetValue(nextId.Value, out var next) ? next : null;
+        }
+
+        // 添加任何未被链表包含的节点
+        foreach (var node in nodes)
+        {
+            Guid nodeId = node is form_card c ? c.id : ((form_question)node).id;
+            if (!processedIds.Contains(nodeId))
+            {
+                sorted.Add(node);
+            }
+        }
+
+        return sorted;
+    }
+
+    private bool HasValidAnswers(form_card card, Guid? subCardId)
+    {
+        var service = _formSetService;
+        if (service == null)
+        {
+            return false;
+        }
+
+        // 检查当前卡片下的所有问题
+        if (card.type == "multiple")
+        {
+            var subCardIds = service.GetSubCardIdList(card.id);
+            if(subCardIds != null && subCardIds.Any()){
+                foreach (var subId in subCardIds)
+                {
+                    foreach (var question in card.form_question)
+                    {
+                        var value = service.GetQuestionValue(question, subId);
+                        if (ShouldDisplayQuestion(value))
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        else
+        {
+            foreach (var question in card.form_question)
+            {
+                var value = service.GetQuestionValue(question, subCardId);
+                if (ShouldDisplayQuestion(value))
+                {
+                    return true;
+                }
+            }
+        }
+
+        // 递归检查所有子卡片
+        foreach (var childCard in card.Inverseparent.OfType<form_card>())
+        {
+            if (HasValidAnswers(childCard, subCardId))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private bool HasFormValidAnswers(form_form form)
+    {
+        // 获取所有根卡片
+        var rootCards = form.form_card.Where(c => c.parent_id == null).ToList();
+
+        // 检查每个根卡片是否有有效答案
+        foreach (var card in rootCards)
+        {
+            if (HasValidAnswers(card, null))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private RenderFragment RenderCard(form_card card, Guid? parentSubCardId) => builder =>
+    {
+        // 首先检查卡片是否可见
+        if (!IsCardVisible(card))
+        {
+            inj_Logger.LogWarning($"卡片不可见，跳过渲染: {card.name} ({card.id})");
+            return;
+        }
+        // 检查卡片是否有有效答案
+        if (!HasValidAnswers(card, parentSubCardId))
+        {
+            return;
+        }
+
+        builder.OpenComponent<MudItem>(0);
+        builder.AddAttribute(1, "xs", 12);
+
+        builder.AddAttribute(2, "ChildContent", (RenderFragment)(cardBuilder =>
+        {
+            cardBuilder.OpenElement(3, "div");
+            cardBuilder.AddAttribute(4, "class", "custom-card custom-card-outlined mb-1");
+
+            // 卡片头部
+            cardBuilder.OpenElement(5, "div");
+            cardBuilder.AddAttribute(6, "class", "custom-card-header");
+
+            // 标题部分
+            cardBuilder.OpenElement(7, "h6");
+            cardBuilder.AddAttribute(8, "class", "custom-card-subtitle");
+            cardBuilder.AddContent(9, card.name);
+            cardBuilder.CloseElement(); // h6
+
+            cardBuilder.CloseElement(); // div.header
+
+            // 内容部分
+            cardBuilder.OpenElement(10, "div");
+            cardBuilder.AddAttribute(11, "class", "custom-card-content");
+
+            cardBuilder.OpenComponent<MudGrid>(12);
+            cardBuilder.AddAttribute(13, "Spacing", 1);
+
+            // 根据卡片类型渲染内容
+            cardBuilder.AddAttribute(14, "ChildContent", (RenderFragment)(gridBuilder =>
+            {
+                // 如果是多实例卡片
+                if (card.type == "multiple")
+                {
+                    var subCardInstances = _formSetService.GetSubCardIdList(card.id) ?? new List<Guid>();
+
+                    if (subCardInstances.Any())
+                    {
+                        // 对每个子卡片实例进行遍历
+                        for (int i = 0; i < subCardInstances.Count; i++)
+                        {
+                            var subCardId = subCardInstances[i];
+                            int instanceIndex = i; // 为闭包创建局部变量
+
+                            gridBuilder.OpenComponent<MudItem>(22 + i * 10);
+                            gridBuilder.AddAttribute(23 + i * 10, "xs", 12);
+
+                            gridBuilder.AddAttribute(24 + i * 10, "ChildContent", (RenderFragment)(instanceBuilder =>
+                            {
+                                instanceBuilder.OpenElement(25 + i * 10, "div");
+                                instanceBuilder.AddAttribute(26 + i * 10, "class", "custom-card-instance");
+
+                                instanceBuilder.OpenElement(27 + i * 10, "div");
+                                instanceBuilder.AddAttribute(28 + i * 10, "class", "custom-card-instance-title");
+                                instanceBuilder.AddContent(29 + i * 10, $"记录 {instanceIndex + 1}");
+                                instanceBuilder.CloseElement();
+
+                                // 获取该卡片下的所有子项
+                                var childItems = GetCardChildItems(card);
+
+                                // 使用双向链表排序
+                                var sortedItems = SortCardItemsByLinkedList(childItems);
+
+                                instanceBuilder.OpenComponent<MudGrid>(31 + i * 10);
+                                instanceBuilder.AddAttribute(32 + i * 10, "Spacing", 0);
+
+                                instanceBuilder.AddAttribute(33 + i * 10, "ChildContent", (RenderFragment)(itemsBuilder =>
+                                {
+                                    // 渲染排序后的子项
+                                    RenderCardItems(itemsBuilder, sortedItems, subCardId, 40 + i * 100);
+                                }));
+
+                                instanceBuilder.CloseComponent(); // MudGrid
+                                instanceBuilder.CloseElement(); // div.custom-card-instance
+                            }));
+
+                            gridBuilder.CloseComponent(); // MudItem for instance
+                        }
+                    }
+                    else
+                    {
+                        // 如果没有子实例，显示提示信息
+                        gridBuilder.OpenComponent<MudItem>(1000);
+                        gridBuilder.AddAttribute(1001, "xs", 12);
+                        gridBuilder.AddAttribute(1002, "ChildContent", (RenderFragment)(noDataBuilder =>
+                        {
+                            noDataBuilder.OpenComponent<MudText>(1003);
+                            noDataBuilder.AddAttribute(1004, "Typo", Typo.body2);
+                            noDataBuilder.AddAttribute(1005, "ChildContent", (RenderFragment)(textBuilder =>
+                            {
+                                textBuilder.AddContent(1006, "此多重记录卡片下暂无数据。");
+                            }));
+                            noDataBuilder.CloseComponent();
+                        }));
+                        gridBuilder.CloseComponent();
+                    }
+                }
+                else // 普通卡片
+                {
+                    // 获取该卡片下的所有子项
+                    var childItems = GetCardChildItems(card);
+
+                    // 使用双向链表排序
+                    var sortedItems = SortCardItemsByLinkedList(childItems);
+
+                    // 渲染排序后的子项
+                    RenderCardItems(gridBuilder, sortedItems, parentSubCardId, 2000);
+                }
+            }));
+
+            cardBuilder.CloseComponent(); // MudGrid
+            cardBuilder.CloseElement(); // div.content
+            cardBuilder.CloseElement(); // div.card
+        }));
+
+        builder.CloseComponent(); // MudItem
+    };
+
+    private void RenderCardItems(RenderTreeBuilder builder, List<object> items, Guid? subCardId, int sequence)
+    {
+        int index = 0;
+        foreach (var item in items)
+        {
+            if (item is form_card nestedCard)
+            {
+                // 首先检查卡片是否可见
+                if (!IsCardVisible(nestedCard))
+                {
+                    continue;
+                }
+                // 修复：只有有有效答案的卡片才渲染MudItem
+                if (!HasValidAnswers(nestedCard, subCardId))
+                {
+                    continue;
+                }
+                builder.OpenComponent<MudItem>(sequence + index * 10);
+                builder.AddAttribute(sequence + index * 10 + 1, "xs", 12);
+                builder.AddAttribute(sequence + index * 10 + 2, "ChildContent", (RenderFragment)(childBuilder =>
+                {
+                    childBuilder.AddContent(sequence + index * 10 + 3, RenderCard(nestedCard, subCardId));
+                }));
+                builder.CloseComponent();
+            }
+            else if (item is form_question question)
+            {
+                // 渲染问题
+                RenderQuestion(builder, question, subCardId, sequence + index * 10);
+            }
+            index++;
+        }
+    }
+
+    private void RenderQuestion(RenderTreeBuilder builder, form_question question, Guid? subCardId, int sequence)
+    {
+        var service = _formSetService;
+        if (service == null)
+        {
+            return;
+        }
+
+        // 获取问题的值
+        var value = service.GetQuestionValue(question, subCardId);
+
+        // 判断是否应该显示
+        bool shouldDisplay = ShouldDisplayQuestion(value);
+        bool questionDisplayStatus = service.TryGetQuestionStatus(question, subCardId);
+
+        if (shouldDisplay && questionDisplayStatus != false)
+        {
+            // 确定列宽
+            int columnSize = question.placeholder_width_ratio > 0 && question.placeholder_width_ratio <= 12
+                ? 12 / question.placeholder_width_ratio
+                : 12;
+            columnSize = Math.Max(1, Math.Min(12, columnSize));
+
+            builder.OpenComponent<MudItem>(sequence);
+            builder.AddAttribute(sequence + 1, "xs", 12);
+            builder.AddAttribute(sequence + 2, "sm", columnSize);
+
+            builder.AddAttribute(sequence + 3, "ChildContent", (RenderFragment)(contentBuilder =>
+            {
+                contentBuilder.OpenElement(sequence + 4, "div");
+
+                // 问题名称
+                contentBuilder.OpenComponent<MudText>(sequence + 6);
+                contentBuilder.AddAttribute(sequence + 7, "Typo", Typo.body2);
+                contentBuilder.AddAttribute(sequence + 9, "ChildContent", (RenderFragment)(textBuilder =>
+                {
+                    textBuilder.OpenElement(sequence + 10, "strong");
+                    textBuilder.AddContent(sequence + 11, question.display_name + "：");
+                    textBuilder.CloseElement(); // strong
+                    if(question.data_type != "文件")
+                    {
+                        string displayValue = FormatQuestionValue(value, question);
+                        textBuilder.AddContent(sequence + 12, displayValue);
+                    }
+                }));
+                contentBuilder.CloseComponent();
+
+                // 文件类型特殊渲染
+                if (question.data_type == "文件" && value is List<string> fileList && fileList.Any())
+                {
+                    contentBuilder.OpenComponent<MudGrid>(sequence + 20);
+                    contentBuilder.AddAttribute(sequence + 21, "Spacing", 1);
+                    contentBuilder.AddAttribute(sequence + 22, "ChildContent", (RenderFragment)(gridBuilder =>
+                    {
+                        int fileIdx = 0;
+                        foreach (var file in fileList)
+                        {
+                            var extension = System.IO.Path.GetExtension(file).ToLower();
+                            var displayName = string.Join("_", file.Split('_').Skip(1));
+                            gridBuilder.OpenComponent<MudItem>(sequence + 30 + fileIdx * 10);
+                            gridBuilder.AddAttribute(sequence + 31 + fileIdx * 10, "xs", 6);
+                            gridBuilder.AddAttribute(sequence + 32 + fileIdx * 10, "md", 2);
+                            gridBuilder.AddAttribute(sequence + 33 + fileIdx * 10, "ChildContent", (RenderFragment)(itemBuilder =>
+                            {
+                                itemBuilder.OpenElement(sequence + 34 + fileIdx * 10, "div");
+                                itemBuilder.AddAttribute(sequence + 35 + fileIdx * 10, "class", "file-item");
+                                // 先渲染文件名
+                                itemBuilder.OpenElement(sequence + 45 + fileIdx * 10, "div");
+                                itemBuilder.AddAttribute(sequence + 46 + fileIdx * 10, "class", "file-name-preview");
+                                itemBuilder.AddContent(sequence + 47 + fileIdx * 10, displayName);
+                                itemBuilder.CloseElement();
+                                // 渲染图片或icon的容器
+                                itemBuilder.OpenElement(sequence + 48 + fileIdx * 10, "div");
+                                itemBuilder.AddAttribute(sequence + 49 + fileIdx * 10, "class", "file-item-content");
+                                if (ImageExtensions.Contains(extension))
+                                {
+                                    itemBuilder.OpenElement(sequence + 50 + fileIdx * 10, "img");
+                                    itemBuilder.AddAttribute(sequence + 51 + fileIdx * 10, "src", $"/uploads/{file}");
+                                    itemBuilder.AddAttribute(sequence + 52 + fileIdx * 10, "alt", displayName);
+                                    itemBuilder.AddAttribute(sequence + 53 + fileIdx * 10, "class", "file-preview-image");
+                                    itemBuilder.AddAttribute(sequence + 54 + fileIdx * 10, "onclick", EventCallback.Factory.Create(this, () => PreviewImage(fileList, file)));
+                                    itemBuilder.CloseElement(); // img
+                                }
+                                else
+                                {
+                                    itemBuilder.OpenElement(sequence + 54 + fileIdx * 10, "div");
+                                    itemBuilder.AddAttribute(sequence + 55 + fileIdx * 10, "class", "file-icon-container");
+                                    itemBuilder.OpenComponent<MudIcon>(sequence + 56 + fileIdx * 10);
+                                    itemBuilder.AddAttribute(sequence + 57 + fileIdx * 10, "Icon", Icons.Material.Outlined.InsertDriveFile);
+                                    itemBuilder.AddAttribute(sequence + 58 + fileIdx * 10, "Size", MudBlazor.Size.Large);
+                                    itemBuilder.AddAttribute(sequence + 59 + fileIdx * 10, "Color", MudBlazor.Color.Primary);
+                                    itemBuilder.CloseComponent(); // MudIcon
+                                    itemBuilder.CloseElement(); // file-icon-container
+                                }
+                                itemBuilder.CloseElement(); // file-item-content
+                                itemBuilder.CloseElement(); // file-item
+                            }));
+                            gridBuilder.CloseComponent(); // MudItem
+                            fileIdx++;
+                        }
+                    }));
+                    contentBuilder.CloseComponent(); // MudGrid
+                }
+                contentBuilder.CloseElement(); // div
+            }));
+            builder.CloseComponent(); // MudItem
+        }
+    }
+
+    private bool ShouldDisplayQuestion(object value)
+    {
+        if (value == null || value == DBNull.Value)
+        {
+            return false;
+        }
+
+        if (value is List<string> listValue)
+        {
+            return listValue.Any(); // 只有当列表有值时才显示
+        }
+
+        return true;
+    }
+
+    private string FormatQuestionValue(object value, form_question question)
+    {
+        if (value == null) return string.Empty;
+
+        switch (question.data_type)
+        {
+            case "文本":
+                return value.ToString() ?? string.Empty;
+
+            case "数值":
+                if (value is decimal decimalValue)
+                {
+                    // 确定小数位数
+                    int decimalPlaces = question.number_decimal_places ?? 2;
+                    string format = $"F{decimalPlaces}";
+                    return decimalValue.ToString(format);
+                }
+                return value.ToString() ?? string.Empty;
+
+            case "日期":
+                if (value is DateTime dateValue)
+                {
+                    string dateFormat = !string.IsNullOrEmpty(question.date_format)
+                        ? question.date_format
+                        : "yyyy-MM-dd";
+                    return dateValue.ToString(dateFormat);
+                }
+                return value.ToString() ?? string.Empty;
+
+            case "选择":
+            case "文件":
+                if (value is List<string> listValue)
+                {
+                    return string.Join(", ", listValue);
+                }
+                return value.ToString() ?? string.Empty;
+
+            default:
+                return value.ToString() ?? string.Empty;
+        }
+    }
+
+    private IEnumerable<object> GetCardChildItems(form_card card)
+    {
+        // 合并子卡片和问题为一个集合
+        return card.Inverseparent.Cast<object>().Concat(card.form_question.Cast<object>());
+    }
+    private bool IsCardVisible(form_card card)
+    {
+        try
+        {
+            // 使用FormSetService检查卡片状态
+            var cardStatus = _formSetService?.TryGetCardStatus(card.id);
+            var isVisible = (bool?)cardStatus ?? false;
+
+            inj_Logger.LogWarning($"卡片可见性检查: {card.name} ({card.id}) - TryGetCardStatus: {cardStatus}, 结果: {isVisible}");
+
+            return isVisible;
+        }
+        catch (Exception ex)
+        {
+            inj_Logger.LogWarning(ex, $"检查卡片可见性失败: {card.id}");
+            return false;
+        }
+    }
+
+    private async Task PreviewImage(List<string> fileList, string fileName)
+    {
+        var imageFiles = fileList.Where(f => ImageExtensions.Contains(System.IO.Path.GetExtension(f).ToLower())).ToList();
+        if (imageFiles.Any())
+        {
+            var initialIndex = imageFiles.IndexOf(fileName);
+            var parameters = new DialogParameters<ImagePreviewDialog>
+            {
+                { x => x.Images, imageFiles },
+                { x => x.InitialIndex, initialIndex }
+            };
+            var options = new DialogOptions
+            {
+                MaxWidth = MaxWidth.ExtraExtraLarge,
+                FullScreen = false
+            };
+            await inj_dialogService.ShowAsync<ImagePreviewDialog>("图片预览", parameters, options);
+        }
+    }
+
+    protected override async Task OnPageDisposedAsync()
+    {
+        // 安全释放FormSetService
+        try
+        {
+            if (_formSetService is IAsyncDisposable ads)
+                await ads.DisposeAsync();
+            else if (_formSetService is IDisposable ds)
+                ds.Dispose();
+        }
+        catch (InvalidOperationException ex) when (ex.Message.Contains("only implements IAsyncDisposable"))
+        {
+            // 忽略已由容器异步释放的情况
+        }
+        catch
+        {
+            // 其他释放异常不抛出
+        }
+        finally
+        {
+            _formSetService = null;
+        }
+
+        await base.OnPageDisposedAsync();
+    }
+}
+<style>
+    /* 组件单独样式 */
+    .custom-card {
+        background-color: var(--mud-palette-background-grey);
+        border-radius: 4px;
+        margin-bottom: 12px;
+        border: 1px solid var(--mud-palette-lines-default);
+    }
+
+    .mud-container .custom-card:last-child {
+        margin-bottom: 0;
+    }
+
+    .custom-card-outlined {
+        border: 1px solid var(--mud-palette-lines-default);
+        box-shadow: none;
+    }
+
+    .custom-card-header {
+        padding: 4px 6px;
+        border-bottom: 1px solid var(--mud-palette-lines-default);
+    }
+
+    .custom-card-content {
+        padding: 6px 10px 6px 12px;
+    }
+
+    .custom-card-title {
+        font-size: 1.25rem;
+        font-weight: 500;
+        line-height: 1.6;
+        margin: 0;
+    }
+
+    .custom-card-subtitle {
+        font-size: 1rem;
+        font-weight: 500;
+        line-height: 1.6;
+        margin: 0;
+    }
+
+    .custom-card-instance {
+        background-color: var(--mud-palette-background-paper);
+        border-radius: 4px;
+        padding: 2px 8px;
+    }
+
+    .custom-card-instance-title {
+        font-size: 0.875rem;
+        color: var(--mud-palette-text-secondary);
+        margin-bottom: 4px;
+    }
+    /* 移动端样式 */
+    .custom-card-phone{
+        border: none;
+    }
+    .custom-card-phone .custom-card-header{
+        border-bottom: none!important;
+    }
+    .custom-card-phone .custom-card-outlined{
+        border: none!important;
+    }
+    .custom-card-phone .custom-card-content{
+        padding: 0!important;
+    }
+    .custom-card-phone .custom-card-header{
+        padding: 0!important;
+    }
+    .custom-card-phone .custom-card-subtitle{
+        margin-bottom: 0.2!important;
+    }
+
+    /* 文件预览样式 */
+    .file-item {
+        border: 1px solid #e0e0e0;
+        border-radius: 0.5rem;
+        padding: 0.5rem 0.25rem;
+        margin-bottom: 0.5rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        box-sizing: border-box;
+    }
+    .file-item-content {
+        max-width: 100%;
+        aspect-ratio: 5/4;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 0.25rem auto;
+    }
+    .file-preview-image {
+        max-width: 100%;
+        max-height: 100%;
+        border-radius: 0.3rem;
+        border: 1px solid #eee;
+        object-fit: cover;
+        display: block;
+        margin: 0 auto;
+    }
+    .file-icon-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 3rem;
+        height: 3rem;
+        background: #f5f5f5;
+        border-radius: 0.3rem;
+    }
+    .file-name-preview {
+        font-size: 0.95rem;
+        color: #666;
+        text-align: center;
+        word-break: break-all;
+        margin-bottom: 0.25rem;
+        max-width: 90%;
+    }
+</style>

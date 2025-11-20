@@ -1,0 +1,148 @@
+@namespace FollowUp.Components.Modules.FollowUpManagement.Components
+@using FollowUp.Components.Modules.FollowUpManagement.Models
+
+@* 任务搜索面板：基础搜索 + 高级搜索 *@
+<MudCard>
+    <MudCardContent>
+        @* 基础搜索区域 *@
+        <div class="basic-search-section">
+            <MudGrid>
+                <MudItem xs="12" sm="3">
+                    <MudTextField @bind-Value="SearchCriteria.PatientName"
+                                  Label="患者姓名"
+                                  Variant="Variant.Outlined"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Person"
+                                  Clearable="true" />
+                </MudItem>
+                <MudItem xs="12" sm="3">
+                    <MudTextField @bind-Value="SearchCriteria.TaskName"
+                                  Label="任务名称"
+                                  Variant="Variant.Outlined"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Assignment"
+                                  Clearable="true" />
+                </MudItem>
+                <MudItem xs="12" sm="3">
+                    <MudSelect @bind-Value="SearchCriteria.EventStatus"
+                               Label="任务状态"
+                               Variant="Variant.Outlined"
+                               Clearable="true"
+                               Adornment="Adornment.Start"
+                               AdornmentIcon="@Icons.Material.Filled.Info">
+                        <MudSelectItem Value="@("")">全部</MudSelectItem>
+                        <MudSelectItem Value="@("未到推送时间")">未到推送时间</MudSelectItem>
+                        <MudSelectItem Value="@("患者未提交")">患者未提交</MudSelectItem>
+                        <MudSelectItem Value="@("待审核")">待审核</MudSelectItem>
+                        <MudSelectItem Value="@("已审核")">已审核</MudSelectItem>
+                        <MudSelectItem Value="@("已随访")">已随访</MudSelectItem>
+                        <MudSelectItem Value="@("已超时")">已超时</MudSelectItem>
+                        <MudSelectItem Value="@("已停止")">已停止</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" sm="3" Class="d-flex align-center justify-end">
+                    <MudButton Variant="Variant.Text"
+                               OnClick="HandleReset"
+                               Class="mr-2">
+                        重置
+                    </MudButton>
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               OnClick="HandleSearch">
+                        搜索
+                    </MudButton>
+                </MudItem>
+            </MudGrid>
+        </div>
+
+        @* 高级搜索区域（可展开） *@
+        <MudExpansionPanels Class="mt-3">
+            <MudExpansionPanel Text="高级搜索" IsInitiallyExpanded="false">
+                <div class="advanced-search-section">
+                    <MudGrid>
+                        <MudItem xs="12" sm="4">
+                            <MudTextField @bind-Value="SearchCriteria.CaseNumber"
+                                          Label="病案号"
+                                          Variant="Variant.Outlined"
+                                          Clearable="true" />
+                        </MudItem>
+                        <MudItem xs="12" sm="4">
+                            <MudTextField @bind-Value="SearchCriteria.PhoneNumber"
+                                          Label="手机号码"
+                                          Variant="Variant.Outlined"
+                                          Clearable="true" />
+                        </MudItem>
+                        <MudItem xs="12" sm="4">
+                            <MudTextField @bind-Value="SearchCriteria.IdNumber"
+                                          Label="身份证号"
+                                          Variant="Variant.Outlined"
+                                          Clearable="true" />
+                        </MudItem>
+
+                        @* 时间范围搜索 *@
+                        <MudItem xs="12" sm="6">
+                            <MudDateRangePicker @bind-DateRange="SearchCriteria.PushTimeRange"
+                                                Label="推送时间范围"
+                                                Variant="Variant.Outlined"
+                                                Clearable="true" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudDateRangePicker @bind-DateRange="SearchCriteria.InputTimeRange"
+                                                Label="填写时间范围"
+                                                Variant="Variant.Outlined"
+                                                Clearable="true" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudDateRangePicker @bind-DateRange="SearchCriteria.AuditTimeRange"
+                                                Label="审核时间范围"
+                                                Variant="Variant.Outlined"
+                                                Clearable="true" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudDateRangePicker @bind-DateRange="SearchCriteria.CreateTimeRange"
+                                                Label="创建时间范围"
+                                                Variant="Variant.Outlined"
+                                                Clearable="true" />
+                        </MudItem>
+                    </MudGrid>
+                </div>
+            </MudExpansionPanel>
+        </MudExpansionPanels>
+    </MudCardContent>
+</MudCard>
+
+@code {
+    [Parameter, EditorRequired]
+    public TaskSearchCriteria SearchCriteria { get; set; } = new();
+
+    [Parameter]
+    public EventCallback OnSearch { get; set; }
+
+    /// <summary>
+    /// 处理搜索
+    /// </summary>
+    private async Task HandleSearch()
+    {
+        await OnSearch.InvokeAsync();
+    }
+
+    /// <summary>
+    /// 重置搜索条件
+    /// </summary>
+    private async Task HandleReset()
+    {
+        SearchCriteria.PatientName = string.Empty;
+        SearchCriteria.TaskName = string.Empty;
+        SearchCriteria.EventStatus = string.Empty;
+        SearchCriteria.CaseNumber = string.Empty;
+        SearchCriteria.PhoneNumber = string.Empty;
+        SearchCriteria.IdNumber = string.Empty;
+        SearchCriteria.PushTimeRange = new MudBlazor.DateRange();
+        SearchCriteria.InputTimeRange = new MudBlazor.DateRange();
+        SearchCriteria.AuditTimeRange = new MudBlazor.DateRange();
+        SearchCriteria.CreateTimeRange = new MudBlazor.DateRange();
+
+        // 重置后立即触发搜索，刷新列表
+        await OnSearch.InvokeAsync();
+    }
+}

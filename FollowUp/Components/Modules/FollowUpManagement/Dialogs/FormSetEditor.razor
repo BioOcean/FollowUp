@@ -1,0 +1,63 @@
+﻿@namespace FollowUp.Components.Modules.FollowUpManagement.Dialogs
+@using Bio.FormSetLib.Components
+@using Bio.FormSetLib.Enums
+@inherits BasePage
+
+<MudDialog Class="formset-editor-dialog">
+    <TitleContent>
+        <MudText Typo="Typo.h6">编辑随访表单</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudContainer Class="editor-container">
+            @if (_loading)
+            {
+                <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-2" />
+                <MudText Align="Align.Center" Class="mt-4">加载中...</MudText>
+            }
+            else
+            {
+                <BioFormSetIndex @key="@PatientEventId.ToString()"
+                                 Patient_event_id="@PatientEventId.ToString()"
+                                 AdaptiveDeviceType="AdaptiveDeviceType.Phone"
+                                 ShowMask="false"
+                                 OnSubmit="HandleFormSubmitted" />
+            }
+        </MudContainer>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text" OnClick="Cancel">取消</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter]
+    public Guid PatientEventId { get; set; }
+
+    [Parameter]
+    public Guid FormSetId { get; set; }
+
+    private bool _loading = true;
+
+    protected override async Task OnPageInitializedAsync()
+    {
+        await base.OnPageInitializedAsync();
+        await Task.Delay(100);
+        _loading = false;
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+
+    private Task HandleFormSubmitted()
+    {
+        inj_loggerFactory.CreateLogger<FormSetEditor>().LogInformation("表单已保存");
+        inj_snackbar.Add("表单已保存", Severity.Success);
+        MudDialog.Close(MudDialogResult.Ok(true));
+        return Task.CompletedTask;
+    }
+}

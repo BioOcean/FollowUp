@@ -1,0 +1,282 @@
+@namespace FollowUp.Components.Modules.FollowUpManagement.Dialogs
+@using FollowUp.Components.Modules.FollowUpManagement.Models
+@using FollowUp.Components.Modules.FollowUpManagement.Services
+@inherits BasePage
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">添加随访任务</MudText>
+    </TitleContent>
+
+    <DialogContent>
+        <MudForm @ref="_form" Model="_model">
+            <MudGrid>
+                <!-- 患者选择 -->
+                <MudItem xs="12">
+                    <MudAutocomplete T="PatientSearchDto"
+                                     Label="患者姓名"
+                                     @bind-Value="_model.Patient"
+                                     SearchFunc="@SearchPatients"
+                                     ToStringFunc="@(p => p?.ToString() ?? string.Empty)"
+                                     Required="true"
+                                     RequiredError="请选择患者" />
+                </MudItem>
+
+                <!-- 随访类型 -->
+                <MudItem xs="12">
+                    <MudRadioGroup T="int" @bind-SelectedOption="_model.FollowupType" Required="true">
+                        <MudRadio T="int" Option="1" Color="Color.Primary">住院随访</MudRadio>
+                        <MudRadio T="int" Option="2" Color="Color.Primary">门诊随访</MudRadio>
+                    </MudRadioGroup>
+                </MudItem>
+
+                <!-- 住院信息 -->
+                @if (_model.FollowupType == 1)
+                {
+                    <MudItem xs="12" sm="6">
+                        <MudDatePicker Label="入院日期"
+                                       @bind-Date="_model.HospitalizedInDate"
+                                       Required="true" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudDatePicker Label="出院日期"
+                                       @bind-Date="_model.HospitalizedOutDate"
+                                       Required="true"
+                                       MinDate="_model.HospitalizedInDate" />
+                    </MudItem>
+                }
+
+                <!-- 门诊信息 -->
+                @if (_model.FollowupType == 2)
+                {
+                    <MudItem xs="12">
+                        <MudDatePicker Label="门诊日期"
+                                       @bind-Date="_model.OutpatientDate"
+                                       Required="true" />
+                    </MudItem>
+                }
+
+                <!-- 任务模板 -->
+                <MudItem xs="12">
+                    <MudSelect T="TaskTemplateDto"
+                               Label="任务模板"
+                               Value="_model.Template"
+                               ValueChanged="@((TaskTemplateDto value) => { _model.Template = value; CalculatePushTime(); })"
+                               ToStringFunc="@(t => t != null ? $"{t.Name} - {t.FormSetName}" : string.Empty)"
+                               Required="true"
+                               RequiredError="请选择任务模板">
+                        @foreach (var template in _templates)
+                        {
+                            <MudSelectItem Value="@template">
+                                @template.Name - @template.FormSetName
+                            </MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+
+                <!-- 审核医生 -->
+                <MudItem xs="12">
+                    <MudSelect T="AuditorDto"
+                               Label="审核医生"
+                               @bind-Value="_model.Auditor"
+                               ToStringFunc="@(a => a?.ToString() ?? string.Empty)"
+                               Required="true"
+                               RequiredError="请选择审核医生">
+                        @foreach (var auditor in _auditors)
+                        {
+                            <MudSelectItem Value="@auditor">
+                                @auditor.ToString()
+                            </MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+
+                <!-- 推送时间显示 -->
+                @if (_calculatedPushTime.HasValue)
+                {
+                    <MudItem xs="12">
+                        <MudTextField Label="推送时间"
+                                      Value="@_calculatedPushTime.Value.ToString("yyyy-MM-dd HH:mm")"
+                                      ReadOnly="true"
+                                      Variant="Variant.Filled" />
+                    </MudItem>
+                }
+            </MudGrid>
+        </MudForm>
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton OnClick="Cancel">取消</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Submit" Disabled="_isSubmitting">
+            @if (_isSubmitting)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+            }
+            else
+            {
+                <span>确定</span>
+            }
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter]
+    public Guid ProjectId { get; set; }
+
+    [Inject] private TaskCreationService _creationService { get; set; } = default!;
+
+    private MudForm _form = default!;
+    private AddTaskModel _model = new();
+    private List<TaskTemplateDto> _templates = new();
+    private List<AuditorDto> _auditors = new();
+    private DateTime? _calculatedPushTime;
+    private bool _isSubmitting;
+
+    protected override async Task OnPageInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        try
+        {
+            _templates = await _creationService.GetTaskTemplatesAsync(ProjectId);
+            _auditors = await _creationService.GetAvailableAuditorsAsync(ProjectId);
+        }
+        catch (Exception ex)
+        {
+            await HandleExceptionAsync(ex, "加载数据失败", "加载任务模板和审核医生列表");
+        }
+    }
+
+    private async Task<IEnumerable<PatientSearchDto>> SearchPatients(string keyword, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(keyword) || keyword.Length < 2)
+        {
+            return Enumerable.Empty<PatientSearchDto>();
+        }
+
+        try
+        {
+            return await _creationService.SearchPatientsAsync(keyword, ProjectId);
+        }
+        catch (Exception ex)
+        {
+            await HandleExceptionAsync(ex, "搜索患者失败", "搜索患者");
+            return Enumerable.Empty<PatientSearchDto>();
+        }
+    }
+
+    private void CalculatePushTime()
+    {
+        if (_model.Template == null)
+        {
+            _calculatedPushTime = null;
+            return;
+        }
+
+        DateTime baseDate;
+        if (_model.FollowupType == 1 && _model.HospitalizedOutDate.HasValue)
+        {
+            baseDate = _model.HospitalizedOutDate.Value;
+        }
+        else if (_model.FollowupType == 2 && _model.OutpatientDate.HasValue)
+        {
+            baseDate = _model.OutpatientDate.Value;
+        }
+        else
+        {
+            _calculatedPushTime = null;
+            return;
+        }
+
+        _calculatedPushTime = _creationService.CalculatePushTime(
+            baseDate,
+            _model.Template.OffsetDays,
+            _model.Template.OffsetMonths,
+            _model.Template.OffsetYears);
+    }
+
+    private async Task Submit()
+    {
+        await _form.Validate();
+        if (!_form.IsValid)
+        {
+            return;
+        }
+
+        if (_model.Patient == null || _model.Template == null || _model.Auditor == null)
+        {
+            await ShowErrorAsync("请完整填写表单");
+            return;
+        }
+
+        _isSubmitting = true;
+        try
+        {
+            Guid taskId;
+
+            if (_model.FollowupType == 1)
+            {
+                if (!_model.HospitalizedInDate.HasValue || !_model.HospitalizedOutDate.HasValue)
+                {
+                    await ShowErrorAsync("请选择入院和出院日期");
+                    return;
+                }
+
+                taskId = await _creationService.CreateHospitalizedFollowupTaskAsync(
+                    _model.Patient.Id,
+                    _model.Template.Id,
+                    _model.Auditor.Id,
+                    _model.HospitalizedInDate.Value,
+                    _model.HospitalizedOutDate.Value);
+            }
+            else
+            {
+                if (!_model.OutpatientDate.HasValue)
+                {
+                    await ShowErrorAsync("请选择门诊日期");
+                    return;
+                }
+
+                taskId = await _creationService.CreateOutpatientFollowupTaskAsync(
+                    _model.Patient.Id,
+                    _model.Template.Id,
+                    _model.Auditor.Id,
+                    _model.OutpatientDate.Value);
+            }
+
+            await ShowSuccessAsync("任务创建成功");
+            MudDialog.Close(MudBlazor.DialogResult.Ok(taskId));
+        }
+        catch (Exception ex)
+        {
+            await HandleExceptionAsync(ex, "创建任务失败", "创建随访任务");
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+
+    private class AddTaskModel
+    {
+        public PatientSearchDto? Patient { get; set; }
+        public int FollowupType { get; set; } = 1;
+        public DateTime? HospitalizedInDate { get; set; }
+        public DateTime? HospitalizedOutDate { get; set; }
+        public DateTime? OutpatientDate { get; set; }
+        public TaskTemplateDto? Template { get; set; }
+        public AuditorDto? Auditor { get; set; }
+    }
+}

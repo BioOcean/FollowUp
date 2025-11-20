@@ -1,0 +1,880 @@
+@page "/followupTaskManager/{Layout?}"
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@inherits BasePage
+@namespace FollowUp.Components.Modules.FollowUpManagement.Pages
+
+@* 任务管理器主页面 *@
+<div class="task-manager-container">
+    @* 页面头部：数据范围 *@
+    <div class="task-manager-header">
+        <div class="task-manager-title">
+            <span style="font-weight:700">数据范围：</span>
+            <span>@_projectName</span>
+        </div>
+        @* 可选：添加数据范围切换按钮（仅组长和管理员显示） *@
+        @if (_isGroupLeader || _isAdminMode)
+        {
+            <div class="task-manager-actions">
+                <MudChipSet T="string" @bind-SelectedValue="_currentDataRange" Mandatory="true" Filter="true">
+                    <MudChip T="string"
+                             Value="@("my")"
+                             Color="Color.Primary"
+                             Default="true"
+                             OnClick="@(() => HandleRangeChange("my"))">
+                        我的任务
+                    </MudChip>
+                    @if (_isGroupLeader || _isAdminMode)
+                    {
+                        <MudChip T="string"
+                                 Value="@("group")"
+                                 Color="Color.Primary"
+                                 OnClick="@(() => HandleRangeChange("group"))">
+                            我组任务
+                        </MudChip>
+                    }
+                    @if (_isAdminMode)
+                    {
+                        <MudChip T="string"
+                                 Value="@("all")"
+                                 Color="Color.Primary"
+                                 OnClick="@(() => HandleRangeChange("all"))">
+                            全部任务
+                        </MudChip>
+                    }
+                </MudChipSet>
+            </div>
+        }
+    </div>
+
+    @* 统计卡片区域 *@
+    <div class="statistics-section mb-4 mt-5">
+        <TaskStatisticsCards Statistics="_statistics"
+                            IsPendingReviewLayout="@IsPendingReviewLayout"
+                            IsAllLayout="@IsAllLayout"
+                            SelectedCard="@_selectedStatCard"
+                            OnCardClick="HandleStatCardClick" />
+    </div>
+
+    @* 搜索面板（仅 ALL 布局显示） *@
+    @if (IsAllLayout)
+    {
+        <div class="search-section mb-4">
+            <TaskManager_SearchPanel SearchCriteria="_searchCriteria" OnSearch="HandleSearch" />
+        </div>
+    }
+
+    @* 任务表格 *@
+    <MudCard>
+        <MudCardContent>
+            <MudTable @ref="_table"
+                      T="TaskListItemDto"
+                      ServerData="ServerReload"
+                      Dense="true"
+                      Hover="true"
+                      Loading="@_loading"
+                      LoadingProgressColor="Color.Primary"
+                      MultiSelection="@_multiSelection"
+                      RowCheckBoxVisible="@_multiSelection"
+                      SelectedItemsChanged="OnSelectedItemsChanged">
+                <ToolBarContent>
+                    <MudText Typo="Typo.h6">任务列表</MudText>
+                    <MudSpacer />
+                    @if (!_multiSelection)
+                    {
+                        <MudButton Color="Color.Secondary"
+                                   Variant="Variant.Outlined"
+                                   StartIcon="@Icons.Material.Filled.PlaylistAdd"
+                                   OnClick="@HandleAddVisitTaskFromToolbar"
+                                   Class="mr-2">
+                            添加随访任务
+                        </MudButton>
+                    }
+                    @if (_isAdminMode || _isGroupLeader)
+                    {
+                        <MudButton Color="Color.Primary"
+                                   Variant="Variant.Outlined"
+                                   StartIcon="@Icons.Material.Filled.People"
+                                   OnClick="@(() => EnterSelectionMode(false))"
+                                   Class="mr-2">
+                            批量更换审核人
+                        </MudButton>
+                        <MudButton Color="Color.Error"
+                                   Variant="Variant.Outlined"
+                                   StartIcon="@Icons.Material.Filled.HighlightOff"
+                                   OnClick="@(() => EnterSelectionMode(true))">
+                            批量取消任务
+                        </MudButton>
+                    }
+                    @* 刷新按钮 *@
+                    <MudIconButton Icon="@Icons.Material.Filled.Refresh"
+                                   Color="Color.Primary"
+                                   OnClick="@(() => _table?.ReloadServerData())"
+                                   Title="刷新" />
+                </ToolBarContent>
+                <HeaderContent>
+                    <MudTh>序号</MudTh>
+                    <MudTh>患者姓名</MudTh>
+                    <MudTh>病案号</MudTh>
+                    <MudTh>联系电话</MudTh>
+                    <MudTh>门诊时间</MudTh>
+                    <MudTh>入院时间</MudTh>
+                    <MudTh>出院时间</MudTh>
+                    <MudTh>随访类型</MudTh>
+                    <MudTh>随访任务</MudTh>
+                    <MudTh>审核人</MudTh>
+                    <MudTh>访视期</MudTh>
+                    <MudTh>实际随访时间</MudTh>
+                    <MudTh>随访状态</MudTh>
+                    <MudTh>操作</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="序号">@context.Index</MudTd>
+                    <MudTd DataLabel="患者姓名">@context.PatientName</MudTd>
+                    <MudTd DataLabel="病案号">@context.CaseNumber</MudTd>
+                    <MudTd DataLabel="联系电话">@context.PhoneNumber</MudTd>
+                    <MudTd DataLabel="门诊时间">@(context.OutpatientDate?.ToString("yyyy-MM-dd") ?? "-")</MudTd>
+                    <MudTd DataLabel="入院时间">@(context.HospitalizedInDate?.ToString("yyyy-MM-dd") ?? "-")</MudTd>
+                    <MudTd DataLabel="出院时间">@(context.HospitalizedOutDate?.ToString("yyyy-MM-dd") ?? "-")</MudTd>
+                    <MudTd DataLabel="随访类型">@context.FollowupTypeName</MudTd>
+                    <MudTd DataLabel="随访任务">@(string.IsNullOrEmpty(context.TaskName) ? "-" : context.TaskName)</MudTd>
+                    <MudTd DataLabel="审核人">@context.AuditDoctorName</MudTd>
+                    <MudTd DataLabel="访视期">@context.FollowupPeriod</MudTd>
+                    <MudTd DataLabel="实际随访时间">@(context.InputTime?.ToString("yyyy-MM-dd") ?? "-")</MudTd>
+                    <MudTd DataLabel="随访状态">
+                        <MudChip T="string"
+                                 Size="Size.Small"
+                                 Color="@GetStatusColor(context.EventStatus)">
+                            @context.EventStatus
+                        </MudChip>
+                    </MudTd>
+                    <MudTd DataLabel="操作">
+                        <div class="d-inline-flex">
+                            @if (IsPendingReviewLayout)
+                            {
+                                @* PendingReview布局：只显示审核按钮 *@
+                                @if ((_isFollowupDoctorMode || _isGroupLeader) && context.EventStatus == "待审核" && context.AuditDoctorId == _currentUserId)
+                                {
+                                    <MudButton Variant="Variant.Text"
+                                              Class="pa-0"
+                                              Style="text-decoration: underline; min-width: auto; font-weight: normal; text-transform: none;"
+                                              Color="Color.Warning"
+                                              OnClick="@(() => HandleAudit(context.Id))">
+                                        审核
+                                    </MudButton>
+                                }
+                            }
+                            else
+                            {
+                                @* ALL布局：显示所有操作按钮 *@
+                                <MudButton Variant="Variant.Text"
+                                          Class="pa-0 mr-2"
+                                          Style="text-decoration: underline; min-width: auto; font-weight: normal; text-transform: none;"
+                                          Color="Color.Primary"
+                                          OnClick="@(() => HandleViewDetail(context.Id))">
+                                    查看
+                                </MudButton>
+
+                                @if ((_isAdminMode || _isGroupLeader) && context.EventStatus != "已随访")
+                                {
+                                    <MudButton Variant="Variant.Text"
+                                              Class="pa-0 mr-2"
+                                              Style="text-decoration: underline; min-width: auto; font-weight: normal; text-transform: none;"
+                                              Color="Color.Primary"
+                                              OnClick="@(() => HandleChangeAuditor(context.Id))">
+                                        更换审核人
+                                    </MudButton>
+                                }
+
+                                @if ((_isFollowupDoctorMode || _isGroupLeader) &&
+                                     (context.EventStatus == "患者未提交" || context.EventStatus == "已超时" || context.EventStatus == "待审核") &&
+                                     context.AuditDoctorId == _currentUserId)
+                                {
+                                    <MudButton Variant="Variant.Text"
+                                              Class="pa-0"
+                                              Style="text-decoration: underline; min-width: auto; font-weight: normal; text-transform: none;"
+                                              Color="Color.Warning"
+                                              OnClick="@(() => HandleAudit(context.Id))">
+                                        审核
+                                    </MudButton>
+                                }
+                            }
+                        </div>
+                    </MudTd>
+                </RowTemplate>
+                <NoRecordsContent>
+                    <EmptyDataView Message="暂无任务数据" />
+                </NoRecordsContent>
+                <LoadingContent>
+                    <LoadingView Message="正在加载任务列表..." />
+                </LoadingContent>
+                <PagerContent>
+                    <MudTablePager PageSizeOptions="new int[] { 10, 20, 50, 100 }" />
+                </PagerContent>
+            </MudTable>
+        </MudCardContent>
+    </MudCard>
+
+    @if (_multiSelection)
+    {
+        <MudPaper Class="task-manager-footer" Elevation="1">
+            <MudStack Direction="Row" Spacing="8" AlignItems="AlignItems.Center">
+                @if (_isCancelMode)
+                {
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Error"
+                               Disabled="@(!_selectedTaskIds.Any())"
+                               OnClick="HandleBatchCancel">
+                        取消所选任务
+                    </MudButton>
+                }
+                else
+                {
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Primary"
+                               Disabled="@(!_selectedTaskIds.Any())"
+                               OnClick="HandleBatchChangeAuditor">
+                        更换所选审核人
+                    </MudButton>
+                }
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Default"
+                           OnClick="ExitSelectionMode">
+                    返回
+                </MudButton>
+            </MudStack>
+        </MudPaper>
+    }
+</div>
+
+@code {
+    // 布局参数
+    [Parameter]
+    public string? Layout { get; set; }
+
+    // 布局模式判断
+    private bool IsAllLayout => string.IsNullOrEmpty(Layout) || Layout.Equals("ALL", StringComparison.OrdinalIgnoreCase);
+    private bool IsPendingReviewLayout => Layout?.Equals("PendingReview", StringComparison.OrdinalIgnoreCase) == true;
+
+    // 注入服务
+    [Inject] private TaskQueryService _queryService { get; set; } = default!;
+    [Inject] private TaskStatisticsService _statisticsService { get; set; } = default!;
+    [Inject] private TaskAuditService _auditService { get; set; } = default!;
+    [Inject] private NavigationManager _navigationManager { get; set; } = default!;
+    [Inject] private IDialogService _dialogService { get; set; } = default!;
+
+    // Logger
+    private ILogger<TaskManager> inj_logger => inj_loggerFactory.CreateLogger<TaskManager>();
+
+    // 表格引用
+    private MudTable<TaskListItemDto>? _table;
+    private bool _loading = false;
+    private bool _multiSelection;
+    private bool _isCancelMode;
+    private HashSet<Guid> _selectedTaskIds = new();
+
+    // 数据模型
+    private TaskSearchCriteria _searchCriteria = new TaskSearchCriteria();
+    private TaskStatisticsDto _statistics = new TaskStatisticsDto();
+
+    // 权限相关
+    private Guid _currentUserId = Guid.Empty;
+    private Guid _currentProjectId = Guid.Empty;
+    private string _projectName = string.Empty; // 项目名称
+    private bool _isAdminMode = false;
+    private bool _isGroupLeader = false;
+    private bool _isFollowupDoctorMode = false; // 是否为随访医生模式
+    private List<Guid> _managedNurseIds = new List<Guid>();
+
+    // 数据范围选择
+    private string _currentDataRange = "my"; // my, group, all
+
+    // 统计卡片选中状态
+    private string _selectedStatCard = string.Empty;
+
+    // 上一次的布局参数（用于检测布局变化）
+    private string? _previousLayout = null;
+    private bool _shouldTriggerInitialLoad = false;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+
+        // 检测布局是否发生变化
+        if (_previousLayout != Layout)
+        {
+            inj_logger.LogInformation("布局参数变化：{PreviousLayout} -> {CurrentLayout}", _previousLayout ?? "null", Layout ?? "ALL");
+            _previousLayout = Layout;
+
+            // 如果不是首次加载（_currentUserId 已设置），需要重新初始化搜索条件
+            if (_currentUserId != Guid.Empty)
+            {
+                InitializeSearchCriteria();
+                await _table?.ReloadServerData()!;
+                await LoadStatistics();
+                StateHasChanged();
+            }
+        }
+    }
+
+    protected override async Task OnPageInitializedAsync()
+    {
+        try
+        {
+            inj_logger.LogInformation("任务管理器页面初始化开始，布局：{Layout}", Layout ?? "ALL");
+            _previousLayout = Layout;
+
+            // 获取当前用户信息
+            await LoadUserContextAsync();
+
+            // 初始化搜索条件（必须在 LoadUserContextAsync 之后）
+            InitializeSearchCriteria();
+
+            // 加载统计数据
+            await LoadStatistics();
+            _shouldTriggerInitialLoad = true;
+            StateHasChanged();
+
+            inj_logger.LogInformation("任务管理器页面初始化成功，布局：{Layout}，用户ID：{UserId}，数据范围：{DataRange}，状态筛选：{Status}",
+                Layout ?? "ALL", _currentUserId, _searchCriteria.DataRangeMode, _searchCriteria.EventStatus ?? "全部");
+        }
+        catch (Exception ex)
+        {
+            await HandleExceptionAsync(ex, "页面初始化失败", "初始化任务管理器");
+        }
+    }
+
+    /// <summary>
+    /// 加载用户上下文信息
+    /// </summary>
+    private async Task LoadUserContextAsync()
+    {
+        // 获取用户ID
+        var user = inj_httpContextAccessor.HttpContext?.User;
+        if (user?.Identity?.IsAuthenticated == true)
+        {
+            var userIdClaim = user.FindFirst("userId")?.Value;
+            if (!string.IsNullOrEmpty(userIdClaim) && Guid.TryParse(userIdClaim, out var userId))
+            {
+                _currentUserId = userId;
+            }
+        }
+
+        // 获取项目ID和项目名称
+        var project = await inj_userContextService.GetProjectAsync();
+        if (project != null)
+        {
+            _currentProjectId = project.id;
+            _projectName = project.display_name ?? project.name;
+        }
+
+        // 获取权限信息
+        _isAdminMode = inj_authorizationService.IsProjectAdmin() || inj_authorizationService.IsSystemAdmin();
+        _isGroupLeader = inj_authorizationService.HasRole("组长") || inj_authorizationService.HasRole("随访组长");
+        _isFollowupDoctorMode = inj_authorizationService.HasRole("随访医生") || inj_authorizationService.HasRole("随访护士");
+        _currentDataRange = DetermineDefaultDataRange();
+
+        // 如果是组长，查询管辖的护士列表
+        if (_isGroupLeader)
+        {
+            await using var context = await ContextFactory.CreateDbContextAsync();
+            _managedNurseIds = await context.Set<Dictionary<string, object>>("followup_doctor_group_map")
+                .AsNoTracking()
+                .Where(m => EF.Property<Guid>(m, "followup_doctor_id") == _currentUserId)
+                .Select(m => EF.Property<Guid>(m, "followup_nurse_id"))
+                .ToListAsync();
+
+            inj_logger.LogInformation("组长模式：管辖护士数量 {Count}", _managedNurseIds.Count);
+        }
+
+        inj_logger.LogInformation(
+            "用户上下文加载完成：UserId={UserId}, ProjectId={ProjectId}, IsAdmin={IsAdmin}, IsGroupLeader={IsGroupLeader}, IsFollowupDoctor={IsFollowupDoctor}",
+                _currentUserId, _currentProjectId, _isAdminMode, _isGroupLeader, _isFollowupDoctorMode);
+    }
+
+    /// <summary>
+    /// 处理数据范围切换
+    /// </summary>
+    private async Task HandleRangeChange(string range)
+    {
+        inj_logger.LogInformation("数据范围切换：{Range}", range);
+        _currentDataRange = range;
+
+        // 更新搜索条件中的权限模式
+        switch (range)
+        {
+            case "my":
+                _searchCriteria.DataRangeMode = "my";
+                break;
+            case "group":
+                _searchCriteria.DataRangeMode = "group";
+                break;
+            case "all":
+                _searchCriteria.DataRangeMode = "all";
+                break;
+        }
+
+        // 刷新表格和统计数据
+        await _table!.ReloadServerData();
+        await LoadStatistics();
+    }
+
+    /// <summary>
+    /// 初始化搜索条件
+    /// </summary>
+    private void InitializeSearchCriteria()
+    {
+        // 保存权限相关的参数（这些参数不应被重置）
+        var projectId = _searchCriteria.ProjectId != Guid.Empty ? _searchCriteria.ProjectId : _currentProjectId;
+        var currentUserId = _searchCriteria.CurrentUserId != Guid.Empty ? _searchCriteria.CurrentUserId : _currentUserId;
+        var isAdminMode = _searchCriteria.IsAdminMode || _isAdminMode;
+        var isGroupLeaderMode = _searchCriteria.IsGroupLeaderMode || _isGroupLeader;
+        var managedNurseIds = _searchCriteria.ManagedNurseIds?.Any() == true ? _searchCriteria.ManagedNurseIds : _managedNurseIds;
+        var dataRangeMode = string.IsNullOrEmpty(_currentDataRange) ? "my" : _currentDataRange;
+
+        // 完全重新创建搜索条件对象，确保清空所有筛选字段
+        _searchCriteria = new TaskSearchCriteria
+        {
+            // 设置权限参数
+            ProjectId = projectId,
+            CurrentUserId = currentUserId,
+            IsAdminMode = isAdminMode,
+            IsGroupLeaderMode = isGroupLeaderMode,
+            ManagedNurseIds = managedNurseIds,
+            DataRangeMode = dataRangeMode,
+
+            // 设置分页参数
+            PageSize = 10,
+            PageIndex = 0,
+
+            // EventStatus 根据布局决定
+            EventStatus = IsPendingReviewLayout ? "待审核" : string.Empty
+        };
+
+        inj_logger.LogInformation("初始化搜索条件完成 - 布局：{Layout}，状态筛选：{Status}，数据范围：{DataRange}",
+            Layout ?? "ALL",
+            _searchCriteria.EventStatus == string.Empty ? "全部" : _searchCriteria.EventStatus,
+            _searchCriteria.DataRangeMode);
+    }
+
+    /// <summary>
+    /// 服务端分页数据加载
+    /// </summary>
+    private async Task<TableData<TaskListItemDto>> ServerReload(TableState state, CancellationToken cancellationToken)
+    {
+        _loading = true;
+
+        try
+        {
+            // 更新分页参数
+            _searchCriteria.PageIndex = state.Page;
+            _searchCriteria.PageSize = state.PageSize > 0 ? state.PageSize : 10; // 确保 PageSize 有效
+            _searchCriteria.SortBy = state.SortLabel ?? "create_time";
+            _searchCriteria.IsAscending = state.SortDirection == SortDirection.Ascending;
+
+            // 查询数据
+            var result = await _queryService.QueryTasksAsync(_searchCriteria);
+
+            inj_logger.LogInformation("加载任务列表：页码 {Page}，每页 {PageSize}，总数 {Total}，状态筛选 {Status}",
+                state.Page, state.PageSize, result.TotalCount, _searchCriteria.EventStatus ?? "全部");
+
+            return new TableData<TaskListItemDto>
+            {
+                Items = result.Items,
+                TotalItems = result.TotalCount
+            };
+        }
+        catch (Exception ex)
+        {
+            inj_logger.LogError(ex, "加载任务列表失败");
+            await HandleExceptionAsync(ex, "加载任务列表失败", "查询任务数据");
+            return new TableData<TaskListItemDto> { Items = new List<TaskListItemDto>(), TotalItems = 0 };
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    /// <summary>
+    /// 加载统计数据
+    /// </summary>
+    private async Task LoadStatistics()
+    {
+        try
+        {
+            _statistics = await _statisticsService.CalculateStatisticsAsync(
+                _currentProjectId,
+                _currentUserId,
+                _isAdminMode,
+                _isGroupLeader,
+                _managedNurseIds,
+                _currentDataRange
+            );
+
+            inj_logger.LogInformation("统计数据加载成功：待审核 {Pending}，已超时 {Overdue}，患者未提交 {NotSubmitted}",
+                _statistics.PendingReviewCount, _statistics.OverdueCount, _statistics.PatientNotSubmittedCount);
+        }
+        catch (Exception ex)
+        {
+            inj_logger.LogError(ex, "加载统计数据失败");
+            await HandleExceptionAsync(ex, "加载统计数据失败", "统计任务数据");
+        }
+    }
+
+    /// <summary>
+    /// 处理统计卡片点击
+    /// </summary>
+    private async Task HandleStatCardClick(string cardType)
+    {
+        // PendingReview布局下，卡片不可点击，直接返回
+        if (IsPendingReviewLayout)
+        {
+            return;
+        }
+
+        inj_logger.LogInformation("统计卡片点击：{CardType}", cardType);
+
+        // 设置选中的卡片
+        _selectedStatCard = cardType;
+
+        // 根据卡片类型更新搜索条件（匹配旧系统的卡片名称）
+        switch (cardType)
+        {
+            case "随访任务":
+                // 总任务：清除所有筛选
+                _searchCriteria.EventStatus = string.Empty;
+                _searchCriteria.CreateTimeRange = new DateRange();
+                break;
+
+            case "已随访":
+                _searchCriteria.EventStatus = "已随访";
+                _searchCriteria.CreateTimeRange = new DateRange();
+                break;
+
+            case "待审核":
+                _searchCriteria.EventStatus = "待审核";
+                _searchCriteria.CreateTimeRange = new DateRange();
+                break;
+
+            case "患者未提交":
+                _searchCriteria.EventStatus = "患者未提交";
+                _searchCriteria.CreateTimeRange = new DateRange();
+                break;
+
+            case "未到推送时间":
+                _searchCriteria.EventStatus = "未到推送时间";
+                _searchCriteria.CreateTimeRange = new DateRange();
+                break;
+
+            case "近一周":
+                // 本周：筛选创建时间在本周内的任务
+                var weekStart = GetCurrentWeekStart();
+                _searchCriteria.CreateTimeRange = new DateRange(weekStart, DateTime.Today.AddDays(7));
+                _searchCriteria.EventStatus = string.Empty; // 清除状态筛选
+                break;
+
+            case "近一月":
+                // 本月：筛选创建时间在本月内的任务
+                var monthStart = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+                _searchCriteria.CreateTimeRange = new DateRange(monthStart, monthStart.AddMonths(1));
+                _searchCriteria.EventStatus = string.Empty; // 清除状态筛选
+                break;
+
+            default:
+                inj_logger.LogWarning("未知的统计卡片类型：{CardType}", cardType);
+                break;
+        }
+
+        // 刷新表格
+        await _table!.ReloadServerData();
+    }
+
+    /// <summary>
+    /// 处理搜索
+    /// </summary>
+    private async Task HandleSearch()
+    {
+        inj_logger.LogInformation("执行搜索：患者姓名={PatientName}，任务名称={TaskName}",
+            _searchCriteria.PatientName, _searchCriteria.TaskName);
+
+        await _table!.ReloadServerData();
+    }
+
+    /// <summary>
+    /// 处理审核
+    /// </summary>
+    private async Task HandleAudit(Guid taskId)
+    {
+        inj_logger.LogInformation("审核任务：{TaskId}", taskId);
+
+        var parameters = new DialogParameters<Dialogs.TaskAuditDialog>
+        {
+            { x => x.TaskId, taskId }
+        };
+
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true
+        };
+
+        var dialog = await _dialogService.ShowAsync<Dialogs.TaskAuditDialog>("任务审核", parameters, options);
+        var result = await dialog.Result;
+
+        // 如果审核成功，刷新表格和统计数据
+        if (result != null && !result.Canceled)
+        {
+            await _table!.ReloadServerData();
+            await LoadStatistics();
+            StateHasChanged();
+        }
+    }
+
+    /// <summary>
+    /// 查看任务详情
+    /// </summary>
+    private async Task HandleViewDetail(Guid taskId)
+    {
+        inj_logger.LogInformation("查看任务详情：{TaskId}", taskId);
+
+        var parameters = new DialogParameters<Dialogs.TaskDetailDialog>
+        {
+            { x => x.TaskId, taskId }
+        };
+
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            MaxWidth = MaxWidth.ExtraLarge,
+            FullWidth = true
+        };
+
+        var dialog = await _dialogService.ShowAsync<Dialogs.TaskDetailDialog>("任务详情", parameters, options);
+        var result = await dialog.Result;
+
+        if (result != null && !result.Canceled && result.Data is bool refresh && refresh)
+        {
+            await _table!.ReloadServerData();
+            await LoadStatistics();
+            StateHasChanged();
+        }
+    }
+
+    /// <summary>
+    /// 更换审核人
+    /// </summary>
+    private async Task HandleChangeAuditor(Guid taskId)
+    {
+        inj_logger.LogInformation("更换审核人：{TaskId}", taskId);
+
+        var parameters = new DialogParameters<Dialogs.ChangeAuditorDialog>
+        {
+            { x => x.TaskId, taskId }
+        };
+
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true
+        };
+
+        var dialog = await _dialogService.ShowAsync<Dialogs.ChangeAuditorDialog>("更换审核人", parameters, options);
+        var result = await dialog.Result;
+
+        // 如果更换成功，刷新表格
+        if (result != null && !result.Canceled)
+        {
+            await _table!.ReloadServerData();
+            StateHasChanged();
+        }
+    }
+
+    /// <summary>
+    /// 获取状态颜色
+    /// </summary>
+    private Color GetStatusColor(string status)
+    {
+        return status switch
+        {
+            "待审核" => Color.Warning,
+            "已超时" => Color.Error,
+            "患者未提交" => Color.Info,
+            "已审核" => Color.Success,
+            "已取消" => Color.Default,
+            _ => Color.Default
+        };
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+
+        if (_shouldTriggerInitialLoad && _table != null)
+        {
+            _shouldTriggerInitialLoad = false;
+            await _table.ReloadServerData();
+        }
+    }
+
+    private string DetermineDefaultDataRange()
+    {
+        if (_isAdminMode)
+        {
+            return "all";
+        }
+
+        if (_isGroupLeader)
+        {
+            return "group";
+        }
+
+        return "my";
+    }
+
+    /// <summary>
+    /// 获取当前周起始日期（周一）
+    /// </summary>
+    private static DateTime GetCurrentWeekStart()
+    {
+        var today = DateTime.Today;
+        var offset = today.DayOfWeek == DayOfWeek.Sunday ? -6 : (int)DayOfWeek.Monday - (int)today.DayOfWeek;
+        return today.AddDays(offset);
+    }
+
+    private void OnSelectedItemsChanged(HashSet<TaskListItemDto> items)
+    {
+        _selectedTaskIds = items.Select(x => x.Id).ToHashSet();
+    }
+
+    private async Task HandleBatchChangeAuditor()
+    {
+        if (!EnsureMultiSelectionEnabled(false))
+        {
+            return;
+        }
+
+        if (!_selectedTaskIds.Any())
+        {
+            inj_snackbar.Add("请先选择任务", Severity.Info);
+            return;
+        }
+
+        var parameters = new DialogParameters<Dialogs.ChangeAuditorDialog>
+        {
+            { x => x.TaskIds, _selectedTaskIds.ToList() }
+        };
+
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true
+        };
+
+        var dialog = await _dialogService.ShowAsync<Dialogs.ChangeAuditorDialog>("更换审核人", parameters, options);
+        var result = await dialog.Result;
+
+        if (result != null && !result.Canceled)
+        {
+            await _table!.ReloadServerData();
+            await LoadStatistics();
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleBatchCancel()
+    {
+        if (!EnsureMultiSelectionEnabled(true))
+        {
+            return;
+        }
+
+        if (!_selectedTaskIds.Any())
+        {
+            inj_snackbar.Add("请先选择任务", Severity.Info);
+            return;
+        }
+
+        var confirm = await _dialogService.ShowMessageBox(
+            "确认",
+            $"确定取消选中的 {_selectedTaskIds.Count} 个任务？",
+            yesText: "确定",
+            cancelText: "取消");
+
+        if (confirm != true)
+        {
+            return;
+        }
+
+        var success = await _auditService.BatchCancelTasksAsync(_selectedTaskIds.ToList());
+        if (success)
+        {
+            inj_snackbar.Add("批量取消成功", Severity.Success);
+            await _table!.ReloadServerData();
+            await LoadStatistics();
+            StateHasChanged();
+        }
+        else
+        {
+            inj_snackbar.Add("批量取消失败", Severity.Error);
+        }
+    }
+
+    private async Task HandleAddVisitTask()
+    {
+        var parameters = new DialogParameters<Dialogs.AddVisitTaskDialog>
+        {
+            { x => x.ProjectId, _currentProjectId },
+            { x => x.SelectedPatientIds, _multiSelection ? _selectedTaskIds.ToList() : new List<Guid>() }
+        };
+
+        var dialog = await _dialogService.ShowAsync<Dialogs.AddVisitTaskDialog>(
+            "添加随访任务",
+            parameters,
+            new DialogOptions { MaxWidth = MaxWidth.Large, FullWidth = true });
+
+        var result = await dialog.Result;
+        if (result != null && !result.Canceled)
+        {
+            await _table!.ReloadServerData();
+            await LoadStatistics();
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleAddVisitTaskFromToolbar()
+    {
+        await HandleAddVisitTask();
+    }
+
+    private bool EnsureMultiSelectionEnabled(bool cancelMode)
+    {
+        if (!_multiSelection)
+        {
+            EnterSelectionMode(cancelMode);
+            inj_snackbar.Add("已开启多选，请勾选任务后再操作", Severity.Info);
+            return false;
+        }
+
+        _isCancelMode = cancelMode;
+        return true;
+    }
+
+    private void EnterSelectionMode(bool cancelMode)
+    {
+        _multiSelection = true;
+        _isCancelMode = cancelMode;
+        _selectedTaskIds.Clear();
+        StateHasChanged();
+    }
+
+    private void ExitSelectionMode()
+    {
+        _multiSelection = false;
+        _isCancelMode = false;
+        _selectedTaskIds.Clear();
+        StateHasChanged();
+    }
+}

@@ -1,0 +1,110 @@
+/* 任务管理器主页面样式 */
+.task-manager-container {
+    padding: 16px;
+    background-color: var(--bg-primary, #F5F7FA);
+    min-height: calc(100vh - 64px);
+}
+
+/* 页面头部样式（复用 HospitalMain 模式） */
+.task-manager-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.task-manager-title {
+    font-size: 1rem;
+    color: #333;
+}
+
+.task-manager-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+/* 统计卡片样式 */
+.stat-card {
+    background-color: var(--bg-secondary, #FFFFFF);
+    border-radius: var(--radius-md, 6px);
+    box-shadow: var(--shadow-sm, 0 2px 4px rgba(0, 0, 0, 0.1));
+    transition: all var(--transition-base, 300ms) var(--ease-out, cubic-bezier(0.4, 0, 0.2, 1));
+    cursor: pointer;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover, 0 8px 16px rgba(10, 107, 88, 0.15));
+}
+
+.stat-card.clickable {
+    cursor: pointer;
+}
+
+/* 突出显示的统计卡片（总任务数） */
+.stat-card-highlight {
+    border: 2px solid var(--mud-palette-success, #4caf50);
+    box-shadow: 0 4px 8px rgba(76, 175, 80, 0.2);
+}
+
+.stat-card-highlight:hover {
+    box-shadow: 0 8px 16px rgba(76, 175, 80, 0.3);
+}
+
+/* 搜索面板样式 */
+.search-section {
+    margin-bottom: 16px;
+}
+
+.basic-search-section {
+    margin-bottom: 8px;
+}
+
+.advanced-search-section {
+    padding-top: 8px;
+}
+
+/* 表格操作按钮样式 */
+.mud-table-toolbar {
+    padding: 12px 16px;
+}
+
+/* 修复 hover 跳动问题：确保表格行高度一致 */
+::deep .mud-table-row {
+    transition: background-color 0.2s ease;
+}
+
+::deep .mud-table-row:hover {
+    background-color: rgba(0, 0, 0, 0.04);
+    transform: none; /* 禁止 transform 变化 */
+}
+
+/* 确保表格单元格不因内容变化而改变高度 */
+::deep .mud-table-cell {
+    vertical-align: middle;
+    padding: 8px 16px;
+}
+
+/* 确保按钮 hover 不改变父元素尺寸 */
+::deep .mud-button-text:hover {
+    background-color: transparent;
+}
+
+/* 任务管理器 - 添加任务按钮（主题绿） */
+.task-add-button {
+    background: linear-gradient(120deg, var(--primary-color, #0A6B58), var(--primary-light, #18B797));
+    color: #fff;
+    font-weight: 600;
+    border-radius: 6px;
+    padding: 0 20px;
+    text-transform: none;
+    box-shadow: 0 6px 14px rgba(10, 107, 88, 0.28);
+}
+
+.task-add-button:hover,
+.task-add-button:focus {
+    background: var(--primary-color, #0A6B58);
+    color: #fff;
+    box-shadow: 0 8px 18px rgba(10, 107, 88, 0.32);
+}
