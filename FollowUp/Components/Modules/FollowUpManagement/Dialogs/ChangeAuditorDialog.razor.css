@@ -1,37 +1,22 @@
 /* ====================================
-   AddTaskDialog.razor.css
-   添加随访任务弹窗样式（中弹窗 960px）
+   ChangeAuditorDialog.razor.css
+   批量更换审核人弹窗样式（小弹窗 600px）
    ==================================== */
 
 /* 弹窗内容区 */
 ::deep .mud-dialog-content {
     padding: var(--spacing-lg);  /* 24px */
-    background-color: var(--bg-primary);
-}
-
-/* 表单网格布局 */
-::deep .mud-grid {
-    gap: var(--spacing-md);  /* 16px */
-}
-
-/* 输入框聚焦动画 */
-::deep .mud-input-root {
-    border-radius: var(--radius-sm);  /* 4px */
-    transition: all var(--transition-base) var(--ease-out);
-}
-
-::deep .mud-input-root:focus-within {
-    box-shadow: 0 0 0 3px rgba(24, 183, 151, 0.1);
+    min-height: 200px;
 }
 
 /* 选择框样式 */
 ::deep .mud-select {
     border-radius: var(--radius-sm);  /* 4px */
+    transition: all var(--transition-base) var(--ease-out);
 }
 
-/* 日期选择器样式 */
-::deep .mud-picker {
-    border-radius: var(--radius-sm);  /* 4px */
+::deep .mud-select:focus-within {
+    box-shadow: 0 0 0 3px rgba(24, 183, 151, 0.1);
 }
 
 /* 按钮样式增强 */
@@ -61,10 +46,6 @@
 @media (max-width: 767px) {
     ::deep .mud-dialog-content {
         padding: var(--spacing-md);  /* 16px */
-    }
-
-    ::deep .mud-grid {
-        gap: var(--spacing-sm);  /* 8px */
     }
 
     ::deep .mud-dialog-actions {

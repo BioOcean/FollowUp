@@ -10,50 +10,59 @@
         }
         else if (_taskDetail != null)
         {
-            <div class="dialog-grid">
-                <MudPaper Class="info-card" Elevation="1">
-                    <div class="card-header">
-                    <MudText Typo="Typo.subtitle1" Color="Color.Primary">任务概览</MudText>
-                    <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(_taskDetail.EventStatus)">
-                        @_taskDetail.EventStatus
-                    </MudChip>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">患者姓名</span>
-                    <span>@_taskDetail.PatientName</span>
-                    <span class="info-label">病案号</span>
-                    <span>@_taskDetail.CaseNumber</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">手机号</span>
-                    <span>@_taskDetail.PhoneNumber</span>
-                    <span class="info-label">身份证号</span>
-                    <span>@_taskDetail.IdNumber</span>
-                </div>
-                <div class="action-bar">
+            @* 上分栏：任务概览 + 患者信息 *@
+            <div class="dialog-top-section">
+                @* 第一行：标题 + 状态 + 操作按钮 *@
+                <div class="dialog-top-header">
+                    <div class="dialog-top-title-group">
+                        <MudText Typo="Typo.subtitle1" Color="Color.Primary">任务概览</MudText>
+                        <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(_taskDetail.EventStatus)">
+                            @_taskDetail.EventStatus
+                        </MudChip>
+                    </div>
                     <MudButton Variant="Variant.Outlined"
                                Color="Color.Primary"
                                OnClick="ViewDischargeProof"
-                                   Disabled="@(!_taskDetail.FileNames.Any())">
-                            查看出院证明
-                        </MudButton>
-                        @if (CanViewResult)
-                        {
-                            <MudButton Variant="Variant.Outlined"
-                                       Color="Color.Info"
-                                       OnClick="ViewResult">
-                                查看随访结果
-                            </MudButton>
-                        }
-                    </div>
-                </MudPaper>
+                               Size="Size.Small"
+                               Disabled="@(!_taskDetail.FileNames.Any())">
+                        查看出院证明
+                    </MudButton>
+                </div>
 
-                <MudPaper Class="form-card" Elevation="1">
-                    <div class="card-header">
-                        <MudText Typo="Typo.subtitle1" Color="Color.Primary">随访表单</MudText>
-                    </div>
-                    <FormDataDisplay PatientEventId="@TaskId" Source="Followup" />
-                </MudPaper>
+                @* 第二行：患者信息（4列网格）*@
+                <div class="patient-info-row">
+                    <span class="patient-info-label">患者姓名</span>
+                    <span class="patient-info-value">@_taskDetail.PatientName</span>
+                    <span class="patient-info-label">病案号</span>
+                    <span class="patient-info-value">@_taskDetail.CaseNumber</span>
+                </div>
+                <div class="patient-info-row">
+                    <span class="patient-info-label">手机号</span>
+                    <span class="patient-info-value">@_taskDetail.PhoneNumber</span>
+                    <span class="patient-info-label">身份证号</span>
+                    <span class="patient-info-value">@_taskDetail.IdNumber</span>
+                </div>
+            </div>
+
+            @* 下分栏：随访表单 *@
+            <div class="dialog-form-section">
+                <div class="dialog-form-header">
+                    <MudText Typo="Typo.subtitle1" Color="Color.Primary">随访表单</MudText>
+                </div>
+                <FormDataDisplay PatientEventId="@TaskId" Source="Followup" />
+            </div>
+
+            @* 底部按钮组 *@
+            <div class="dialog-bottom-actions">
+                @if (CanViewResult)
+                {
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Info"
+                               OnClick="ViewResult">
+                        查看随访结果
+                    </MudButton>
+                }
+                <MudButton OnClick="Close" Variant="Variant.Filled" Color="Color.Primary">关闭</MudButton>
             </div>
         }
         else
@@ -61,9 +70,6 @@
             <EmptyDataView Message="未找到任务详情" Height="360px" />
         }
     </DialogContent>
-    <DialogActions>
-        <MudButton OnClick="Close" Variant="Variant.Filled" Color="Color.Primary">关闭</MudButton>
-    </DialogActions>
 </MudDialog>
 
 @code {

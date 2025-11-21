@@ -70,9 +70,13 @@
             })
             .ToListAsync();
 
+        // 为空或未限制项目的宣教也可用
         var options = ProjectId == Guid.Empty
             ? raw
-            : raw.Where(e => e.project_id != null && e.project_id.Contains(ProjectId));
+            : raw.Where(e =>
+                e.project_id == null ||
+                e.project_id.Count == 0 ||
+                e.project_id.Contains(ProjectId));
 
             _educationOptions.Clear();
             _educationOptions.AddRange(options.Select(e => new EducationOption

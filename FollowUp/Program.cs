@@ -48,6 +48,7 @@ builder.Services.AddProjectManagementServices();
 builder.Services.AddScoped<IPatientStatisticsService, PatientStatisticsService>();
 builder.Services.AddScoped<IFollowupStatisticsService, FollowupStatisticsService>();
 builder.Services.AddScoped<IEducationStatisticsService, EducationStatisticsService>();
+builder.Services.AddScoped<IEducationQueryService, EducationQueryService>();
 builder.Services.AddSingleton<ZhiPuQingYanService>();
 
 // 注册随访管理模块服务（任务管理器）

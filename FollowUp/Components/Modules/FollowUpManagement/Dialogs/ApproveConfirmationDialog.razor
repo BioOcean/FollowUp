@@ -1,56 +1,103 @@
 ﻿@namespace FollowUp.Components.Modules.FollowUpManagement.Dialogs
 @using FollowUp.Components.Modules.FollowUpManagement.Models
+@using Bio.Core.FormSetDC
+@inject FormSetServiceFactory inj_formSetServiceFactory
 @inherits BasePage
 
 <MudDialog Class="approve-confirmation-dialog">
     <DialogContent>
-        <div class="dialog-header">
-            <MudText Typo="Typo.h6" Class="title">审核确认</MudText>
-            @if (TaskDetail != null)
-            {
-                <MudText Typo="Typo.body2" Class="subtitle">
-                    @($"{TaskDetail.PatientName} | {TaskDetail.TaskName}")
-                </MudText>
-            }
-        </div>
+        <MudTabs @bind-ActivePanelIndex="_activeTab" Class="mt-2">
+            <MudTabPanel Text="审核意见">
+                @* 任务信息卡片 *@
+                @if (TaskDetail != null)
+                {
+                    <div class="task-info-card">
+                        <div class="task-info-header">
+                            <MudText Typo="Typo.subtitle1" Color="Color.Primary">
+                                <MudIcon Icon="@Icons.Material.Filled.Assignment" Size="Size.Small" Class="mr-1" />
+                                审核确认
+                            </MudText>
+                        </div>
+                        <div class="task-info-content">
+                            <div class="info-item">
+                                <span class="info-label">患者姓名</span>
+                                <span class="info-value">@TaskDetail.PatientName</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">任务名称</span>
+                                <span class="info-value">@TaskDetail.TaskName</span>
+                            </div>
+                        </div>
+                    </div>
+                }
 
-        <div class="section">
-            <div class="section-header">
-                <MudText Typo="Typo.subtitle2" Class="section-title">审核意见</MudText>
-                <MudButton Variant="Variant.Outlined"
-                           Color="Color.Primary"
-                           OnClick="GenerateAuditComment"
-                           Disabled="_generating || _skipMessage">
-                    @(_generating ? "生成中..." : "一键生成")
-                </MudButton>
-            </div>
-            <MudTextField @bind-Value="_auditComment"
-                          Lines="4"
-                          Variant="Variant.Filled"
-                          Disabled="_skipMessage || _generating"
-                          Placeholder="填写审核意见，或点击一键生成"
-                          Class="full-width" />
-            <MudCheckBox T="bool"
-                         @bind-Checked="_skipMessage"
-                         Label="确认不填写审核意见直接通过"
-                         Color="Color.Info"
-                         Class="mt-2" />
-        </div>
+                @* 审核意见区域 *@
+                <div class="audit-section">
+                    <div class="section-header">
+                        <MudText Typo="Typo.subtitle2" Class="section-title">
+                            <MudIcon Icon="@Icons.Material.Filled.RateReview" Size="Size.Small" Class="mr-1" />
+                            审核意见
+                        </MudText>
+                        <MudButton Variant="Variant.Outlined"
+                                   Size="Size.Small"
+                                   Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.AutoAwesome"
+                                   OnClick="GenerateAuditComment"
+                                   Disabled="_generating || _skipMessage">
+                            @(_generating ? "生成中..." : "AI 生成")
+                        </MudButton>
+                    </div>
+                    <MudTextField @bind-Value="_auditComment"
+                                  Lines="30"
+                                  Variant="Variant.Outlined"
+                                  Disabled="_skipMessage || _generating"
+                                  Placeholder="@(_generating ? "AI 正在生成审核意见..." : "填写审核意见，或点击 AI 生成")"
+                                  Class="audit-input" />
+                    <MudCheckBox T="bool"
+                                 @bind-Checked="_skipMessage"
+                                 Label="确认不填写审核意见直接通过"
+                                 Color="Color.Info"
+                                 DisableRipple="true"
+                                 Class="skip-checkbox" />
+                </div>
+            </MudTabPanel>
 
-        <div class="section">
-            <MudCheckBox T="bool"
-                         @bind-Checked="_needEducation"
-                         Label="需要宣教（选择后进入宣教选择）"
-                         Color="Color.Success" />
-        </div>
+            <MudTabPanel Text="宣教选择">
+                <div class="education-section">
+                    @if (_loadingEducation)
+                    {
+                        <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Medium" />
+                    }
+                    else if (_educationOptions.Count == 0)
+                    {
+                        <MudText Typo="Typo.body2" Color="Color.Default">当前无可用宣教内容</MudText>
+                    }
+                    else
+                    {
+                        <MudSelect T="Guid?"
+                                   @bind-Value="_selectedEducationId"
+                                   Label="宣教模板"
+                                   Variant="Variant.Outlined"
+                                   Dense="true"
+                                   Class="full-width">
+                            @foreach (var item in _educationOptions)
+                            {
+                                <MudSelectItem Value="@( (Guid?)item.Id )">@item.Title</MudSelectItem>
+                            }
+                        </MudSelect>
+                    }
+                </div>
+            </MudTabPanel>
+        </MudTabs>
     </DialogContent>
     <DialogActions>
         <MudButton Variant="Variant.Text" OnClick="Cancel">取消</MudButton>
         <MudButton Variant="Variant.Filled"
-                   Color="Color.Primary"
+                   Color="Color.Success"
+                   StartIcon="@Icons.Material.Filled.CheckCircle"
                    Disabled="_generating"
                    OnClick="Confirm">
-            确认
+            确认通过
         </MudButton>
     </DialogActions>
 </MudDialog>
@@ -63,9 +110,17 @@
     public TaskDetailDto? TaskDetail { get; set; }
 
     private string _auditComment = string.Empty;
+    private int _activeTab;
     private bool _skipMessage;
-    private bool _needEducation;
     private bool _generating;
+    private bool _loadingEducation;
+    private readonly List<EducationItem> _educationOptions = new();
+    private Guid? _selectedEducationId;
+
+    protected override async Task OnPageInitializedAsync()
+    {
+        await LoadEducationOptionsAsync();
+    }
 
     private async Task GenerateAuditComment()
     {
@@ -78,12 +133,44 @@
         try
         {
             _generating = true;
-            var prompt = BuildPrompt(TaskDetail);
-            await inj_zhiPuQingYanService.AssistantStreamAsync(
-                prompt,
-                content =>
+
+            // 获取表单数据（问卷答案）
+            var formSetService = await inj_formSetServiceFactory.CreateAsync(TaskDetail.PatientEventId);
+            string answerSummary = formSetService.GetAllQuestionAnswer();
+
+            if (string.IsNullOrEmpty(answerSummary))
+            {
+                await ShowWarningAsync("无数据，无法生成审核意见");
+                return;
+            }
+
+            // 追加患者信息
+            await using var dbContext = await ContextFactory.CreateDbContextAsync();
+            var patient = await dbContext.patient
+                .Include(p => p.patient_event)
+                .FirstOrDefaultAsync(p => p.id == TaskDetail.PatientId);
+
+            if (patient != null)
+            {
+                string patientInfo = $"；患者姓名：{patient.name}；年龄：{patient.age}；性别：{patient.gender}；";
+                var patientEvent = patient.patient_event.FirstOrDefault(e => e.id == TaskDetail.PatientEventId);
+                if (patientEvent != null)
                 {
-                    _auditComment = content;
+                    patientInfo += $"随访名称：{patientEvent.form_set_name}";
+                }
+                answerSummary += patientInfo;
+            }
+
+            // 清空文本框并更新UI
+            _auditComment = string.Empty;
+            StateHasChanged();
+
+            // 使用问卷数据作为提示词
+            await inj_zhiPuQingYanService.AssistantStreamAsync(
+                prompt: answerSummary,
+                onPartialResponse: chunk =>
+                {
+                    _auditComment = chunk;
                     InvokeAsync(StateHasChanged);
                 });
         }
@@ -97,25 +184,32 @@
         }
     }
 
-    private static string BuildPrompt(TaskDetailDto task)
-    {
-        var sb = new StringBuilder();
-        sb.AppendLine("你是医院质控审核医师，请根据随访信息生成简洁的审核意见。");
-        sb.AppendLine($"患者：{task.PatientName}");
-        sb.AppendLine($"任务：{task.TaskName}");
-        if (task.PushTime != null) sb.AppendLine($"推送时间：{task.PushTime:yyyy-MM-dd HH:mm}");
-        if (task.InputTime != null) sb.AppendLine($"填写时间：{task.InputTime:yyyy-MM-dd HH:mm}");
-        sb.AppendLine($"状态：{task.EventStatus}");
-        return sb.ToString();
-    }
-
     private void Confirm()
     {
+        if (_activeTab == 1)
+        {
+            if (!_selectedEducationId.HasValue)
+            {
+                _ = ShowWarningAsync("请选择宣教内容");
+                return;
+            }
+
+            var educationResult = new AuditConfirmationResult
+            {
+                RequireEducation = true,
+                FollowupEducationId = _selectedEducationId
+            };
+
+            MudDialog.Close(MudDialogResult.Ok(educationResult));
+            return;
+        }
+
         var result = new AuditConfirmationResult
         {
             AuditComment = _auditComment?.Trim() ?? string.Empty,
             SkipMessage = _skipMessage,
-            RequireEducation = _needEducation
+            RequireEducation = false,
+            FollowupEducationId = null
         };
 
         MudDialog.Close(MudDialogResult.Ok(result));
@@ -125,4 +219,46 @@
     {
         MudDialog.Cancel();
     }
+
+    private async Task LoadEducationOptionsAsync()
+    {
+        _loadingEducation = true;
+        try
+        {
+            var projectId = TaskDetail?.ProjectId ?? Guid.Empty;
+            var hospitalId = await inj_userContextService.GetHospitalIdAsync();
+            Guid? departmentId = null;
+
+            if (projectId == Guid.Empty)
+            {
+                var project = await inj_userContextService.GetProjectAsync();
+                if (project != null)
+                {
+                    projectId = project.id;
+                    departmentId = project.department_id;
+                }
+            }
+
+            if (departmentId == null)
+            {
+                var department = await inj_userContextService.GetDepartmentAsync();
+                departmentId = department?.id;
+            }
+
+            var options = await inj_educationQueryService.GetEducationsAsync(hospitalId, departmentId, projectId);
+
+            _educationOptions.Clear();
+            _educationOptions.AddRange(options);
+            _selectedEducationId = TaskDetail?.FollowupEducationId;
+        }
+        catch (Exception ex)
+        {
+            await HandleExceptionAsync(ex, "加载宣教列表失败", "查询宣教内容");
+        }
+        finally
+        {
+            _loadingEducation = false;
+        }
+    }
+
 }

@@ -1,0 +1,99 @@
+/* ====================================
+   CancelTaskDialog.razor.css
+   取消随访任务弹窗样式（小弹窗 600px）
+   ==================================== */
+
+/* 弹窗内容区 */
+::deep .mud-dialog-content {
+    padding: var(--spacing-lg);  /* 24px */
+    min-height: 220px;
+}
+
+/* 警告信息框 */
+::deep .dialog-warning {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);  /* 8px */
+    padding: var(--spacing-md);  /* 16px */
+    background-color: #FFF5F5;
+    border: 1px solid #FC8181;
+    border-radius: var(--radius-md);  /* 6px */
+    margin-bottom: var(--spacing-md);  /* 16px */
+}
+
+::deep .dialog-warning .warning-icon {
+    color: var(--error-color);
+    font-size: 24px;
+    flex-shrink: 0;
+}
+
+::deep .dialog-warning .warning-text {
+    font-size: 14px;
+    color: #742A2A;
+    line-height: 1.5;
+    font-weight: 500;
+}
+
+/* 输入框聚焦动画 */
+::deep .mud-input-root {
+    border-radius: var(--radius-sm);  /* 4px */
+    transition: all var(--transition-base) var(--ease-out);
+}
+
+::deep .mud-input-root:focus-within {
+    box-shadow: 0 0 0 3px rgba(197, 48, 48, 0.1);
+}
+
+/* 按钮样式增强 */
+::deep .mud-button-root {
+    border-radius: var(--radius-sm);  /* 4px */
+    min-height: 36px;
+    transition: all var(--transition-fast) var(--ease-out);
+}
+
+::deep .mud-button-root:hover {
+    transform: translateY(-1px);
+}
+
+::deep .mud-button-root:active {
+    transform: translateY(0);
+}
+
+/* 危险按钮特殊样式 */
+::deep .mud-button-filled.mud-error-color:hover {
+    box-shadow: 0 8px 16px rgba(197, 48, 48, 0.2);
+}
+
+/* 弹窗操作栏 */
+::deep .mud-dialog-actions {
+    border-top: 1px solid var(--border-color);
+    padding: var(--spacing-md) var(--spacing-lg);  /* 16px 24px */
+    gap: var(--spacing-sm);  /* 8px */
+}
+
+/* 响应式：移动端 */
+@media (max-width: 767px) {
+    ::deep .mud-dialog-content {
+        padding: var(--spacing-md);  /* 16px */
+    }
+
+    ::deep .dialog-warning {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: var(--spacing-sm);  /* 8px */
+    }
+
+    ::deep .dialog-warning .warning-text {
+        font-size: 13px;
+    }
+
+    ::deep .mud-dialog-actions {
+        flex-direction: column-reverse;  /* 危险按钮在下方 */
+        padding: var(--spacing-md);  /* 16px */
+    }
+
+    ::deep .mud-dialog-actions .mud-button-root {
+        width: 100%;
+        min-height: 44px;  /* 触摸友好 */
+    }
+}

@@ -137,11 +137,12 @@ h1:focus {
 
 /* 复选框 */
 .mud-checkbox {
-    transition: all var(--transition-fast) var(--ease-bounce);
+    transition: none !important;
+    animation: none !important;
 }
 
 .mud-checkbox:active {
-    transform: scale(0.9);
+    transform: none !important;
 }
 
 /* 芯片标签 */

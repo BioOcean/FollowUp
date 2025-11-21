@@ -1,70 +1,21 @@
-﻿.task-detail-dialog .mud-dialog-content {
+/* ====================================
+   TaskDetailDialog.razor.css
+   任务详情查看弹窗样式（上下分栏布局）
+   ==================================== */
+
+/* 弹窗内容区背景 */
+::deep .task-detail-dialog ::deep .mud-dialog-content {
     background-color: var(--bg-primary);
 }
 
-.task-detail-dialog .dialog-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 12px;
+/* 弹窗添加打开动画 */
+::deep .task-detail-dialog {
+    animation: dialogOpen var(--transition-base) var(--ease-out);
 }
 
-@media (min-width: 992px) {
-    .task-detail-dialog .dialog-grid {
-        grid-template-columns: 380px 1fr;
+/* 响应式：移动端 */
+@media (max-width: 767px) {
+    ::deep .task-detail-dialog ::deep .mud-dialog-content {
+        padding: var(--spacing-md);
     }
-}
-
-.task-detail-dialog .info-card,
-.task-detail-dialog .form-card {
-    border-radius: 10px;
-    border: 1px solid var(--border-color);
-    background-color: var(--bg-secondary);
-}
-
-.task-detail-dialog .card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
-}
-
-.task-detail-dialog .info-row {
-    display: grid;
-    grid-template-columns: 110px 1fr 110px 1fr;
-    gap: 4px 6px;
-    padding: 4px 0;
-    align-items: center;
-    color: var(--text-secondary);
-}
-
-.task-detail-dialog .info-row .wide {
-    grid-column: span 3;
-}
-
-.task-detail-dialog .info-label {
-    color: var(--text-tertiary);
-    font-weight: 600;
-}
-
-.task-detail-dialog .action-bar {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 10px;
-}
-
-.task-detail-dialog .form-card {
-    padding: 8px 10px;
-}
-
-.task-detail-dialog .mud-dialog-actions {
-    border-top: 1px solid var(--border-color);
-}
-
-.task-manager-footer {
-    margin-top: 12px;
-    padding: 10px 12px;
-    border: 1px solid var(--border-color);
-    border-radius: 10px;
-    background-color: var(--bg-secondary);
 }

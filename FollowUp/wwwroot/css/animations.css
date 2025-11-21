@@ -510,3 +510,323 @@
     contain: strict;
 }
 
+/* ========================================
+   十一、弹窗动画（Dialog Animations）
+   ======================================== */
+
+/* 弹窗打开动画 - 缩放淡入（专业简洁风格） */
+.dialog-open {
+    animation: dialogOpen var(--transition-base) var(--ease-out);
+}
+
+@keyframes dialogOpen {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* 弹窗关闭动画 */
+.dialog-close {
+    animation: dialogClose var(--transition-fast) var(--ease-in-out);
+}
+
+@keyframes dialogClose {
+    from {
+        opacity: 1;
+        transform: scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+}
+
+/* 弹窗遮罩淡入 */
+.dialog-backdrop {
+    animation: backdropFadeIn var(--transition-base) var(--ease-out);
+}
+
+@keyframes backdropFadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* 弹窗遮罩淡出 */
+.dialog-backdrop-out {
+    animation: backdropFadeOut var(--transition-base) var(--ease-out);
+}
+
+@keyframes backdropFadeOut {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}
+
+/* ========================================
+   十二、输入框聚焦动画（Input Focus Animations）
+   ======================================== */
+
+/* 输入框聚焦微光效果 */
+.input-focus-glow {
+    position: relative;
+    transition: all var(--transition-base) var(--ease-out);
+}
+
+.input-focus-glow::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    border-radius: inherit;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(24, 183, 151, 0.3),
+        transparent
+    );
+    opacity: 0;
+    transition: opacity var(--transition-base) var(--ease-out);
+    z-index: -1;
+    pointer-events: none;
+}
+
+.input-focus-glow:focus-within::before {
+    opacity: 1;
+    animation: inputGlowPulse 2s ease-in-out infinite;
+}
+
+@keyframes inputGlowPulse {
+    0%, 100% {
+        transform: translateX(-100%);
+    }
+    50% {
+        transform: translateX(100%);
+    }
+}
+
+/* MudBlazor 输入框聚焦增强 */
+::deep .mud-input-root:focus-within .mud-input-underline::after {
+    transform: scaleX(1);
+    transition: transform var(--transition-base) var(--ease-out);
+}
+
+::deep .mud-input-root .mud-input-underline::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--primary-color);
+    transform: scaleX(0);
+    transition: transform var(--transition-base) var(--ease-out);
+}
+
+/* 输入框边框动画 */
+.input-border-animate {
+    border: 1px solid var(--border-color);
+    transition: all var(--transition-base) var(--ease-out);
+}
+
+.input-border-animate:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(24, 183, 151, 0.1);
+}
+
+/* ========================================
+   十三、卡片悬浮增强（Card Hover Enhancements）
+   ======================================== */
+
+/* 卡片标准悬浮效果 */
+.card-hover {
+    transition: all var(--transition-base) var(--ease-out);
+}
+
+.card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
+}
+
+/* 卡片深度悬浮效果 */
+.card-hover-deep {
+    transition: all var(--transition-base) var(--ease-out);
+}
+
+.card-hover-deep:hover {
+    transform: translateY(-4px) scale(1.01);
+    box-shadow: 0 12px 24px rgba(10, 107, 88, 0.2);
+}
+
+/* 卡片发光悬浮效果 */
+.card-hover-glow {
+    transition: all var(--transition-base) var(--ease-out);
+}
+
+.card-hover-glow:hover {
+    transform: translateY(-2px);
+    box-shadow:
+        0 8px 16px rgba(10, 107, 88, 0.15),
+        0 0 20px rgba(24, 183, 151, 0.2);
+}
+
+/* ========================================
+   十四、按钮涟漪效果增强（Button Ripple Enhancements）
+   ======================================== */
+
+/* MudBlazor 按钮涟漪效果 */
+::deep .mud-button-root.ripple-effect {
+    position: relative;
+    overflow: hidden;
+}
+
+::deep .mud-button-root.ripple-effect::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+    width: 100px;
+    height: 100px;
+    margin-top: -50px;
+    margin-left: -50px;
+    top: 50%;
+    left: 50%;
+    opacity: 0;
+    transform: scale(0);
+    pointer-events: none;
+}
+
+::deep .mud-button-root.ripple-effect:active::after {
+    animation: ripple 0.6s ease-out;
+}
+
+/* 按钮按下反馈 */
+.button-press {
+    transition: transform var(--transition-fast) var(--ease-out);
+}
+
+.button-press:active {
+    transform: scale(0.97);
+}
+
+/* ========================================
+   十五、骨架屏加载增强（Skeleton Loading Enhancements）
+   ======================================== */
+
+/* 骨架屏容器 */
+.skeleton-container {
+    width: 100%;
+    padding: var(--spacing-md);
+}
+
+/* 骨架屏行 */
+.skeleton-row {
+    display: flex;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+}
+
+/* 骨架屏列 */
+.skeleton-column {
+    flex: 1;
+}
+
+/* 骨架屏输入框 */
+.skeleton-input {
+    height: 40px;
+    border-radius: var(--radius-sm);
+    background: linear-gradient(
+        90deg,
+        var(--bg-tertiary) 0%,
+        #E2E8F0 20%,
+        var(--bg-tertiary) 40%,
+        var(--bg-tertiary) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s linear infinite;
+}
+
+/* 骨架屏按钮 */
+.skeleton-button {
+    width: 100px;
+    height: 36px;
+    border-radius: var(--radius-sm);
+    background: linear-gradient(
+        90deg,
+        var(--bg-tertiary) 0%,
+        #E2E8F0 20%,
+        var(--bg-tertiary) 40%,
+        var(--bg-tertiary) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s linear infinite;
+}
+
+/* 骨架屏表格 */
+.skeleton-table-row {
+    display: flex;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.skeleton-table-cell {
+    flex: 1;
+    height: 20px;
+    border-radius: var(--radius-sm);
+    background: linear-gradient(
+        90deg,
+        var(--bg-tertiary) 0%,
+        #E2E8F0 20%,
+        var(--bg-tertiary) 40%,
+        var(--bg-tertiary) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s linear infinite;
+}
+
+/* 骨架屏信息卡片布局 */
+.skeleton-info-card {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+}
+
+.skeleton-info-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--spacing-md);
+}
+
+.skeleton-info-item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.skeleton-info-label {
+    height: 14px;
+    width: 60px;
+    border-radius: var(--radius-sm);
+}
+
+.skeleton-info-value {
+    height: 16px;
+    width: 100%;
+    border-radius: var(--radius-sm);
+}
+

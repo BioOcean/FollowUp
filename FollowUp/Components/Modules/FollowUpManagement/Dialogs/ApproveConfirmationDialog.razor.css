@@ -1,39 +1,164 @@
-﻿.approve-confirmation-dialog .dialog-header {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    margin-bottom: 12px;
+/* ====================================
+   ApproveConfirmationDialog.razor.css
+   审核确认弹窗样式（优化版）
+   ==================================== */
+
+/* 弹窗添加打开动画 */
+::deep .approve-confirmation-dialog {
+    animation: dialogOpen var(--transition-base) var(--ease-out);
 }
 
-.approve-confirmation-dialog .title {
-    color: var(--primary-color);
+/* 弹窗内容区 */
+::deep .approve-confirmation-dialog ::deep .mud-dialog-content {
+    padding: var(--spacing-lg);  /* 24px */
+    background-color: var(--bg-primary);
+}
+
+/* ========== 任务信息卡片 ========== */
+.task-info-card {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);  /* 6px */
+    padding: var(--spacing-md);  /* 16px */
+    margin-bottom: var(--spacing-md);  /* 16px */
+}
+
+.task-info-header {
+    margin-bottom: var(--spacing-sm);  /* 8px */
+    padding-bottom: var(--spacing-sm);  /* 8px */
+    border-bottom: 1px solid var(--border-color);
+}
+
+.task-info-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-sm);  /* 8px */
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);  /* 4px */
+}
+
+.info-label {
+    color: var(--text-tertiary);
+    font-size: 13px;
     font-weight: 600;
 }
 
-.approve-confirmation-dialog .subtitle {
+.info-value {
     color: var(--text-secondary);
+    font-size: 14px;
 }
 
-.approve-confirmation-dialog .section {
+/* ========== 审核意见区域 ========== */
+.audit-section {
     background-color: var(--bg-secondary);
     border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 12px;
-    margin-bottom: 12px;
+    border-radius: var(--radius-md);  /* 6px */
+    padding: var(--spacing-md);  /* 16px */
+    margin-bottom: var(--spacing-md);  /* 16px */
 }
 
-.approve-confirmation-dialog .section-header {
+.section-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 8px;
+    margin-bottom: var(--spacing-sm);  /* 8px */
 }
 
-.approve-confirmation-dialog .section-title {
+.section-title {
     color: var(--text-primary);
     font-weight: 600;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
 }
 
-.approve-confirmation-dialog .full-width {
+.audit-input {
     width: 100%;
+    margin-bottom: var(--spacing-sm);  /* 8px */
+}
+
+::deep .audit-input ::deep .mud-input-root {
+    border-radius: var(--radius-sm);  /* 4px */
+}
+
+::deep .audit-input ::deep textarea {
+    font-size: 14px;
+}
+
+.skip-checkbox {
+    margin-top: var(--spacing-xs);  /* 4px */
+}
+
+/* ========== 宣教选项区域 ========== */
+.education-section {
+    background-color: rgba(76, 175, 80, 0.05);  /* 淡绿色背景 */
+    border: 1px solid rgba(76, 175, 80, 0.2);
+    border-radius: var(--radius-md);  /* 6px */
+    padding: var(--spacing-md);  /* 16px */
+    margin-bottom: var(--spacing-md);  /* 16px */
+}
+
+/* ========== 按钮增强 ========== */
+::deep .approve-confirmation-dialog ::deep .mud-button-root {
+    border-radius: var(--radius-sm);  /* 4px */
+    transition: all var(--transition-fast) var(--ease-out);
+}
+
+::deep .approve-confirmation-dialog ::deep .mud-button-root:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+::deep .approve-confirmation-dialog ::deep .mud-button-root:active {
+    transform: translateY(0);
+}
+
+/* AI 生成按钮特殊效果 */
+::deep .approve-confirmation-dialog ::deep .mud-button-outlined:hover {
+    background-color: rgba(24, 183, 151, 0.08);
+}
+
+/* 弹窗操作栏 */
+::deep .approve-confirmation-dialog ::deep .mud-dialog-actions {
+    border-top: 1px solid var(--border-color);
+    padding: var(--spacing-md) var(--spacing-lg);  /* 16px 24px */
+    gap: var(--spacing-sm);  /* 8px */
+}
+
+/* ========== 响应式：移动端 ========== */
+@media (max-width: 767px) {
+    ::deep .approve-confirmation-dialog ::deep .mud-dialog-content {
+        padding: var(--spacing-md);  /* 16px */
+    }
+
+    .task-info-content {
+        grid-template-columns: 1fr;  /* 单列显示 */
+    }
+
+    .task-info-card,
+    .audit-section,
+    .education-section {
+        padding: var(--spacing-sm);  /* 8px */
+        margin-bottom: var(--spacing-sm);  /* 8px */
+    }
+
+    .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-xs);  /* 4px */
+    }
+
+    ::deep .approve-confirmation-dialog ::deep .mud-dialog-actions {
+        flex-direction: column;
+        padding: var(--spacing-md);  /* 16px */
+    }
+
+    ::deep .approve-confirmation-dialog ::deep .mud-dialog-actions .mud-button-root {
+        width: 100%;
+        min-height: 44px;  /* 触摸友好 */
+    }
 }

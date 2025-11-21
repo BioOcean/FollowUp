@@ -1,0 +1,515 @@
+/* ====================================
+   统一弹窗样式系统
+   基于 UI-Design-Guidelines.md 深色医疗风格
+   ===================================== */
+
+/* ========== 1. 弹窗基础样式 ========== */
+
+/* MudDialog 容器样式 */
+::deep .mud-dialog {
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-xl);
+    background-color: var(--bg-secondary);
+}
+
+/* 弹窗纸张容器 */
+::deep .mud-dialog-paper {
+    border-radius: var(--radius-md);
+}
+
+/* 弹窗标题区域 */
+::deep .mud-dialog-title {
+    padding: var(--spacing-lg) var(--spacing-lg) var(--spacing-md);
+    border-bottom: 1px solid var(--border-color);
+    background-color: var(--bg-secondary);
+}
+
+/* 弹窗内容区域 */
+::deep .mud-dialog-content {
+    padding: var(--spacing-lg);
+    background-color: var(--bg-primary);
+}
+
+/* 弹窗操作栏 */
+::deep .mud-dialog-actions {
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-top: 1px solid var(--border-color);
+    background-color: var(--bg-secondary);
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--spacing-sm);
+}
+
+/* ========== 2. 弹窗布局类 ========== */
+
+/* 弹窗头部 */
+.dialog-header {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    margin-bottom: var(--spacing-lg);
+}
+
+/* 弹窗标题 */
+.dialog-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.4;
+}
+
+/* 弹窗副标题 */
+.dialog-subtitle {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+/* 弹窗内容分组 */
+.dialog-section {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+    transition: all var(--transition-base) var(--ease-out);
+}
+
+.dialog-section:last-child {
+    margin-bottom: 0;
+}
+
+/* 分组标题 */
+.section-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-sm);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+/* 分组内容 */
+.section-content {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+/* ========== 3. 上下分栏布局（查看/审核弹窗新布局）========== */
+
+/* 上分栏容器 */
+.dialog-top-section {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+}
+
+/* 上分栏第一行：标题+状态+操作按钮 */
+.dialog-top-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-md);
+    gap: var(--spacing-sm);
+}
+
+.dialog-top-title-group {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    flex: 1;
+}
+
+/* 患者信息行（4列网格：标签-值-标签-值）*/
+.patient-info-row {
+    display: grid;
+    grid-template-columns: 110px 1fr 110px 1fr;
+    gap: var(--spacing-xs) var(--spacing-md);  /* 垂直8px 水平16px */
+    padding: var(--spacing-sm) 0;
+    align-items: center;
+    color: var(--text-secondary);
+}
+
+.patient-info-label {
+    color: var(--text-tertiary);
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.patient-info-value {
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+/* 下分栏：随访表单区域 */
+.dialog-form-section {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+}
+
+.dialog-form-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: var(--spacing-sm);
+}
+
+/* 底部按钮组（替代原 DialogActions）*/
+.dialog-bottom-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--spacing-sm);
+    padding-top: var(--spacing-md);
+    border-top: 1px solid var(--border-color);
+}
+
+.dialog-bottom-actions ::deep .mud-button-root {
+    border-radius: var(--radius-sm);
+    min-height: 36px;
+    padding: 0 var(--spacing-md);
+    font-weight: 500;
+    transition: all var(--transition-fast) var(--ease-out);
+}
+
+.dialog-bottom-actions ::deep .mud-button-root:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.dialog-bottom-actions ::deep .mud-button-root:active {
+    transform: translateY(0);
+}
+
+/* ========== 4. 旧版网格布局（兼容性保留，逐步移除）========== */
+
+.dialog-grid {
+    display: grid;
+    gap: var(--spacing-md);
+    grid-template-columns: 380px 1fr;
+}
+
+/* 患者信息卡片 */
+.info-card {
+    background-color: var(--bg-secondary) !important;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md) !important;
+    padding: var(--spacing-md);
+    box-shadow: var(--shadow-sm);
+    transition: all var(--transition-base) var(--ease-out);
+}
+
+.info-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
+}
+
+/* 表单数据卡片 */
+.form-card {
+    background-color: var(--bg-secondary) !important;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md) !important;
+    padding: var(--spacing-md);
+    box-shadow: var(--shadow-sm);
+}
+
+/* 信息行标题 */
+.info-label {
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-weight: 500;
+    margin-bottom: var(--spacing-xs);
+}
+
+/* 信息行内容 */
+.info-value {
+    font-size: 14px;
+    color: var(--text-primary);
+    word-break: break-all;
+}
+
+/* 信息行网格布局 */
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+}
+
+.info-grid:last-child {
+    margin-bottom: 0;
+}
+
+/* 信息项 */
+.info-item {
+    display: flex;
+    flex-direction: column;
+}
+
+/* ========== 5. 表单增强样式 ========== */
+
+/* 表单字段标签 */
+.form-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-xs);
+}
+
+/* 必填标记 */
+.required-mark {
+    color: var(--error-color);
+    margin-left: 2px;
+}
+
+/* 表单提示文本 */
+.form-hint {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    margin-top: var(--spacing-xs);
+}
+
+/* ========== 6. 按钮增强样式 ========== */
+
+/* 主按钮 */
+::deep .mud-button.btn-primary {
+    background-color: var(--primary-color);
+    color: #ffffff;
+    border-radius: var(--radius-sm);
+    padding: 8px 20px;
+    font-weight: 500;
+    box-shadow: var(--shadow-md);
+    transition: all var(--transition-fast) var(--ease-out);
+}
+
+::deep .mud-button.btn-primary:hover {
+    background-color: var(--primary-light);
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-1px);
+}
+
+::deep .mud-button.btn-primary:active {
+    background-color: var(--primary-dark);
+    transform: translateY(0);
+}
+
+/* 次要按钮 */
+::deep .mud-button.btn-secondary {
+    background-color: transparent;
+    border: 1px solid var(--primary-color);
+    color: var(--primary-color);
+    border-radius: var(--radius-sm);
+    padding: 8px 20px;
+    font-weight: 500;
+    transition: all var(--transition-fast) var(--ease-out);
+}
+
+::deep .mud-button.btn-secondary:hover {
+    background-color: var(--primary-lighter);
+    border-color: var(--primary-light);
+}
+
+/* 危险按钮 */
+::deep .mud-button.btn-danger {
+    background-color: var(--error-color);
+    color: #ffffff;
+    border-radius: var(--radius-sm);
+    padding: 8px 20px;
+    font-weight: 500;
+    box-shadow: var(--shadow-md);
+    transition: all var(--transition-fast) var(--ease-out);
+}
+
+::deep .mud-button.btn-danger:hover {
+    background-color: #E53E3E;
+    box-shadow: 0 8px 16px rgba(197, 48, 48, 0.2);
+    transform: translateY(-1px);
+}
+
+::deep .mud-button.btn-danger:active {
+    background-color: #9B2C2C;
+    transform: translateY(0);
+}
+
+/* ========== 7. 警告/提示样式 ========== */
+
+/* 警告框 */
+.dialog-warning {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md);
+    background-color: #FFF5F5;
+    border: 1px solid #FC8181;
+    border-radius: var(--radius-md);
+    margin-bottom: var(--spacing-md);
+}
+
+.dialog-warning .warning-icon {
+    color: var(--error-color);
+    font-size: 24px;
+    flex-shrink: 0;
+}
+
+.dialog-warning .warning-text {
+    font-size: 14px;
+    color: #742A2A;
+    line-height: 1.5;
+}
+
+/* 信息框 */
+.dialog-info {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md);
+    background-color: #EBF8FF;
+    border: 1px solid #90CDF4;
+    border-radius: var(--radius-md);
+    margin-bottom: var(--spacing-md);
+}
+
+.dialog-info .info-icon {
+    color: var(--info-color);
+    font-size: 24px;
+    flex-shrink: 0;
+}
+
+.dialog-info .info-text {
+    font-size: 14px;
+    color: #2C5282;
+    line-height: 1.5;
+}
+
+/* ========== 8. 响应式布局 ========== */
+
+/* 平板端（768px - 991px）*/
+@media (min-width: 768px) and (max-width: 991px) {
+    .dialog-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .info-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    /* 患者信息改为2列 */
+    .patient-info-row {
+        grid-template-columns: 110px 1fr;
+    }
+
+    ::deep .mud-dialog {
+        max-width: 90vw;
+    }
+
+}
+
+/* 移动端（< 768px）*/
+@media (max-width: 767px) {
+    /* 弹窗全屏化 */
+    ::deep .mud-dialog {
+        max-width: 100vw;
+        min-width: 100vw;
+        margin: 0;
+        border-radius: 0;
+        max-height: 100vh;
+    }
+
+
+    /* 单列布局 */
+    .dialog-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .info-grid {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-sm);
+    }
+
+    /* 患者信息改为2列 */
+    .patient-info-row {
+        grid-template-columns: 90px 1fr;
+        gap: var(--spacing-xs);
+    }
+
+    .patient-info-label {
+        font-size: 12px;
+    }
+
+    /* 上分栏头部垂直排列 */
+    .dialog-top-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    /* 减小间距 */
+    ::deep .mud-dialog-title,
+    ::deep .mud-dialog-content,
+    ::deep .mud-dialog-actions {
+        padding: var(--spacing-md);
+    }
+
+    .dialog-section,
+    .dialog-top-section,
+    .dialog-form-section {
+        padding: var(--spacing-sm);
+    }
+
+    /* 按钮全宽 */
+    ::deep .mud-dialog-actions,
+    .dialog-bottom-actions {
+        flex-direction: column;
+    }
+
+    ::deep .mud-dialog-actions .mud-button,
+    .dialog-bottom-actions .mud-button-root {
+        width: 100%;
+    }
+
+    /* 触摸友好按钮尺寸 */
+    ::deep .mud-button {
+        min-height: 44px;
+    }
+}
+
+/* ========== 9. 打印样式 ========== */
+
+@media print {
+    ::deep .mud-dialog {
+        box-shadow: none;
+        border: 1px solid #ccc;
+    }
+
+    ::deep .mud-dialog-actions {
+        display: none;
+    }
+}
+
+/* ========== 10. 无障碍增强 ========== */
+
+/* 键盘焦点可见性 */
+::deep .mud-button:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+/* 高对比度模式支持 */
+@media (prefers-contrast: high) {
+    .info-card,
+    .form-card,
+    .dialog-section {
+        border-width: 2px;
+    }
+}
+
+/* ========== 11. 暗黑模式预留 ========== */
+
+/* 暗黑模式下的样式调整（预留） */
+@media (prefers-color-scheme: dark) {
+    /* 未来可扩展暗黑模式支持 */
+}

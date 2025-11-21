@@ -615,7 +615,7 @@
         var options = new DialogOptions
         {
             CloseOnEscapeKey = true,
-            MaxWidth = MaxWidth.Medium,
+            MaxWidth = MaxWidth.Large,  // 大弹窗 = 1280px
             FullWidth = true
         };
 
@@ -646,7 +646,7 @@
         var options = new DialogOptions
         {
             CloseOnEscapeKey = true,
-            MaxWidth = MaxWidth.ExtraLarge,
+            MaxWidth = MaxWidth.Large,  // 大弹窗 = 1280px
             FullWidth = true
         };
 
@@ -676,7 +676,7 @@
         var options = new DialogOptions
         {
             CloseOnEscapeKey = true,
-            MaxWidth = MaxWidth.Small,
+            MaxWidth = MaxWidth.Small,  // 小弹窗 = 600px
             FullWidth = true
         };
 
@@ -769,7 +769,7 @@
         var options = new DialogOptions
         {
             CloseOnEscapeKey = true,
-            MaxWidth = MaxWidth.Small,
+            MaxWidth = MaxWidth.Small,  // 小弹窗 = 600px
             FullWidth = true
         };
 
@@ -833,7 +833,7 @@
         var dialog = await _dialogService.ShowAsync<Dialogs.AddVisitTaskDialog>(
             "添加随访任务",
             parameters,
-            new DialogOptions { MaxWidth = MaxWidth.Large, FullWidth = true });
+            new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true });  // 中弹窗 = 960px
 
         var result = await dialog.Result;
         if (result != null && !result.Canceled)
